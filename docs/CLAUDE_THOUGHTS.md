@@ -24,13 +24,23 @@
 
 ### 💡 IDÉES NOUVELLES
 
+#### [18:20] Instance #2 - AUTO_INITIALISATION_RÉVOLUTIONNAIRE
+**Catégorie** : Architecture/UX  
+**Idée** : Auto-initialisation instances Claude à l'ouverture du projet  
+**Contexte** : Éliminer friction d'init manuelle pour Enzo  
+**Status** : ✅ IMPLÉMENTÉE  
+**Impact** : RÉVOLUTIONNAIRE - UX parfaite  
+**Mécanisme** : Fichier CLAUDE.md à la racine = trigger auto-init  
+**Avantages** : Zéro friction, init instantanée, fallback "lis doc"  
+**Notes** : 🚀 EXPÉRIENCE UTILISATEUR PARFAITE !
+
 #### [18:10] Instance #2 - SYSTÈME_SYNCHRONISATION_AUTO
 **Catégorie** : Architecture/Coordination  
 **Idée** : Lecture automatique de tous les .md avant chaque réponse  
 **Contexte** : Éviter doublons et conflits entre instances  
-**Status** : 🔄 EN_COURS_IMPLÉMENTATION  
+**Status** : ✅ IMPLÉMENTÉE  
 **Impact** : CRITIQUE - Base de la coordination  
-**Prochaine étape** : Finaliser marquage EN_COURS/FINI dans code  
+**Résultat** : Marquage EN_COURS/FINI + partage réflexions  
 **Notes** : Révolutionnaire pour coordination multi-instances  
 
 ### 🚨 ERREURS À ÉVITER

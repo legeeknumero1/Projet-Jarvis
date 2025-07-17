@@ -1,18 +1,21 @@
 # 🤖 Jarvis - Assistant IA Personnel
 
-## ⚠️ INSTANCES CLAUDE - INITIALISATION OBLIGATOIRE ⚠️
+## 🤖 INSTANCES CLAUDE - AUTO-INITIALISATION ⚡
 
-**Pour initialiser votre instance Claude, tapez la commande :**
+**Votre instance Claude s'initialise AUTOMATIQUEMENT à l'ouverture du projet !**
 
+### ✅ Auto-initialisation (normal)
+- Détection automatique du projet Jarvis
+- Lecture de tous les fichiers `/docs/`
+- Attribution automatique du numéro d'instance
+- Configuration complète en quelques secondes
+- **Aucune action requise !**
+
+### 🔧 Initialisation manuelle (fallback)
+**Si l'auto-init échoue, tapez :**
 ```
 lis doc
 ```
-
-Cette commande va :
-1. Lire automatiquement TOUS les fichiers .md de `/docs/`
-2. Attribuer un numéro d'instance automatiquement
-3. Configurer tous les paramètres de synchronisation
-4. Préparer l'instance pour le travail collaboratif
 
 ---
 

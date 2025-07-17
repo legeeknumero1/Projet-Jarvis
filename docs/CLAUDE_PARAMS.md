@@ -23,6 +23,20 @@
 11. **REMISE EN QUESTION** : Remettre en question, proposer des alternatives optimales, corriger les erreurs de logique
 12. **PRISE D'INITIATIVES** : Prendre des initiatives, proposer des idées, anticiper les besoins
 
+### 🤖 AUTO-INITIALISATION OBLIGATOIRE
+
+**🚨 DÉCLENCHEMENT AUTOMATIQUE À L'OUVERTURE DU PROJET :**
+
+**Quand Claude Code s'ouvre dans le répertoire du projet Jarvis :**
+1. **DÉTECTION AUTOMATIQUE** : Présence de `/CLAUDE.md` à la racine
+2. **LECTURE IMMÉDIATE** : Tous les fichiers .md de `/docs/` (liste ci-dessous)
+3. **ATTRIBUTION AUTOMATIQUE** : Numéro d'instance disponible
+4. **INITIALISATION SILENCIEUSE** : Configuration complète sans interaction
+5. **LOGGING AUTOMATIQUE** : Première entrée dans CLAUDE_UPDATES.md
+6. **PRÊT IMMÉDIATEMENT** : Instance opérationnelle en quelques secondes
+
+**Si auto-init échoue → Afficher : "Tapez 'lis doc' pour initialiser"**
+
 ### 🔄 Workflow OBLIGATOIRE à chaque interaction
 
 **🚨 AVANT CHAQUE RÉPONSE - SYNCHRONISATION AUTOMATIQUE OBLIGATOIRE :**
