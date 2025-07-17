@@ -25,18 +25,32 @@
 
 ### 🔄 Workflow OBLIGATOIRE à chaque interaction
 
-1. **LIRE** `/docs/CLAUDE_PARAMS.md` (ce fichier) EN PREMIER
-2. **LIRE** `/docs/CLAUDE.md` pour les instructions techniques
-3. **LIRE** `/docs/BUGS.md` pour les problèmes connus
-4. **LIRE** `/docs/README.md` pour le contexte projet
-5. **LIRE** tous les autres fichiers .md pertinents
-6. **RECHERCHER** sur internet les meilleures pratiques
-7. **PLANIFIER** avec TodoWrite
-8. **EXÉCUTER** la tâche
-9. **METTRE À JOUR** tous les fichiers .md concernés
-10. **VÉRIFIER** la cohérence entre tous les fichiers .md
-11. **CONTRÔLER DUPLICATIONS** : Vérifier qu'il n'y a pas de doublons entre fichiers
-12. **OPTIMISER SI NÉCESSAIRE** : Fusionner contenus dupliqués en gardant le plus utile
+**🚨 AVANT CHAQUE RÉPONSE - SYNCHRONISATION AUTOMATIQUE OBLIGATOIRE :**
+
+1. **LECTURE AUTOMATIQUE COMPLÈTE** de TOUS les fichiers .md du projet :
+   - `/docs/CLAUDE_PARAMS.md` (ce fichier) EN PREMIER
+   - `/docs/CLAUDE_CONFIG.md` pour statut instances
+   - `/docs/CLAUDE_UPDATES.md` pour actions récentes
+   - `/docs/CLAUDE_INSTANCES.md` pour réservations
+   - `/docs/CLAUDE_THOUGHTS.md` pour réflexions partagées
+   - `/docs/CLAUDE.md` pour instructions techniques
+   - `/docs/BUGS.md` pour problèmes connus
+   - `/docs/README.md` pour contexte projet
+   - `/docs/CHANGELOG.md` pour historique
+   - `/docs/API.md` pour documentation
+   - `/docs/DOCUMENTATION.md` pour structure générale
+   - `/docs/PROFIL_JARVIS.md` pour contexte Enzo/projet
+
+2. **VÉRIFICATION CONFLITS** : Scanner si une autre instance travaille déjà sur la demande
+3. **MISE À JOUR STATUS** : Mettre à jour statut dans CLAUDE_CONFIG.md si nécessaire
+4. **RECHERCHER** sur internet les meilleures pratiques
+5. **PLANIFIER** avec TodoWrite
+6. **EXÉCUTER** la tâche avec marquage EN_COURS
+7. **METTRE À JOUR** tous les fichiers .md concernés avec marquage FINI
+8. **LOGGER** dans CLAUDE_UPDATES.md
+9. **VÉRIFIER** la cohérence entre tous les fichiers .md
+10. **CONTRÔLER DUPLICATIONS** : Vérifier qu'il n'y a pas de doublons entre fichiers
+11. **OPTIMISER SI NÉCESSAIRE** : Fusionner contenus dupliqués en gardant le plus utile
 
 ### 📝 Règles de documentation STRICTES
 
@@ -46,6 +60,7 @@
 - **TOUJOURS maintenir** la cohérence entre tous les .md
 - **TOUJOURS documenter** les bugs dans `BUGS.md`
 - **TOUJOURS documenter** les changements dans `CHANGELOG.md`
+- **TOUJOURS documenter** les réflexions dans `CLAUDE_THOUGHTS.md`
 - **TOUJOURS tenir à jour** la documentation technique
 - **ÉVITER LES DUPLICATIONS** : Ne pas dupliquer des actions/contenus entre fichiers
 - **OPTIMISER LA STRUCTURE** : Garder un seul fichier par fonction/sujet
@@ -54,6 +69,49 @@
 - **SUIVRE LES FILS** : Maintenir la continuité des discussions et tâches non terminées
 - **CODE ROBUSTE** : Générer du code propre, structuré, robuste avec documentation
 - **DIAGNOSTICS DÉTAILLÉS** : Fournir des diagnostics complets en cas d'échec
+
+### 🏷️ Règles de marquage dans le code OBLIGATOIRES
+
+**TOUT code modifié DOIT être marqué avec commentaires :**
+
+**Format OBLIGATOIRE :**
+```python
+# Instance #X - EN_COURS - [Description de la modification]
+[CODE EN COURS DE MODIFICATION]
+# Instance #X - FINI - [Description de ce qui a été fait]
+```
+
+**Exemples :**
+```python
+# Instance #2 - EN_COURS - Ajout fonction de chat vocal
+def chat_vocal():
+    # Nouvelle implémentation par Instance #2
+    pass
+# Instance #2 - FINI - Fonction chat vocal opérationnelle
+
+# Instance #1 - EN_COURS - Optimisation algorithme reconnaissance
+# ... code ...
+# Instance #1 - FINI - Algorithme optimisé +30% performance
+```
+
+**Règles de marquage :**
+- **EN_COURS** : Instance travaille actuellement dessus - AUTRES INSTANCES DOIVENT SKIP
+- **FINI** : Modification terminée - AUTRES INSTANCES PEUVENT TRAVAILLER DESSUS
+- **BESOIN_AIDE** : Instance bloquée - AUTRES INSTANCES PEUVENT AIDER
+- **REVIEW_DEMANDÉE** : Instance demande relecture - COLLABORATION SOUHAITÉE
+
+### 🎯 Commande spéciale "lis doc" - INITIALISATION INSTANCE
+
+**Si l'utilisateur tape "lis doc" :**
+
+1. **EXÉCUTER IMMÉDIATEMENT** la séquence d'initialisation complète :
+   - Lire TOUS les fichiers .md de `/docs/` dans l'ordre de priorité
+   - Attribuer automatiquement un numéro d'instance disponible
+   - Mettre à jour CLAUDE_CONFIG.md avec le statut ACTIVE
+   - Logger l'initialisation dans CLAUDE_UPDATES.md
+   - Confirmer à l'utilisateur : "Instance #X initialisée et prête ✅"
+
+2. **RÉPONDRE** avec un résumé de l'état du projet et du statut de l'instance
 
 ### 🚨 Confirmation de suppression
 
@@ -132,6 +190,6 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 ---
 
 ## 🔄 Dernière mise à jour
-**Date** : 2025-01-17 - 17:25
-**Par** : Claude
-**Action** : Ajout des règles d'ingénieur expert : précision extrême, intolérance aux erreurs, auto-analyse, anticipation, mémoire contextuelle
+**Date** : 2025-01-17 - 18:12
+**Par** : Instance #2 (Claude)
+**Action** : Système de synchronisation automatique révolutionnaire : lecture tous .md avant chaque réponse, marquage EN_COURS/FINI, partage réflexions, skip automatique conflits

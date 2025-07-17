@@ -67,19 +67,21 @@ POUR chaque nouveau démarrage d'instance :
 
 **CHAQUE instance DOIT exécuter cette séquence :**
 
-1. **LECTURE AUTOMATIQUE de TOUS les .md** (OBLIGATOIRE)
+1. **LECTURE AUTOMATIQUE de TOUS les .md** (OBLIGATOIRE à chaque interaction)
    ```
+   AVANT CHAQUE RÉPONSE - LECTURE COMPLÈTE :
    - /docs/CLAUDE_PARAMS.md (PRIORITÉ ABSOLUE)
    - /docs/CLAUDE_CONFIG.md (ce fichier)
    - /docs/CLAUDE_UPDATES.md (log temps réel)
+   - /docs/CLAUDE_THOUGHTS.md (réflexions partagées)
    - /docs/CLAUDE_INSTANCES.md (coordination)
    - /docs/CLAUDE.md (instructions techniques)
    - /docs/BUGS.md (problèmes connus)
    - /docs/README.md (documentation projet)
    - /docs/CHANGELOG.md (historique)
    - /docs/API.md (documentation API)
-   - /Profil Jarvis Complet.md (contexte Enzo)
-   - /DOCUMENTATION.md (point d'entrée)
+   - /docs/PROFIL_JARVIS.md (contexte Enzo/projet)
+   - /docs/DOCUMENTATION.md (structure générale)
    ```
 
 2. **ATTRIBUTION DU NUMÉRO D'INSTANCE**
@@ -87,11 +89,18 @@ POUR chaque nouveau démarrage d'instance :
    - Mettre à jour statut à ACTIVE
    - Horodater le début d'activité
 
-3. **PREMIÈRE ENTRÉE DANS CLAUDE_UPDATES.md**
+3. **VÉRIFICATION ANTI-CONFLIT**
+   - Scanner CLAUDE_UPDATES.md pour actions récentes d'autres instances
+   - Vérifier CLAUDE_THOUGHTS.md pour éviter doublons de réflexions
+   - Scanner le code pour les marquages EN_COURS d'autres instances
+   - Si conflit détecté → SKIP et chercher autre tâche
+
+4. **PREMIÈRE ENTRÉE DANS CLAUDE_UPDATES.md**
    ```
    [18:XX] Instance #X - INITIALISATION
    - Lecture complète de tous les fichiers .md ✅
    - Attribution numéro d'instance : #X
+   - Vérification anti-conflit : ✅
    - Statut : PRÊT À TRAVAILLER
    - Contexte Enzo/Jarvis : ASSIMILÉ
    ```
@@ -109,6 +118,15 @@ COMPORTEMENT_INSTANCE:
   initiatives: ENCOURAGÉES
   anticipation: MAXIMALE
   memoire_contextuelle: PERMANENTE
+  
+SYNCHRONISATION_OBLIGATOIRE:
+  lecture_md_avant_reponse: OBLIGATOIRE
+  verification_conflits: AUTOMATIQUE
+  marquage_code: OBLIGATOIRE
+  partage_reflexions: OBLIGATOIRE
+  respect_en_cours: STRICT
+  skip_si_conflit: AUTOMATIQUE
+  demande_enzo_si_rien: OBLIGATOIRE
 ```
 
 ### 🔄 Mise à jour obligatoire CLAUDE_UPDATES.md
@@ -241,23 +259,32 @@ git status && git add . && git commit -m "Instance #X: [description]"
 ## 🚨 Règles de coordination STRICTES
 
 ### 🔒 Avant toute action
-1. Lire CLAUDE_UPDATES.md pour voir activité récente
-2. Vérifier CLAUDE_INSTANCES.md pour réservations
-3. Logger intention dans CLAUDE_UPDATES.md
-4. Réserver tâche si nécessaire
-5. Commencer le travail
+1. **LECTURE COMPLÈTE** : Lire TOUS les .md (liste ci-dessus)
+2. **SCAN CONFLITS** : Vérifier marquages EN_COURS dans le code
+3. **VÉRIFICATION RÉFLEXIONS** : Checker CLAUDE_THOUGHTS.md pour doublons
+4. **RÉSERVATION** : Logger intention dans CLAUDE_UPDATES.md
+5. **MARQUAGE CODE** : Marquer "EN_COURS" si modification code
+6. **SI CONFLIT DÉTECTÉ** : SKIP automatiquement et chercher autre tâche
 
 ### 🔄 Pendant le travail
 1. Logger toutes les 15 minutes dans CLAUDE_UPDATES.md
-2. Mettre à jour progression dans CLAUDE_INSTANCES.md
-3. Documenter blocages immédiatement
-4. Demander aide si nécessaire
+2. Maintenir marquage "EN_COURS" dans le code
+3. Partager réflexions importantes dans CLAUDE_THOUGHTS.md
+4. Documenter blocages immédiatement
+5. Demander aide si nécessaire avec marquage "BESOIN_AIDE"
 
 ### ✅ Après le travail
-1. Logger résultat final dans CLAUDE_UPDATES.md
-2. Libérer réservation dans CLAUDE_INSTANCES.md
-3. Mettre à jour documentation concernée
-4. Documenter prochaines étapes
+1. **MARQUER "FINI"** dans le code
+2. Logger résultat final dans CLAUDE_UPDATES.md
+3. Libérer réservation dans CLAUDE_INSTANCES.md
+4. Mettre à jour documentation concernée
+5. Partager solutions dans CLAUDE_THOUGHTS.md
+
+### ❓ Si rien à faire
+1. **SCANNER** tous les .md pour nouvelles tâches
+2. **VÉRIFIER** s'il y a des "BESOIN_AIDE" à traiter
+3. **CHERCHER** tâches "FINI" à améliorer
+4. **SI VRAIMENT RIEN** : Demander à Enzo "Que puis-je faire ?"
 
 ---
 
@@ -293,9 +320,9 @@ git status && git add . && git commit -m "Instance #X: [description]"
 ---
 
 ## 🔄 Dernière mise à jour
-**Date** : 2025-01-17 - 18:05
+**Date** : 2025-01-17 - 18:12
 **Par** : Instance #2 (Claude)
-**Action** : Création configuration complète multi-instances
+**Action** : Ajout synchronisation automatique complète - Lecture tous .md avant chaque réponse + marquage code obligatoire
 
 ---
 
