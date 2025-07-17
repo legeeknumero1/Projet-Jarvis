@@ -15,6 +15,9 @@ Ensuite, vous DEVEZ consulter TOUS les fichiers de documentation dans le dossier
 Tous les fichiers .md de documentation se trouvent dans ce dossier :
 
 - **`CLAUDE_PARAMS.md`** - ⚠️ PARAMÈTRES PRIORITAIRES (LIRE EN PREMIER)
+- **`CLAUDE_CONFIG.md`** - 🤖 CONFIGURATION MULTI-INSTANCES (ATTRIBUTION NUMÉROS + PARAMÈTRES)
+- **`CLAUDE_UPDATES.md`** - 📝 LOG TEMPS RÉEL TOUTES INSTANCES (OBLIGATOIRE À JOUR)
+- **`CLAUDE_INSTANCES.md`** - 🤖 COORDINATION MULTI-INSTANCES (RÉSERVATIONS + HANDOVER)
 - **`CLAUDE.md`** - Instructions permanentes pour Claude
 - **`BUGS.md`** - Liste complète des bugs (passés, présents, futurs)
 - **`README.md`** - Documentation principale du projet
@@ -26,11 +29,15 @@ Tous les fichiers .md de documentation se trouvent dans ce dossier :
 ## 🔄 Workflow obligatoire
 
 1. **TOUJOURS** lire `/docs/CLAUDE_PARAMS.md` EN PREMIER ABSOLU
-2. **TOUJOURS** lire `/docs/CLAUDE.md` pour les instructions techniques
-3. **TOUJOURS** consulter `/docs/BUGS.md` pour les problèmes connus
-4. **TOUJOURS** vérifier `/docs/README.md` pour le contexte
-5. Consulter les autres fichiers selon le besoin
-6. Mettre à jour la documentation après chaque action
+2. **SI MULTI-INSTANCES** lire `/docs/CLAUDE_CONFIG.md` pour attribution numéro + config
+3. **SI MULTI-INSTANCES** lire `/docs/CLAUDE_UPDATES.md` pour voir activité temps réel
+4. **SI MULTI-INSTANCES** lire `/docs/CLAUDE_INSTANCES.md` pour coordination/réservations
+5. **TOUJOURS** lire `/docs/CLAUDE.md` pour les instructions techniques
+6. **TOUJOURS** consulter `/docs/BUGS.md` pour les problèmes connus
+7. **TOUJOURS** vérifier `/docs/README.md` pour le contexte
+8. Consulter les autres fichiers selon le besoin
+9. **OBLIGATOIRE** : Logger TOUTES les actions dans `/docs/CLAUDE_UPDATES.md`
+10. Mettre à jour la documentation après chaque action
 
 ## 📝 Règles de documentation STRICTES
 

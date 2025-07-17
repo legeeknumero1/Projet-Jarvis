@@ -11,12 +11,12 @@
 ---
 
 ## 📊 Résumé actuel
-- **Total bugs** : 3
+- **Total bugs** : 6
 - **Critiques** : 0
 - **Urgents** : 0
-- **Normaux** : 0
+- **Normaux** : 3
 - **Résolus** : 3
-- **En cours** : 0
+- **En cours** : 3
 
 ---
 
@@ -73,6 +73,51 @@
 
 ---
 
+### BUG-004 - Dépendances audio manquantes
+**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Découvert** : 2025-01-17 - 18:30
+**Résolu** : N/A
+**Description** : 
+- `soundfile` et `pydub` non installés dans l'environnement virtuel
+- Fonctionnalités audio limitées (conversion, normalisation)
+- TTS Piper partiellement fonctionnel
+
+**Impact** : Fonctionnalités audio avancées non disponibles
+**Solution** : Installer les dépendances manquantes : `pip install soundfile pydub`
+**Prochaine étape** : Installation des packages audio complets
+
+---
+
+### BUG-005 - sentence-transformers manquant
+**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Découvert** : 2025-01-17 - 18:30
+**Résolu** : N/A
+**Description** : 
+- Module `sentence-transformers` non installé
+- Système d'embeddings désactivé temporairement
+- Recherche de mémoire limitée au texte simple
+
+**Impact** : Mémoire vectorielle non fonctionnelle
+**Solution** : Installer sentence-transformers et réactiver les embeddings
+**Prochaine étape** : `pip install sentence-transformers`
+
+---
+
+### BUG-006 - FastAPI deprecated warnings
+**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Découvert** : 2025-01-17 - 18:30
+**Résolu** : N/A
+**Description** : 
+- Warnings de dépréciation `on_event` dans FastAPI
+- Nouvelle API `lifespan` recommandée
+- Fonctionnalité toujours opérationnelle
+
+**Impact** : Cosmétique, pas d'impact fonctionnel
+**Solution** : Migrer vers la nouvelle API lifespan de FastAPI
+**Prochaine étape** : Refactoring des event handlers
+
+---
+
 ## 📝 Template pour nouveaux bugs
 
 ```markdown
@@ -104,6 +149,6 @@
 ---
 
 ## 🔄 Dernière mise à jour
-**Date** : 2025-01-17 - 17:35
+**Date** : 2025-01-17 - 18:30
 **Par** : Claude
-**Action** : Résolution complète des 3 bugs critiques - Tous les composants principaux fonctionnels
+**Action** : Ajout de 3 nouveaux bugs non critiques - Système fonctionnel mais améliorations possibles

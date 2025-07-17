@@ -7,8 +7,12 @@ import httpx
 class OllamaClient:
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
-        self.client = httpx.AsyncClient(timeout=120.0)
+        self.client = None
         self.logger = logging.getLogger(__name__)
+    
+    async def _ensure_client(self):
+        if self.client is None:
+            self.client = httpx.AsyncClient(timeout=120.0)
     
     async def __aenter__(self):
         return self
@@ -19,6 +23,7 @@ class OllamaClient:
     async def is_available(self) -> bool:
         """Vérifie si Ollama est disponible"""
         try:
+            await self._ensure_client()
             response = await self.client.get(f"{self.base_url}/api/version")
             return response.status_code == 200
         except Exception as e:
@@ -28,6 +33,7 @@ class OllamaClient:
     async def list_models(self) -> List[Dict[str, Any]]:
         """Liste les modèles disponibles"""
         try:
+            await self._ensure_client()
             response = await self.client.get(f"{self.base_url}/api/tags")
             if response.status_code == 200:
                 data = response.json()
@@ -42,6 +48,7 @@ class OllamaClient:
     async def pull_model(self, model_name: str) -> bool:
         """Télécharge un modèle"""
         try:
+            await self._ensure_client()
             self.logger.info(f"Starting to pull model: {model_name}")
             
             async with self.client.stream(
@@ -82,6 +89,7 @@ class OllamaClient:
     ) -> Optional[str]:
         """Génère une réponse avec le modèle"""
         try:
+            await self._ensure_client()
             payload = {
                 "model": model,
                 "prompt": prompt,
@@ -123,6 +131,7 @@ class OllamaClient:
     ) -> Optional[str]:
         """Interface de chat avec historique"""
         try:
+            await self._ensure_client()
             payload = {
                 "model": model,
                 "messages": messages,

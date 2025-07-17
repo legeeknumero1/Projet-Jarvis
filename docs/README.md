@@ -151,15 +151,20 @@ Configurez votre token et URL Home Assistant dans `.env` pour l'intégration dom
 - [x] Architecture modulaire
 - [x] Configuration Docker
 - [x] Base de données PostgreSQL
-- [x] Intégration Ollama
+- [x] Intégration Ollama avec LLaMA 3.1
 - [x] Gestion des profils utilisateurs
 - [x] Système de mémoire vectorielle
+- [x] Reconnaissance vocale Whisper (backend)
+- [x] API endpoints vocaux (/voice/transcribe, /voice/synthesize)
+- [x] Interface vocale React (Speech Recognition API)
+- [x] Chat en temps réel avec WebSocket
+- [x] Synthèse vocale Piper (backend, partiellement)
 
 ### 🔄 En cours
-- [ ] Reconnaissance vocale Whisper
-- [ ] Synthèse vocale Piper
-- [ ] Intégration Home Assistant
-- [ ] Système de plugins
+- [ ] Intégration Home Assistant complète
+- [ ] Système de plugins/modules
+- [ ] Amélioration de la synthèse vocale
+- [ ] Installation complète des dépendances audio
 
 ### 📋 Planifiées
 - [ ] Reconnaissance de contexte ambiant
