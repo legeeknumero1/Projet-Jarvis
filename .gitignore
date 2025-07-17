@@ -1,85 +1,178 @@
-# Projet Jarvis - .gitignore
+# Jarvis V1 - Fichiers à ignorer
 
-# Python
+# Environnements Python
+backend/venv/
+backend/env/
+backend/.env
+backend/.venv
+services/*/venv/
+services/*/env/
+services/*/.env
+services/*/.venv
+
+# Fichiers Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Node.js
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Base de données
+*.db
+*.sqlite
+*.sqlite3
+data/postgres/
+data/redis/
+
+# Modèles IA
+models/
+*.model
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# Fichiers de configuration sensibles
+config/secrets.py
+config/keys.py
+.env
+.env.local
+.env.production
+.env.staging
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Ollama
+.ollama/
+ollama_data/
+
+# Mémoire et cache
+memory/
+cache/
+*.cache
+
+# Certificats et clés
+*.key
+*.pem
+*.crt
+*.cert
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+*.old
+
+# Fichiers de test
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-backend/venv/
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.npm
-.yarn-integrity
-frontend/node_modules/
-frontend/build/
+# Spyder project settings
+.spyderproject
+.spyproject
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Rope project settings
+.ropeproject
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# mkdocs documentation
+/site
 
-# Logs
-logs/
-*.log
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Database
-*.db
-*.sqlite3
-
-# Docker
-.dockerignore
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Models et données
-models/
-data/private/
-*.model
-*.pkl
-
-# Temporaires
-tmp/
-temp/
-*.tmp
-*.temp
-
-# Secrets
-*.key
-*.pem
-*.crt
-config/secrets.json
-
-# Coverage
-coverage/
-*.cover
-.coverage
-
-# Build
-build/
-dist/
+# Pyre type checker
+.pyre/

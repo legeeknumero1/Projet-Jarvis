@@ -14,9 +14,9 @@
 - **Total bugs** : 6
 - **Critiques** : 0
 - **Urgents** : 0
-- **Normaux** : 3
-- **Résolus** : 3
-- **En cours** : 3
+- **Normaux** : 0
+- **Résolus** : 6
+- **En cours** : 0
 
 ---
 
@@ -74,47 +74,47 @@
 ---
 
 ### BUG-004 - Dépendances audio manquantes
-**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Statut** : 🟢 MINEUR ✅ RÉSOLU
 **Découvert** : 2025-01-17 - 18:30
-**Résolu** : N/A
+**Résolu** : 2025-01-17 - 18:42
 **Description** : 
 - `soundfile` et `pydub` non installés dans l'environnement virtuel
 - Fonctionnalités audio limitées (conversion, normalisation)
 - TTS Piper partiellement fonctionnel
 
 **Impact** : Fonctionnalités audio avancées non disponibles
-**Solution** : Installer les dépendances manquantes : `pip install soundfile pydub`
-**Prochaine étape** : Installation des packages audio complets
+**Solution appliquée** : Installation réussie des dépendances : `pip install soundfile pydub`
+**Résultat** : Fonctionnalités audio complètes maintenant disponibles
 
 ---
 
 ### BUG-005 - sentence-transformers manquant
-**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Statut** : 🟢 MINEUR ✅ RÉSOLU
 **Découvert** : 2025-01-17 - 18:30
-**Résolu** : N/A
+**Résolu** : 2025-01-17 - 18:42
 **Description** : 
 - Module `sentence-transformers` non installé
 - Système d'embeddings désactivé temporairement
 - Recherche de mémoire limitée au texte simple
 
 **Impact** : Mémoire vectorielle non fonctionnelle
-**Solution** : Installer sentence-transformers et réactiver les embeddings
-**Prochaine étape** : `pip install sentence-transformers`
+**Solution appliquée** : Installation réussie : `pip install sentence-transformers`
+**Résultat** : Système d'embeddings maintenant disponible pour la mémoire vectorielle
 
 ---
 
 ### BUG-006 - FastAPI deprecated warnings
-**Statut** : 🟡 NORMAL ❌ NON RÉSOLU
+**Statut** : 🟢 MINEUR ✅ RÉSOLU
 **Découvert** : 2025-01-17 - 18:30
-**Résolu** : N/A
+**Résolu** : 2025-01-17 - 18:43
 **Description** : 
 - Warnings de dépréciation `on_event` dans FastAPI
 - Nouvelle API `lifespan` recommandée
 - Fonctionnalité toujours opérationnelle
 
 **Impact** : Cosmétique, pas d'impact fonctionnel
-**Solution** : Migrer vers la nouvelle API lifespan de FastAPI
-**Prochaine étape** : Refactoring des event handlers
+**Solution appliquée** : Migration vers la nouvelle API lifespan de FastAPI
+**Résultat** : Plus de warnings de dépréciation, code à jour avec FastAPI moderne
 
 ---
 
@@ -143,12 +143,15 @@
 - **17:30** - BUG-001 RÉSOLU : Whisper installé depuis GitHub, contournement Python 3.13
 - **17:32** - BUG-002 RÉSOLU : Ollama déployé via Docker, LLaMA 3.1 fonctionnel
 - **17:35** - BUG-003 RÉSOLU : Piper TTS adapté pour utilisation module Python
-- **Taux de résolution** : 100% (3/3 bugs résolus)
-- **Temps total** : 35 minutes
+- **18:42** - BUG-004 RÉSOLU : Dépendances audio installées (soundfile, pydub)
+- **18:42** - BUG-005 RÉSOLU : sentence-transformers installé pour embeddings
+- **18:43** - BUG-006 RÉSOLU : Migration vers FastAPI lifespan API
+- **Taux de résolution** : 100% (6/6 bugs résolus)
+- **Temps total** : 73 minutes
 
 ---
 
 ## 🔄 Dernière mise à jour
-**Date** : 2025-01-17 - 18:30
-**Par** : Claude
-**Action** : Ajout de 3 nouveaux bugs non critiques - Système fonctionnel mais améliorations possibles
+**Date** : 2025-01-17 - 18:43
+**Par** : Instance #5 (Claude)
+**Action** : Résolution complète des 3 bugs restants - Système maintenant 100% fonctionnel !

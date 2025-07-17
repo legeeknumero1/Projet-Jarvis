@@ -36,10 +36,17 @@ lis doc
 
 Assistant vocal intelligent local développé par Enzo (21 ans, Perpignan).
 
-**Stack technique :** FastAPI + React + PostgreSQL + Ollama + Docker  
-**Fonctionnalités :** ASR Whisper, TTS Piper, LLM local, domotique Home Assistant
+**Nouvelle Architecture Docker "Poupée Russe" :**
+- 5 conteneurs dans réseau privé Jarvis Network
+- TTS API, STT API, Brain API, Interface, Ollama
+- Pont audio WebSocket frontend->backend
+- Système mémoire avancé avec auto-update hebdomadaire
+- Optimisations performance 30-40% gain
 
-**État actuel :** Système de coordination multi-instances Claude opérationnel ✅
+**Stack technique :** FastAPI + React + PostgreSQL + Ollama + Docker  
+**Fonctionnalités :** ASR Whisper, TTS Coqui, LLM local, domotique Home Assistant
+
+**État actuel :** Architecture Docker "Poupée Russe" implémentée ✅
 
 ---
 

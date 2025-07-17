@@ -1,0 +1,730 @@
+Avant de vous parler d'amélioration, de
+lignes de code ou de sophistication,
+laissez-moi dissiper les doutes, lever
+les hésitations. Avant de montrer les
+machine, parlons de l'attention. Avant
+de dévoiler le fruit, partageons la
+passion. Bonjour, Initium, enchanté. Je
+suis ingénieur, je suis bâtisseur. Je
+m'essaie à devenir un artisan du futur.
+Je ne bricole pas, je structure. Je
+n'exécute pas, je conçois. Je suis de
+ceux qui rêvent en langage binaire et
+transforment le vie en lumière. Je code
+l'invisible, je domte l'éphémère. Je
+mets de l'ordre dans le chaos, du feu
+dans la matière. J'assemble des mots qui
+deviennent des échos, qui deviennent du
+code, qui deviennent des mondes
+nouveaux. Je connais des neurones non
+pas humains mais bien artificiels et je
+cherche dans leur circuit une étincelle.
+Je ne suis pas l'élève de la
+technologie. Je suis l'élan, la folie,
+la poésie. Je marche sur un fil entre
+rêve et réalisable, là où l'impossible
+devient envisageable. Et si vous me
+suivez dans cette ascension, sachez-le,
+ce n'est pas un projet, c'est une
+vision. Pas un service, pas un plan
+d'abonnement, mais un laboratoire
+vivant, un rêve brouillonnant. Mon
+Jarvis, un assistant né dans l'ombre
+pour servir dans la clarté, local
+autonome sans nuage à consulter. Je ne
+l'ai pas conçu pour séduire les masses.
+Je l'ai bâtis pour qu'il m'embrasse.
+Dans ma quête d'efficacité de silence de
+place dans cette danse entre homme et
+machine sans grimace. Cela fait plus
+d'un an que je marche dans cette
+direction. Un an d'effort, de nuit
+blanche, de correction, un an à voir ce
+rêve évoluer, un an à douter, mais à ne
+jamais plier. Je ne cherche pas à être
+applaudi. Je veux juste transmettre
+cette envie. Créer, forger, tenter
+l'inédit, faire jaillir l'espoir dans
+l'infini. Je veux inspirer, faire rêver,
+faire lever les idées que l'on croyait
+enterrer. Pas pour copier, pas pour
+cloner, mais pour allumer en chacun une
+voix inventée. Mais alors vient la
+question, celle que certains poseront.
+Où est le code ? Où sont les fondations
+? Ce projet si ce Jarvis là, celui que
+je façonne pas à pas, il ne sera pas
+libre, pas ouvert, pas public, pas par
+ego, pas par logique, mais parce qu'il
+est encore en construction, en tension,
+en devenir et que parfois pour bâtir, il
+faut aussi savoir retenir. Mais je n'ai
+jamais fermé toutes les portes loin de
+là. J'ai tendu les clés et j'entends
+toujours, croyez-moi, avec luxe du code
+open source, une base pour ceux qui
+veulent créer leur voix avec Louen, à
+premier pas, un assistant déjà là. Oui,
+ces projets datent un peu mais il
+témoigne de ce que je veux. Donner de
+l'élan, ouvrir des pistes, allumer chez
+vous cette flamme d'artiste.
+Aujourd'hui, je trace un chemin porteur
+de vision. Non pour plaire, mais pour
+semer l'ambition, pas pour que l'on me
+suive à la lettre ou en miroir, mais
+pour donner à chacun l'élant d'y croire.
+Peu importe le domaine, le projet, la
+mission. Si cela élève l'humain, alors
+j'ai rempli ma raison. Ce qui nous
+différencie de la machine, ce ni la
+force, ni la routine, ce grain d'âme,
+cette folie douce, cette flamme divine.
+Pour ce projet, peut-être que je rêve
+trop grand, peut-être que je cours après
+le vent, mais dites-moi, quelle est la
+taille d'un rêve ? Quel est le poids
+d'un enfant qui croit encore que l'on
+peut bâtir autrement ? Moi, je ne suis
+qu'un homme ou plutôt un petit garçon
+qui murmure au monde de sa vision et qui
+vous montre maintenant le fruit vivant
+de son ambition.
+Si je vous montre ça actuellement comme
+ça mon Jarvis, vous allez vous dire pour
+ceux qui ont vu ma dernière vidéo, si
+vous l'avez pas vu d'ailleurs, allez la
+voir évidemment parce que cette vidéo
+c'est la suite, c'est son amélioration.
+Bah là vous allez vous dire, il y a rien
+qui change en fait. D'abord, il faut
+savoir que j'ai fait une refonte
+complète de l'infrastructure et de
+l'architecture. Oui, pardon,
+excusez-moi.
+Voilà, donc je suis reparti sur des
+bonnes bases. Je suis reparti de zéro he
+globalement.
+Il a été repensé par Initium. Voici ma
+nouvelle version améliorée.
+Je vous propose de vous montrer sous
+forme de schéma. Vous savez, j'aime bien
+les schémas. J'en ai préparé pour vous
+dans cette vidéo, d'accord ? J'ai tout
+préparé. Alors, je vais essayer de
+vulgariser tout en parlant un peu du
+côté technique. Je vais essayer d'aller
+les deux pour que tout le monde puisse
+comprendre. L'ancienne architecture de
+Jarvis, c'est très simple. Tout était
+sur mon ordinateur. Donc, il y avait
+Olama, donc la partie serveur de LLM he
+pour faire les inférences avec les LLM,
+la partie TTS et STAPI, donc tex to
+speech et speech to text. Donc, ce qui
+permet de retranscrire la voix en texte
+et le texte en voix évidemment. Et il y
+avait encore à côté mon assistant avec
+donc le côté navigateur en 3D. Ça
+c'était pour pas la partie frontine, le
+côté backend du navigateur, il y avait
+donc là où je choisissais mon
+microphone, la détection des outils, la
+métacognition, la l'activation et cetera
+et cetera. Voilà, en gros ça c'était
+l'ancienne architecture et du coup il y
+avait une perte déjà de performance
+parce que forcément qui dit sur
+l'ordinateur dit vous avez quand même
+des tâches en fond qui vont renner, ça
+mange quand même de la mémoire. Ce qui
+serait super bien, ça serait que pour
+chaque système, on est un petit
+ordinateur en fait. Donc j'ai acheté
+plusieurs j'ai acheté chaque ordinateur.
+Voilà, j'ai non c'est une blague
+évidemment j'ai utilisé Docker. Alors là
+vous allez me dire qu'est-ce que Dour ?
+Laissez-moi vous retrouver le schéma
+pour vous expliquer un schéma évidemment
+que j'ai construit à la main que j'ai
+construit tout seul bien évidemment. Bon
+c'est vrai que je lui ai fait générer en
+anglais. D'accord. Pour ceux qui
+comprennent pas, qui savent pas trop ce
+que c'est dour, laissez-moi vous
+expliquer brièvement. Un conteneur,
+voyez ça comme un no comme un système
+d'exploitation. Each container is like a
+mini computer. Voilà. Bon, si vous
+voulez, je la refais. Container is like
+mini computer. OK. Avant, vous avez ce
+côté
+on en vient à la nouvelle. Ça ressemble
+à ça. On a un côté STT à payer en
+container, un TTS en container, unama en
+container, un brain attention, c'est
+nouveau ça en container et l'interface
+en container. Tout ça dans une stack de
+cœur. Et dedans, je l'ai tout mis sous
+un même réseau privé. Donc ici, bon
+Jarvis Network logique. Et là si vous
+regardez mon ordinateur, il est ici.
+Vous voyez bien que mon ordi n'est pas
+rattaché à ce système. Alors bon, en
+soit techniquement oui. Attendez,
+laissez-moi faire un pain. En soit mon
+ordi, lui ce qu'il fait, il run Docker.
+Donc l'application, qu'est-ce qui fait
+Docker exécutable ? Lui, il va run ma
+stack que j'ai ici. D'accord ? Ma stack
+Docker, qu'est-ce qu'elle va faire ?
+Elle va du coup tous ses containers et
+le réseau privé et cetera. Voilà, elle
+va il va run tout ça quoi globalement.
+Hop, attendez, bougez pas. Hop, je mets
+en rose parce qu'on est un peu girly
+ici. Hop, quand vous avez ce genre de
+système, vous vous dites "Trop cool,
+c'est génial, super." Déjà, je vous le
+dis droit dans les yeux. Je vais parler
+beaucoup, je pense, dans cette vidéo de
+performance de de ressources
+computationnelles puis qu'en gros, moi
+je run tout sur un ordinateur.
+D'ailleurs, si je pose les bases, j'ai
+une RTX 3060 avec 12 Go ce qui est pas
+incroyable non plus quand vous voulez
+faire de grosses infrastructures en IA.
+Et j'ai 32 Go de RAM, ce qui est pas non
+plus énorme quand vous souhaitez encore
+une fois faire de l'IA plus avancé. Donc
+en partant de ce principe, j'ai des
+ressources très limitées hein. Il y en a
+ils vont me dire "Ouais franchement
+c'est pas mal." Oui d'accord c'est c'est
+pas mal mais c'est encore une fois des
+ressources très limité. Si vous voulez
+faire des grosses archises hein, vous
+comparez ça à des serveurs de d'open a
+d'accord ? Euh ils ont des milliers de
+GPU, ils ont des achant 84 Go la GPU ou
+128 Go la GPU. Enfin là j'en ai 12, vous
+voyez le le rapport un peu
+disproportionné. Donc globalement
+comment on fait pour run tout ça en
+local ? en fait, c'est ça sur son petit
+ordinateur. Donc il y a vraiment un
+problème de ressources computationnelles
+et c'est un truc que j'ai beaucoup aimé
+en terme d'ingénierie parce que je suis
+très limité en soi et ça c'est le truc
+qui m'a poussé à vous allez voir faire
+toutes sortes de de petits tips que je
+suis plutôt content en terme de de
+performance. Le fait de passer sous
+Docker et faire cette architecture, vous
+avez une performance. J'ai gagné entre
+30 et 40 % de performance en plus. C'est
+c'est impressionnant. Ici ça runne
+beaucoup plus vite. Je vous donne un
+petit exemple plus factuel, on va dire.
+Avant quand je faisais un run de Jarvis
+sur mon ordinateur entre ma voix qui
+était retranscrite euh le LLM qui était
+exécuté, donc la partie cerveau
+métacognition et tout qui était exécuté
+puis la partie action tool plus après la
+partie génération d'une voix synthétique
+via le texte qui a été généré tout
+l'infrain en fait ça prenait en moyenne
+entre 10 voir 20 secondes et ça
+dépendait aussi des processus que
+j'avais en fond sur mon ordinateur avec
+Docker. J'arrive à avoir un processus
+qui run en moins de 5 secondes en
+moyenne, ce qui est énorme.
+Des fois quand vas-y, il est pas très
+content, on peut être à 7 secondes,
+d'accord, mais grand maximum et c'est
+énorme.
+Entre 5 et 7 secondes pour genre de
+matos, c'est cool. C'est cool. Mais bon,
+il y a pas que ça comme optimisation.
+Mais le fait de poser les fondations et
+l'infrastructure de base sur du docker
+comme ça, de le construire comme ça,
+déjà c'est plus mat, plus sécurisé et
+cetera et en plus il y a cette qualité
+de performance et en plus ça peut être
+déployé sur un serveur aussi. C'est ça
+qui est qui est cool. Mais il y a un
+souci dans tout ça, c'est que donc ça
+c'est mes ordinateurs, d'accord ? Sauf
+que mon ordi, il est ici. Mon volume et
+mon micro, tout ça là, c'est sur mon
+ordinateur ici. Le souci, c'est vu que
+ça c'est à chaque fois c'est des
+conteneurs, c'est c'est des c'est des OS
+différents, ils ont pas de micro, ils
+ont pas de de de speakers d'enceinte.
+Voilà. Bah ça c'est un souci, c'est
+c'est un problème pour la partie ici
+génération de l'audio. Bah l'audio va
+être généré ici mais va pas être généré
+dans mon ordi, donc je vais jamais
+l'entendre. va être bloqué dans le dans
+le conteneur, dans cet ordinateur
+interne. Et pareil pour le le micro ici,
+pour transformer ma voix en texte, il
+faut un micro pour détecter ma voix.
+Sauf que le micro, bah il y a pas de
+micro là parce que c'est complètement
+séparé. Vous allez vous dire "Bah oui,
+mais mais connecte un micro sur ton
+conteneur, ça marche pas comme ça."
+Voilà. Donc qu'est-ce qu'on fait dans
+cette situation ?
+Dans cette situation,
+on va faire un pont entre un conteneur
+ici, donc mon interface puisque ça va
+être l'entrée client et ici, ça va être
+son navigateur. On va faire un pont. Ça
+se voit que c'est le P San Francisco. Ah
+pardon, pardon, excusez-moi, il est pas
+rouge. En sachant qu'un qu'un navigateur
+que ici l'application web que j'ai fait,
+elle a un avantage. Il y a le front end,
+c'est ce que vous voyez ici, c'est la
+partie client et la partie back end et
+derrière le backend, c'est le côté
+serveur, le front end c'est le côté
+client. Voilà. Et donc grâce à ça, on va
+pouvoir faire un pont puisque le
+frontend va être envoyé sur mon ordi.
+Donc moi, sur mon ordi, j'ai accès donc
+à l'interface he comme vous l'avez vu le
+le la petite boule là qui tourne. Voilà,
+c'est mon front end. Et quand je vais
+interagir avec le frontend, quand je
+vais activer mon micro, connecter voilà
+les enceintes et tout sur le côté
+frontend, ça va être envoyé à mon
+backend, donc ici au backend de
+l'interface là. Et grâce à ce backend,
+mon micro il sera du coup envoyé ici.
+Mes enceintes aussi entre guillemets.
+Voilà. Tac. Et c'est super d'ailleurs
+puisque là mon micro et mon flux audio,
+il sera dans ce conteneur là. Et ce
+conteneur là, il est où ? Bah, il est
+dans la stack, il est dans le dans le
+network ici. Donc ce conteneurlà, il a
+accès à quoi ? Et ben il a accès à tout
+ça. J'ai juste à lui dire écoute mon
+coco, maintenant que mon micro et que
+mes enceintes et tout ils sont envoyés
+dans le conteneur là et bah tu me le
+bascules ici pour générer la voie. Donc
+ça hop la voix va être envoyée ici et tu
+me bascules mon micro là-dedans. C'est
+comme ça qu'on peut répartir et qu'on
+peut résoudre ce problème. Sauf que bon,
+c'est encore un peu plus compliqué que
+ça. Vous me permettez une tout petite
+aparté technique, une tout petite
+légère.
+C'est un mythique passif mythique qui
+donne de la [ __ ] magique. Donc en gros ça
+donne 6 de P magique flat.
+Je voulais faire un flu streaming comme
+fait un peu près Twitch et en gros faire
+du streaming auditif. Donc en gros comme
+ça toute la partie génération audio se
+génère en fait dans mon conteneur. Ici
+mon TTS donc ici qui va qui va générer
+ma voix synthétique, elle génère mes
+fichiers donc mes chunk audio et en fait
+elle le lise en streaming un peu donc
+comme Twitch directement à mon interface
+qui lui donc encore une fois va
+répliquer sur mon ordinateur via donc
+mon navigateur web puisque je vous ai
+dit qu'il y avait un pont ici évidemment
+voilà petit pont surtout qu'en plus bah
+il y a les fréquences auditives parce
+que bah ma sphère elle bouge selon les
+fréquences auditives et il faut que ça
+soit donc parallélisé. C'est pour ça
+qu'en fait, j'ai utilisé des web socket
+pour justement gérer ce flux audio en
+streaming. Donc on appelle ça des web
+sockets. On ouvre un web socket et c'est
+un pont audio qui permet en fait de lire
+ici. Donc j'ai fait deux ponts audio. Un
+pont pour les fréquences et un pont pour
+l'audio. Donc là ce qui est cool c'est
+que bon évidemment là si si le run bah
+ça fait comme dans ma vidéo que je vous
+ai présenté à l'époque.
+Personne ne voit le changement en NDR.
+Rter si tu triste.
+La première vidéo la Jarvis que j'ai
+présenté la dernière fois. Nickel le son
+il est nickel sauf que tout a changé
+littéralement puisqueavant c'était
+simple. J'avais juste à le run sur mon
+ordi, le son sortait de mon ordinateur,
+donc je générais mon fichier audio puis
+je le lisais sur mon ordi. C'était
+simple, sauf que là non, là c'est comme
+si on avait un serveur à part puisque
+Docker c'est ça. Et donc faut tout gérer
+ce truc de process audio pour atterrir
+sur l'interface de de l'utilisateur. Ce
+qui me permet demain si je prends mon
+téléphone portable, bah je peux déployer
+sur un serveur externe, un VPS ou voilà
+et je peux me connecter sur mon
+téléphone au serveur donc à l'interface,
+connecter mon micro, parler de mon
+téléphone. tant que je suis connecté à
+mon serveur externe, je peux parler à
+mon interface et donc mon JVIS va me
+répondre et l'audio va être généré sur
+mon téléphone. Ça c'est la grande
+nouveauté. Ce qui je pense Iron Man Star
+techniquement fonctionne je pense pareil
+puisque bah il parle dans son armure et
+cetera. Donc je pense qu'il a aussi géré
+ce système sauf qu'il a des serveurs,
+beaucoup de serveurs, beaucoup trop de
+serveurs, des satellites aussi mais bon.
+Ensuite maintenant alors attendez parce
+que j'ai des notes en même temps pour
+vous parler. J'ai noté amélioration TTS
+donc le texte to speed justement l'audio
+chunk tex qualité de voix synthétique
+moins d'hallucination modèle clonage de
+voix. Oui oui parce que j'utilise un
+modèle de clonage de voix. J'utilise ici
+coqui TTS qui est vraiment pas mal. Et
+en fait le souci que j'avais au début
+c'était que je lui faisait générer des
+grosses parties de texte. Je faisais
+générer 4 5 6 des fois sep phrases. Donc
+c'était très long. Et en fait le modèle
+j'ai remarqué qu'il était entraîné à
+lire à chaque fois des phrases des des
+petites séquences. Donc ça ça fait que
+le modèle allait halluciner. Et les
+administrations auditives, ça fait du
+style
+voilà globalement pourquoi parce que
+tout simplement bah ça fait des
+fréquences audio. Il se perd, il
+hallucide et il génère un peu des
+fréquences audio n'importe comment et
+donc ça fait des trucs chelous très
+étranges. Donc c'est pour ça j'ai
+amélioré la qualité en lui faisant
+générer des chunks et juste des phrases.
+Donc tu fais générer phrase par phrase,
+donc fichier audio de phrase par phrase,
+morceau par morceau. Et en plus, vu
+qu'ici moi j'utilise donc du streaming,
+moi je commence à lire dès qu'il y a un
+fichier audio qui a été détecté. Bah le
+fichier audio, il est directement
+détecté puisqu'il a généré qu'une petite
+phrase. Donc il génère plein de fichiers
+audio. J'ai pas besoin d'attendre qu'il
+me génère à chaque fois un fichier audio
+qui va me lire h phrases. Vous voyez ce
+que je veux dire ? Donc je gagne
+énormément de temps. Ce qui fait que ça
+peut en moins de 5 secondes tout mon
+process peut run seulement sur une RTX
+12 Go et 32 Go de RAM, ce qui encore une
+fois, je répète n'est pas beaucoup.
+Évidemment, je vous passe aussi toute la
+partie optimisation de génération et
+cetera. Voilà, il y a il y a plein de
+choses à faire avec le modèle. j'estime
+l'avoir vraiment pas mal optimisé,
+peut-être qu'il y a encore plus à faire,
+mais ça me permet du coup de d'avoir ce
+gain de performance tout en économisant
+aussi des ressources. Écoutez-moi bien,
+on arrive à ma partie préférée. Je suis
+trop content de ça. Déjà, dites-moi ce
+que vous en pensez dans les commentaires
+jusque là pour ceux qui sont arrivés là.
+Merci, ça fait plaisir, merci du
+soutien. Abonnez-vous, likez, partagez
+et tout si vous appréciez. Voilà, petit
+moment YouTubeur. Mais on arrive
+vraiment à ma partie préférée. Vraiment,
+c'est incroyable. Je je vous le dis.
+C'est ou le problème que que j'avais à
+l'époque, c'était que dans mon interface
+de Jarvis, dans la partie donc
+navigateur et tout, j'avais mis Jarvis
+dedans. Tout était dans dans
+l'interface. Problème, ça ralentit
+l'interface, ça ralentit le navigateur
+de tout mettre dedans. C'est plus
+compliqué que ça soit maintenable et
+tout. Moi, j'aimerais bien séparer les
+choses. D'ailleurs, c'est la doctrine de
+Docker. Bien séparer les choses. Vu que
+maintenant j'ai bien mon serveur DIIA,
+bien mon STT, bien mon TTS, bien mon
+interface, maintenant j'ai bien mon
+brain. Et vous l'avez vu je pense dans
+le schéma. C'est vrai que je l'avais
+mis. Pourquoi je parle de cerveau ?
+Pourquoi j'ai appelé ça brain API ? Ben
+en fait c'est un cerveau. Pourquoi ?
+parce que dedans, j'ai intégré plusieurs
+choses. On a la partie M pour la
+métacognition. Je reviendrai après parce
+que pareil, je l'ai retravaillé qui
+permet de se dire que j'arvist entre
+guillemets que le cerveau se dise
+"Attends, est-ce qu'il parle à moi ? Il
+parle à quelqu'un d'autre et est-ce que
+c'est cohérent ?" Le petit A avec le
+système agentique avec donc bah les
+différentes tools, hein, voilà les T
+donc les tools d'activation et surtout
+la mm pour la memory. Voilà globalement
+ce qu'on a dans ce brain API. On va
+faire un à un si vous le voulez bien.
+Pour la partie métacognition que j'ai
+intégré dedans, j'ai amélioré le
+système. En gros, à l'époque que je
+faisais, je passais à chaque fois
+quasiment tout le temps dans un LM et je
+lui disais "Attends, est-ce que
+l'utilisateur parle vraiment à toi ?
+Voici le prom, voici l'historique de la
+conversation, est-ce que tu estimes
+qu'il te parle à toi ?" Et du coup, à
+chaque fois ça ça renait à l'M. Le
+problème, c'est que quand je fais en
+fait, ça génère une hallucination et mon
+modèle de speech to text, il génère
+souvent les mêmes hallucinations puisque
+bah il sait pas ce qu'il dit. Donc il va
+générer thanks you, il va générer OK, il
+va générer des mots des fois qui on
+aucun sens mais il va générer à chaque
+fois toujours les mêmes mots
+d'hallucination. Du coup au lieu
+d'activer un LM pour ça, économie de
+ressources computationnelles comme je
+l'ai dit, on va tout simplement mettre
+une fonction, un algorithme prédéfini,
+voilà, de base qui va détecter les mots
+et qui va dire bah attends, s'il met
+fengu s met s'il met certains mots
+d'hallucination qui sont toujours les
+mêmes, automatiquement ça active pas et
+on passe pas via la métacognition via du
+LLM. Juste on fait un return non paf, on
+s'active pas. Point. Ensuite, on met un
+deuxième filtre, c'est si c'est pas par
+exemple en alphabet latin parce que des
+fois le modèle de hallucine, il va
+générer du cyrilque, va générer du
+chinois, va générer voilà grâce à ça on
+fait un deuxième filtre. On dit "Bah
+écoute, si c'est pas de l'alphabet
+latin, tu pareil tu te sais que il est
+halluciné, ça a pas de sens." Surtout
+que moi avec mon Jarvis, je parle soit
+en anglais, soit en français. Donc il y
+a pas il y a pas d'autres langues. Donc
+dans ce cas-là, bah hop, si c'est pas du
+lata, pareil, tu filtres, on enlève et
+donc je fais des précouches comme ça qui
+permet d'éviter d'activer le LLM de
+métognition. Une fois que bon tous ces
+filtres sont passés, dans ce cas-là, il
+va activer ce LLM de métacognition qui
+va donc avoir un petit LLM qui va se
+dire "Attends euh donc voici le prom,
+voici l'historique, euh est-ce que c'est
+cohérent ? Est-ce qu'il parle à moins ?"
+Après la métacognition vient l'agent. Il
+faut savoir qu'à l'époque, on va
+repasser sur un petit schéma si vous le
+voulez bien. Il y avait la configuration
+de l'assistant. L'assistant a été
+utilisé ici via le le menu. Il y avait
+une base de données vectorielle qui
+permettait via un rag de faire une
+similarité entre le prom du chatter et
+les descriptions des outils. Si c'était
+similaire, alors ça allait déclencher
+des outils ici. Si ce n'était pas, ça
+allait appeler tout simplement unem
+classique. J'ai complètement dégagé tout
+ce que je vous ai présenté en système
+similarité de vecteur, voilà, rag et
+tout, j'ai tout dégagé pouf poubelle et
+je suis passé sur un système agentique.
+J'ai créé donc un agent qui va
+déclencher lui-même des outils puisque
+maintenant il y a des agents. Ça c'est
+un peu la c'est un peu la mode 2025
+aussi mais en même temps ça commence à
+être mature et pas mal. Je mets
+directement dans son contexte dans son
+système prom dans son système interne,
+je lui dis voilà tu as accès à cet
+outil, cet outil, cet outil, cet outil.
+Je lui plog les outils et je lui dis
+voilà tu déclenches quand tu estimes que
+il y a besoin. Et ça c'est extrêmement
+puissant. Et surtout que j'ai fait ça en
+agent react, c'est-à-dire en gros, il
+peut déclencher un outil. Si demain je
+lui dis il est quelle heure et on est
+quelle date ? à l'époque avec mon mon
+rag soit il allait donner une date soit
+il a donné l'heure c'est tout ou il
+allait crash j'allais pas trop
+comprendre là maintenant Rax qui va
+faire mon agent il va d'abord déclencher
+l'heure il va revenir dans dans dans
+système agentique orchestrateur il va
+dire attends ok maintenant j'ai récupéré
+l'heure. Ah mais attends l'utilisateur
+il veut aussi la date déclencher un
+outil de date. Il va avoir la date
+l'heure et ensuite il va se redéclencher
+somme le lundi 14 juillet 2025 à 1257.
+Générer la réponse avec l'heure et la
+date et vous le donnez. C'est hyper
+puissant. Ça me permet vraiment d'avoir
+un outil intelligent, d'avoir vraiment
+un agent vraiment intelligent. Et
+ensuite, dernière chose, ce système là
+que j'ai intégré, le système de la
+mémoire maintenant. Il a deux types de
+mémoire. Il y a la mémoire statique et
+la mémoire dynamique. Alors pour
+l'instant, comment j'ai géré ça ? Vous
+pouvez le retrouver ici dans le front
+directement. Ici, j'ai intégré un petit
+menu pour l'instant. Hop, où il y a ma
+mémoire statique et il y a ma mémoire
+dynamique qui permet voilà de l'ouvrir
+et d'avoir la mémoire dynamique. Alors
+ici, je l'ai pas encore utilisé assez de
+temps pour générer une mémoire
+dynamique, vous allez voir. Mais ici,
+j'ai une mémoire statique par exemple
+qui a déjà été enregistrée parce que je
+lui ai parlé là juste ici. Ça ce n'est
+pas un langage de programmation. Hop,
+voilà. Mais après ça, je peux le
+modifier justement pour ça. Et comment
+ça fonctionne ? Du coup, tout simplement
+quand je vais lancer la première fois
+mon Jarvis et ben en fait il va me poser
+une question. Donc ça, je l'ai mis
+automatiquement. C'est la première
+question que tu poses.
+Pour personnaliser ton expérience,
+peux-tu te présenter en quelques phrases
+? Indique ton prénom ou pseudo, ton âge,
+ce que tu aimes, tes centre d'intérêts
+principaux et grands sujets qui
+t'intéressent ou qui t'importent le
+plus.
+Du coup, je vais lui dire bah voilà, je
+m'appelle Julien, je suis ingénieur en
+IA, j'ai déjà fait tel projet, j'aime
+bien c, j'aime bien ça. Tout ce que je
+peux dire de façon statique qui change
+pas de moi, de ma personne, je vais
+pouvoir lui donner et il va stocker
+cette mémoire statique. Mais surtout
+maintenant, il y a la mémoire dynamique
+et ça c'est important. C'est une mémoire
+qui va évoluer de A à Z tout le temps.
+Tous les cinq promptes de l'utilateur,
+il va reévaluer en fait l'intérêt qu'à
+l'utilateur et vraiment ce qu'il aime,
+ce qu'il aime pas. Et ça, cette mémoire,
+je l'injecte à chaque promptte dans le
+système. Dans le système en gros donc
+l'agent que je dit précédemment, je lui
+injecte les outils et je lui injecte
+aussi la mémoire statique pour savoir
+qui je suis, ce que je fais, ce que
+j'aime et tout. Sa personnalité à lui
+évidemment et ma mémoire dynamique plus
+après donc mon prompte et l'historique
+de conversation. Et ça ça lui permet de
+se dire "Ah, il s'appelle Julian, il a
+telle profession, il code en ça si ça."
+Ah oui, en ce moment il aime beaucoup
+l'aviation puis l'informatique quantique
+et et que ça ça évolue du coup à chaque
+fois chaque prom que ah maintenant il
+aimera que je sais pas l'informatique
+quantique, ah maintenant il aime que la
+chimie, enfin voilà, ça peut ça peut
+évoluer au fur et à mesure des promptes
+et sinon ça permet d'avoir un agent
+intelligent qui s'adapte avec moi. Donc
+là il y a cette notion d'adaptation.
+Donc ça c'est la première version que
+j'ai généré de ça. Dernière chose que je
+voulais vous parler, pourquoi ne pas
+avoir utilisé du fine tuning ? Pourquoi
+ne pas fine tune le modèle ? Pour ceux
+qui sont pas dans le domaine, il faut
+savoir ça demande énormément de
+ressources. Alors pour ceux qui
+connaissent un peu, il vont me dire "Bah
+tu peux utila, tu peux faire des modèles
+quantisés et tout." Oui mais non, ça
+demande quand même des performances.
+Alors oui, on va pas réentraîner par
+exemple les 7 milliards, 8 milliards, 4
+milliards, 2 milliards, ce que vous
+voulez du LLM de paramètres, mais on va
+rentraîner quand même des millions de
+paramètres, rien que 1 à 2 millions, ça
+prend énormément de temps sur un PC
+classique si on veut tout avoir en local
+sans passer par un serveur ou louer des
+GPU à gauche à droite. Ça prend
+énormément de temps. De deux, les
+données sont pas bonnes puisque moi je
+vais C'est quoi mes données ? Mes
+données, c'est littéralement ah bah
+parle-moi d'aéronautique. Ah tu un petit
+débat, ah oui, il est quelle heure ?
+machin, c'est des données en soit nules.
+Enfin, c'est des données qu'un modèle tu
+as pas besoin d'avoir. Donc, le modèle
+va être beaucoup plus mauvais. S'il
+serait en train là-dessus, il va être
+beaucoup plus bête et il va être moins
+performant. Ça casse tout le modèle.
+C'est pour ça qu'ici, j'utilise pas de
+fine tuning et que j'utilise tout
+simplement juste du contexte. En fait,
+c'est c'est c'est extrêmement puissant.
+On peut juste littéralement utiler le
+contexte. Voilà comment j'ai amélioré
+mon Jarvis. Dites-moi dans les
+commentaires ce que vous en pensez.
+Mettez un like, partagez, abonnez-vous.
+Salut !

@@ -28,11 +28,11 @@
 
 ### 📊 Instances actives actuelles
 ```
-Instance #1: ACTIVE - Implémentation chat vocal IA (18:30) ✅ DÉTECTÉE
-Instance #2: ACTIVE - Configuration système multi-instances (18:06) 
-Instance #3: DISPONIBLE
-Instance #4: DISPONIBLE  
-Instance #5: DISPONIBLE
+Instance #1: DISPONIBLE
+Instance #2: DISPONIBLE
+Instance #3: ACTIVE - Analyse complète fichiers projet (18:32) ✅ ARCHITECTURE DOCKER
+Instance #4: ACTIVE - Simplification système init (18:37) ✅ TERMINÉ
+Instance #5: ACTIVE - Lecture complète documentation (18:40) ✅ EN COURS
 Instance #6: DISPONIBLE
 Instance #7: DISPONIBLE
 Instance #8: DISPONIBLE

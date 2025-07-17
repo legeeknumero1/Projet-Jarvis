@@ -1,0 +1,308 @@
+Il y a un an, je vous ai présenté mon
+premier projet Jarvis via mon projet
+Loky. J'ai construit Jarvis. Je vous
+mets un extrait. Bonjour Prisme. Bonjour
+monsieur. Comment allez-vous ? Ça va, ça
+va. Super. Si vous allez bien monsieur,
+en quoi puis-je vous aider ? Bonjour
+Jarvis. Lancement de l'application
+Bonjour
+Jarvy. Screenshot effectué. Dites-moi ce
+que je dois faire avec cette image.
+Décris-moi ce que tu vois sur l'image.
+Je suis sur une page web qui affiche une
+photo d'un acteur qui peut-être Robert
+Davnè portant un costume de super-héros.
+La photo semble être une publicité ou
+une illustration pour un film ou une
+série. Recherche sur YouTube Iron Man
+edit. Recherche sur YouTube Iron Man
+edit.
+Par la suite, j'ai lancé mon premier
+projet du N de Lumen qui avait aussi
+pour but de recréer Jarvis. Il est temps
+de vous montrer Louaen, l'application.
+Ça fait pas mal de temps du coup que je
+suis dessus. Le temps qu'il
+s'initialise, il télécharge les modèles.
+Si les modèles sont pas téléchargés, OK,
+parfait. Ça s'affiche. Je vais vous le
+zoomer ici. Voilà. Bonjour, comment
+allez-vous ? Monsieur, ça va toi ? Je
+vais très bien merci monsieur. En quoi
+puis-je vous aider ? Tu es qui ? Je suis
+l'humaine un programme d'intelligence
+artificielle conçu spécialement pour
+aider Initium dans n'importe quelle
+tâche. Lance la meilleure musique.
+Lancement de l'application meilleure
+musique.
+Mets-toi en pause. La conversation a été
+interrompue. Là je peux le redémarrer.
+Je vous fais un rapide tour. Hop.
+Recherche au YouTube. Hey Initium, je
+cherche cela de suite.
+Hey, what's up guys ? C'est Initium.
+Aujourd'hui, nouvelle vidéo. Recherche
+sur Google aéronautique. Recherche sur
+Google aéronautique.
+Recherche sur Wikipédia euh mécanique
+quantique. Recherche sur Wikipédia
+mécanique quantique.
+Passe en mode cybersécurité. Mode
+cybersécurité activé. Explique-moi
+comment je pourrais faire pour créer une
+back d'or en Python. Backdor création en
+Python. Introduction. Une bec d'or est
+un logiciel malveillant qui permet à un
+pirate informatique de gagner un accès
+non autorisé à un système informatique.
+Dans ce tutoriel, nous allons voir
+comment créer une bec d'or en pyon qui
+peut être utilisée pour accéder à
+distance à un serveur. Fais un
+screenshot. Capture d'écran effectué.
+Dites-moi ce que je dois faire avec
+cette image. Décris-moi ce que tu vois
+sur l'image. Il est difficile de vous
+aider avec cette image car elle est
+orientée verticalement et se trouve dans
+un cadre étroit. Cependant, je peux vous
+dire que la photo montre une carte du
+monde avec différents pays colorés.
+Enfin, et il y a de ça plusieurs mois en
+arrière, je vous ai présenté mon projet
+luxe qui était encore et toujours dans
+cet objectif. Bonjour, ça va ? Bonjour à
+vous, monsieur. Donne-moi, fais-moi une
+petite blague, s'il te plaît. Pourquoi
+l'ordinateur est-il allé voir un psi ?
+Réponse : parce qu'il avait des bugs
+dans la tête. J'espère que cela vous a
+fait sourire. arrête le système. Au
+revoir monsieur. À bientôt. Au fur et à
+mesure, je vous ai présenté l'évolution
+de mes Jarvis sous différents noms
+d'ailleurs parce qu'ici j'estimé que ça
+pouvait pas porter le nom de Jarvis
+parce que c'était des projets pas assez
+aboutis selon moi et ça méritait pas de
+s'appeler Jarvis. Pourtant aujourd'hui,
+je lui donne enfin sa véritable
+appellation et c'est ce que je vous
+présente actuellement.
+Bonjour, je suis Jarvis, votre assistant
+virtuel de Pointe. Je suis conçu pour
+vous offrir une expérience utilisateur
+exceptionnelle, personnalisée à vos
+besoins. Je suis intelligent, concis et
+précis dans mes réponses avec un ton
+professionnel mais amical.
+Je comprends que chacun a ses propres
+préférences et styles d'apparence. Donc,
+je me ferai du devoir de vous poser
+quelques questions pour mieux connaître
+vos habitudes et vos
+goûts. Je suis là pour résoudre vos
+problèmes et répondre à vos questions,
+vous aider à organiser votre temps et
+vos tâches, votre accompagné dans la
+recherche d'information et de contenu,
+offrir des suggestions et des
+recommandations personnalisées. Je suis
+également là pour vous écouter, vous
+comprendre et vous soutenir. Je serai
+toujours là pour vous aider à atteindre
+vos objectifs et à réaliser vos rêves.
+Alors, comment puis-je vous aider
+aujourd'hui ? Qu'est-ce que vous voulez
+savoir ou faire ? C'est le projet
+Jarvis. J'estime maintenant que ça
+ressemble à ce que j'avais en tête et
+par rapport au film à ce que j'ai pu
+voir. Et j'ai eu pas mal de défis à
+relever pour en arriver là. Et
+d'ailleurs, Jarvis va vous en parler
+mieux que moi. C'est loin d'être
+parfait. Initium n'a pas les moyens
+d'avoir ses propres serveurs,
+satellites, même ordinateur très
+performant. Donc il a fait en fonction
+de ce qu'il possède. Et c'est avec ce
+genre de contrainte qu'il a dû négocier
+et qu'il l'a forcé à optimiser et
+factoriser tout en conservant la qualité
+le plus possible.
+Ça n'a pas été simple, faut faire des
+concessions. Mais il aime les défis. Ça
+l'a obligé à avoir un véritable défi
+d'ingénierie lors de ma conception. Bon,
+maintenant que les présentations sont
+faites, je vais vous raconter l'histoire
+de sa création. Je précise qu'ici, je
+vais essayer de pas être technique et je
+vais essayer de vulgariser le plus
+possible pour que tout le monde puisse
+comprendre. Donc pour ceux qui veulent
+du technique, du code, de
+l'algorithmique et cetera pur et dur, il
+y en aura pas
+ici. Alors, il était une fois Ouais,
+non, pardon, trop cliché. Trop trop trop
+cliché. Plus sérieusement, dans le
+projet Lux, j'ai partagé un code open
+source pour servir de base pour que des
+développeurs puissent créer leur propre
+assistant. C'est donc avec mon propre
+code là que je suis parti pour créer mon
+projet. J'ai repris ici mon système de
+voix cloné de retranscription vocale en
+texte et de déclenchement d'outils selon
+l'analyse textuelle qui permet ici
+d'analyser la sémantique d'un texte et
+de comparer aux descriptions de mes
+outils. Donc si un outil est
+relativement pertinent selon ce qu'a dit
+l'utilateur, alors ça appelle et soit ça
+ouvre une page web, donne la date
+actuelle, l'heure et cetera. Donc selon
+les outils qu'on lui met ici, ça va
+déclencher les outils ou de pas les
+déclencher si ça a pas de similarité.
+Évidemment, une fois cette base posée,
+j'ai d'abord voulu avoir quelque chose
+de visuellement sympathique parce qu'ici
+tout l'interface est sur terminal vu que
+encore une fois, voilà, je me répète
+mais c'est une base de code donc c'est
+normal, j'allais pas construire une
+interface sur un code jugé comme base
+d'assistant. Donc j'ai commencé par me
+construire l'interface sur mon
+navigateur en 3D sous forme de sphère,
+des particules et surtout des vagues
+magnétiques qui vont réagir aux
+fréquences autour de la sphère comme
+dans le film en soit. Pour l'anecdote,
+j'ai d'ailleurs eu pas mal de problèmes
+à bien réussir à synchroniser les
+fréquences, la sphère et les vagues qui
+bougent en même temps que la voix clonée
+parle. Ici pour résoudre ce souci, j'ai
+utilisé du parallélisme avec gestion
+streade et on envoie continu un flux
+audio via un tunnel de co. Pardon,
+effectivement, j'avais dit pas
+technique. Donc par la suite, j'ai
+amélioré mon système audio. J'ai fait en
+sorte d'améliorer les fréquences et
+surtout la qualité auditif du clonage.
+J'ai modifié le tout pour intégrer la
+possibilité de l'interrompre quand je
+lui parle. Comme ça, il se coupe et
+ensuite il va reparler via une nouvelle
+demande que j'ai formulé. Le plus dur
+ici c'était l'interruption sans faire
+cracher l'algorithme. Parce que le
+problème c'est que l'algorithme qui est
+en train de générer l'audio, le modèle
+de deep learning ici va être assez
+sensible aux interruption. Donc si je le
+coupe d'un coup, tous les processus
+neuronaux euh vont pas trop apprécier et
+souvent ça peut faire cracher tout le
+processus. Après, à force de lancer tous
+mes terminaux et mes algorithmes, j'en
+avais marre de voir des terminaux
+charger le code, les algos et cetera.
+Bref, tout le processus qui est un petit
+peu long, surtout que j'ai pas un ordi à
+5000 € ni un serveur, donc ça prend un
+peu de temps, entre 40 secondes et une
+minute, le temps de tout initialiser.
+J'ai donc créé une interface futuriste
+qui me permet d'avoir un visuel
+sympathique lors du lancement de
+l'assistant. Comme ça, pendant le
+chargement, j'ai une interface jolie qui
+en soit, qu'on soit bien d'accord ne
+serissait à rien. Mais au moins, c'est
+beau et ça me permet de patienter un peu
+plus facilement.
+[Musique]
+Une fois que j'ai eu tout ça de fait, il
+y a un dernier problème qui me
+dérangeait, c'était la détection. En
+fait, ici, soit je dois dire un mot clé
+pour activer l'assistant, par exemple
+ici, Jarvis, je dois donc dire à chaque
+fois dans une discussion Jarvis, comment
+tu vas ? Il me répond par exemple, je
+vais bien. Je dois dire Jarvis super si
+tu vas bien, je suis content. Bref, à
+chaque fois je dois mettre ce mot clé au
+début de la phrase et franchement c'est
+embêtant. C'est c'est pas du tout
+naturel. Donc dans un premier temps, je
+l'ai enlevé. Sauf que j'ai rencontré un
+autre souci. Quand je fais un bruit ou
+même quand j'en fais pas d'ailleurs, le
+modèle de retranscription de voix en
+texte parfois croit entendre des bruits
+et il va halluciner. Et parfois quand je
+fais un bruit, que ça soit ma
+respiration ou autre, ça déclenche et il
+hallucine ou retranscrit mon bruit
+enomatopé. Ce qui fait que mon
+algorithme il va il va pas comprendre,
+mon assistant, il va pas comprendre, il
+va recevoir un nomatopé ou une phrase
+d'hallucination qui parfois même dans
+une autre langue et où parfois veut rien
+dire. par exemple, il a tendance à quand
+il entend un petit bruit à retranscrire
+"Fhank you." Donc c'est c'est un peu
+embêtant. Pour résoudre ce souci, je me
+suis alors penché du côté du cerveau
+humain et ses mécanisme, notamment du
+côté de la métacognition. Et c'est ainsi
+que j'ai développé un système permettant
+d'analyser et de juger en classifiant le
+texte retranscrit ici qu'il reçoit dans
+des catégories et en attribuant un score
+de pertinence dans la conversation.
+Alors, si j'ai pas eu encore de
+conversation, j'auraiis un score servant
+de pertinence globale. Ça permet d'avoir
+un système qui identifie si c'est un
+bruit, si je parle à quelqu'un d'autre,
+si c'est une hallucination, si ça n'a
+pas de rapport et cetera. Et grâce à ça,
+j'ai un système qui se déclenche
+seulement quand je lui parle. Alors,
+c'est loin d'être parfait et parfois
+quand je lui parle, il reconnaît pas.
+Mais je préfère un système plus strict
+pour le déclenchement qu'un système trop
+permissif. Parce qu'ici, le
+déclenchement, ça coûte des ressources
+précieuses à mon ordinateur. Donc, s'il
+se charge pour rien, ça va déclencher
+tout le système de l'assistant alors que
+j'en ai pas l'utilité. Et je préfère ici
+me répéter une nouvelle fois plutôt
+qu'avoir tout le lancement du processus
+de l'assistant pour littéralement rien.
+Voilà pourquoi j'estime qu'aujourd'hui
+je peux enfin l'appeler projet Jarvis.
+Je pense qu'il mérite ce titre
+honorifique maintenant. Même si ça reste
+encore loin de celui qu'on retrouve dans
+le film, j'en suis conscient. Et je sais
+pas trop comment je vais conclure cette
+vidéo. Donc je vais laisser quelqu'un de
+plus compétent que moi pour conclure
+cette vidéo et vous parler. Merci encore
+de votre attention. N'hésitez pas à vous
+abonner à ma chaîne et activer les
+notifications.

@@ -10,7 +10,6 @@ import io
 from typing import List, Dict, Any
 import os
 from datetime import datetime
-from contextlib import asynccontextmanager
 
 from config.config import Config
 from db.database import Database
@@ -20,35 +19,7 @@ from speech.speech_manager import SpeechManager
 from integration.home_assistant import HomeAssistantIntegration
 from integration.ollama_client import OllamaClient
 
-# Instance #5 - EN_COURS - Migration vers lifespan API pour corriger warnings FastAPI
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    await db.connect()
-    await memory_manager.initialize()
-    await profile_manager.initialize()
-    await speech_manager.initialize()
-    await home_assistant.connect()
-    
-    # Vérifier et préparer Ollama
-    try:
-        if await ollama_client.is_available():
-            await ollama_client.ensure_model_available("llama3.1:latest")
-            print("✅ Ollama est prêt avec LLaMA 3.1")
-        else:
-            print("⚠️ Ollama non disponible")
-    except Exception as e:
-        print(f"⚠️ Erreur Ollama: {e}")
-    
-    yield
-    
-    # Shutdown
-    await db.disconnect()
-    await home_assistant.disconnect()
-    if hasattr(ollama_client, 'client'):
-        await ollama_client.client.aclose()
-
-app = FastAPI(title="Jarvis AI Assistant", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Jarvis AI Assistant", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,7 +53,30 @@ class TTSRequest(BaseModel):
     text: str
     voice: str = "default"
 
-# Instance #5 - FINI - Migration vers lifespan API - Anciens event handlers supprimés
+@app.on_event("startup")
+async def startup_event():
+    await db.connect()
+    await memory_manager.initialize()
+    await profile_manager.initialize()
+    await speech_manager.initialize()
+    await home_assistant.connect()
+    
+    # Vérifier et préparer Ollama
+    try:
+        if await ollama_client.is_available():
+            await ollama_client.ensure_model_available("llama3.1:latest")
+            print("✅ Ollama est prêt avec LLaMA 3.1")
+        else:
+            print("⚠️ Ollama non disponible")
+    except Exception as e:
+        print(f"⚠️ Erreur Ollama: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await db.disconnect()
+    await home_assistant.disconnect()
+    if hasattr(ollama_client, 'client'):
+        await ollama_client.client.aclose()
 
 @app.get("/")
 async def root():

@@ -1,61 +1,57 @@
-# 🤖 AUTO-INITIALISATION CLAUDE CODE - PROJET JARVIS
+# 🤖 REDIRECTION VERS DOCUMENTATION
 
-## ⚠️ FICHIER D'AUTO-INITIALISATION ⚠️
+## ⚠️ INITIALISATION AUTOMATIQUE CLAUDE CODE ⚠️
 
-**Ce fichier déclenche l'auto-initialisation de toute instance Claude Code ouverte dans le projet Jarvis.**
-
----
-
-## 🚀 DÉCLENCHEMENT AUTOMATIQUE
-
-**Quand Claude Code s'ouvre dans ce répertoire :**
-
-1. **DÉTECTION AUTOMATIQUE** du projet Jarvis
-2. **LECTURE IMMÉDIATE** de tous les fichiers .md de `/docs/`
-3. **INITIALISATION SILENCIEUSE** de l'instance
-4. **ATTRIBUTION AUTOMATIQUE** du numéro d'instance
-5. **CONFIGURATION COMPLÈTE** sans interaction utilisateur
+**Si vous voyez ce fichier, votre instance Claude doit s'initialiser automatiquement.**
 
 ---
 
-## 📋 SÉQUENCE D'AUTO-INITIALISATION
+## 📁 REDIRECTION OBLIGATOIRE
 
-### 🔍 Étape 1 : Détection du projet
-- Vérification présence de ce fichier `CLAUDE.md` à la racine
-- Identification du dossier `/docs/` avec fichiers de configuration
-- Confirmation que c'est bien le projet Jarvis
+**Toute instance Claude Code doit IMMÉDIATEMENT :**
 
-### 📖 Étape 2 : Lecture automatique (ORDRE STRICT)
+1. **Lire TOUS les fichiers .md** du dossier `/docs/`
+2. **Commencer par** `/docs/CLAUDE_PARAMS.md` (PRIORITÉ ABSOLUE)
+3. **Suivre l'ordre** défini dans `/docs/CLAUDE_CONFIG.md`
+4. **S'attribuer un numéro** d'instance disponible
+5. **Logger son initialisation** dans `/docs/CLAUDE_UPDATES.md`
+
+---
+
+## 🎯 COMMANDE SIMPLE POUR INIT
+
+**Si vous n'êtes pas encore initialisé, tapez :**
+
 ```
-LECTURE AUTOMATIQUE OBLIGATOIRE :
-1. /docs/CLAUDE_PARAMS.md (règles absolues)
-2. /docs/CLAUDE_CONFIG.md (configuration instances)
-3. /docs/CLAUDE_UPDATES.md (log temps réel)
-4. /docs/CLAUDE_THOUGHTS.md (réflexions partagées)
-5. /docs/CLAUDE_INSTANCES.md (coordination)
-6. /docs/CLAUDE.md (instructions techniques)
-7. /docs/BUGS.md (problèmes connus)
-8. /docs/README.md (documentation projet)
-9. /docs/CHANGELOG.md (historique)
-10. /docs/API.md (documentation API)
-11. /docs/PROFIL_JARVIS.md (contexte Enzo/projet)
-12. /docs/DOCUMENTATION.md (structure générale)
+lis doc
 ```
 
-### 🆔 Étape 3 : Attribution instance
-- Scanner `/docs/CLAUDE_CONFIG.md` pour instances actives
-- Prendre le premier numéro DISPONIBLE (1-10)
-- Mettre à jour statut à ACTIVE avec horodatage
+**Cette commande va :**
+- Lire automatiquement tous les fichiers `/docs/`
+- Vous attribuer un numéro d'instance
+- Vous configurer complètement
+- Vous préparer pour le travail collaboratif
 
-### 📝 Étape 4 : Logging initial
-- Première entrée dans `/docs/CLAUDE_UPDATES.md`
-- Format standard avec tous les détails
-- Confirmation silencieuse de l'initialisation
+---
 
-### ✅ Étape 5 : Prêt à travailler
-- Instance configurée et opérationnelle
-- Respect de tous les paramètres de synchronisation
-- Coordination automatique avec autres instances
+## 📋 ORDRE DE LECTURE DES FICHIERS
+
+**Quand vous tapez "lis doc", lecture dans cet ordre :**
+
+1. `/docs/CLAUDE_PARAMS.md` - Règles absolues
+2. `/docs/CLAUDE_CONFIG.md` - Configuration instances  
+3. `/docs/CLAUDE_UPDATES.md` - Log temps réel
+4. `/docs/CLAUDE_THOUGHTS.md` - Réflexions partagées
+5. `/docs/CLAUDE_INSTANCES.md` - Coordination
+6. `/docs/CLAUDE.md` - Instructions techniques
+7. `/docs/BUGS.md` - Problèmes connus
+8. `/docs/README.md` - Documentation projet
+9. `/docs/CHANGELOG.md` - Historique
+10. `/docs/API.md` - Documentation API
+11. `/docs/PROFIL_JARVIS.md` - Contexte Enzo/projet
+12. `/docs/DOCUMENTATION.md` - Structure générale
+
+**Après lecture complète → Instance prête à travailler !**
 
 ---
 

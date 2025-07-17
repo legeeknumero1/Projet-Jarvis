@@ -1,17 +1,164 @@
 version: '3.8'
 
+networks:
+  jarvis-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    # Enable internet access through host network bridge
+    external: false
+    attachable: true
+
 services:
+  # Container 1: TTS API (Text-to-Speech)
+  tts-api:
+    build:
+      context: ./services/tts
+      dockerfile: Dockerfile
+    networks:
+      - jarvis-network
+    environment:
+      - SERVICE_NAME=tts-api
+      - TTS_MODEL_PATH=/app/models/tts
+      - WEBSOCKET_URL=ws://interface:8001/ws/audio
+    volumes:
+      - ./services/tts:/app
+      - ./models/tts:/app/models/tts
+      - ./logs:/app/logs
+    restart: unless-stopped
+    depends_on:
+      - interface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Container 2: STT API (Speech-to-Text)
+  stt-api:
+    build:
+      context: ./services/stt
+      dockerfile: Dockerfile
+    networks:
+      - jarvis-network
+    environment:
+      - SERVICE_NAME=stt-api
+      - STT_MODEL_PATH=/app/models/stt
+      - WEBSOCKET_URL=ws://interface:8001/ws/audio
+    volumes:
+      - ./services/stt:/app
+      - ./models/stt:/app/models/stt
+      - ./logs:/app/logs
+    restart: unless-stopped
+    depends_on:
+      - interface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Container 3: Ollama LLM
+  ollama:
+    image: ollama/ollama:latest
+    networks:
+      - jarvis-network
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Container 4: Interface (Frontend + Audio Bridge)
+  interface:
+    build:
+      context: ./services/interface
+      dockerfile: Dockerfile
+    networks:
+      - jarvis-network
+    ports:
+      - "3000:3000"
+      - "8001:8001"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_WS_URL=ws://localhost:8001
+      - BACKEND_URL=http://brain-api:8000
+      - TTS_API_URL=http://tts-api:8002
+      - STT_API_URL=http://stt-api:8003
+    volumes:
+      - ./services/interface:/app
+      - /app/node_modules
+    restart: unless-stopped
+    depends_on:
+      - brain-api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Container 5: Brain API (Main Backend Logic)
+  brain-api:
+    build:
+      context: ./services/brain
+      dockerfile: Dockerfile
+    networks:
+      - jarvis-network
+    environment:
+      - DATABASE_URL=postgresql://jarvis:jarvis@postgres:5432/jarvis_db
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - TTS_API_URL=http://tts-api:8002
+      - STT_API_URL=http://stt-api:8003
+      - INTERFACE_URL=http://interface:8001
+      - MEMORY_UPDATE_INTERVAL=604800
+      - MEMORY_RETENTION_DAYS=365
+    volumes:
+      - ./services/brain:/app
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./memory:/app/memory
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Supporting services (Database, Cache)
   postgres:
     image: postgres:15
+    networks:
+      - jarvis-network
     environment:
       POSTGRES_DB: jarvis_db
       POSTGRES_USER: jarvis
       POSTGRES_PASSWORD: jarvis
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
+      - ./services/brain/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jarvis"]
@@ -21,8 +168,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    networks:
+      - jarvis-network
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -32,65 +179,16 @@ services:
       timeout: 10s
       retries: 5
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+  # Optional: NTP Server for time synchronization
+  ntp-server:
+    image: cturra/ntp:latest
+    networks:
+      - jarvis-network
     environment:
-      - DATABASE_URL=postgresql://jarvis:jarvis@postgres/jarvis_db
-      - REDIS_URL=redis://redis:6379
-      - OLLAMA_BASE_URL=http://ollama:11434
-    volumes:
-      - ./backend:/app
-      - ./models:/app/models
-      - ./logs:/app/logs
-      - ./data:/app/data
+      - NTP_SERVERS=time.cloudflare.com,pool.ntp.org
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_WS_URL=ws://localhost:8000
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    restart: unless-stopped
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-    environment:
-      - OLLAMA_ORIGINS=*
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    cap_add:
+      - SYS_TIME
 
 volumes:
   postgres_data:
