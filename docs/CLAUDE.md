@@ -18,6 +18,38 @@
 7. **METTRE À JOUR** : Toujours mettre à jour les fichiers .md concernés après chaque action
 8. **PRIVILÉGIER** : Solutions locales (pas de cloud)
 9. **MAINTENIR** : Compatibilité avec Home Assistant
+10. **📝 CHATGPT.md** : **RÈGLE ABSOLUE** - Documenter TOUT dans `/docs/CHATGPT.md` à 100% (pensées, bugs, recherches, demandes Enzo, actions, tests, décisions)
+
+### 🚀 Commandes spéciales Enzo
+
+#### "START JARVIS" - DÉMARRAGE COMPLET
+**Quand Enzo dit "start jarvis" :**
+1. **LANCER IMMÉDIATEMENT** tous les services Jarvis :
+   - Backend FastAPI (uvicorn main:app)
+   - Frontend React (npm start)
+   - Services Docker (docker-compose up -d)
+   - Base de données PostgreSQL
+   - Redis cache
+   - Ollama LLM
+2. **VÉRIFIER** que tout fonctionne :
+   - Endpoints API répondent
+   - Interface web accessible
+   - WebSocket connecté
+   - Base données connectée
+3. **CONFIRMER** : "Jarvis V1.1.0 démarré et opérationnel ✅"
+
+#### "STOP JARVIS" - ARRÊT PROPRE
+**Quand Enzo dit "stop jarvis" :**
+1. **ARRÊTER PROPREMENT** tous les services :
+   - Fermer connexions base données
+   - Arrêter serveurs web
+   - docker-compose down (graceful)
+   - Sauvegarder état si nécessaire
+2. **VÉRIFIER** arrêt complet :
+   - Ports libérés
+   - Processus terminés
+   - Pas de corruption
+3. **CONFIRMER** : "Jarvis arrêté proprement ✅"
 
 ### 📋 Workflow obligatoire à chaque demande
 1. **LIRE** `/docs/CLAUDE_PARAMS.md` EN PREMIER ABSOLU

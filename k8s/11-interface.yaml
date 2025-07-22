@@ -1,0 +1,173 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-interface
+  namespace: jarvis
+  labels:
+    app: jarvis-interface
+    component: frontend
+    version: v1.4.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-interface
+  template:
+    metadata:
+      labels:
+        app: jarvis-interface
+        component: frontend
+    spec:
+      containers:
+      - name: interface
+        image: jarvis-interface:latest  # Image buildée depuis services/interface
+        imagePullPolicy: IfNotPresent   # Image locale avec fallback
+        ports:
+        - containerPort: 3000
+          name: frontend
+        - containerPort: 8001
+          name: websocket
+        envFrom:
+        - configMapRef:
+            name: jarvis-config
+        - secretRef:
+            name: jarvis-secrets
+        env:
+        - name: SERVICE_NAME
+          value: "interface"
+        - name: REACT_APP_API_URL
+          value: "http://localhost:30000"  # NodePort externe
+        - name: REACT_APP_WS_URL
+          value: "ws://localhost:30001"   # NodePort externe
+        - name: BACKEND_API_URL
+          value: "http://jarvis-backend:8000"
+        - name: TTS_API_URL
+          value: "http://jarvis-tts:8002"
+        - name: STT_API_URL
+          value: "http://jarvis-stt:8003"
+        # Pas de volumes nécessaires - code dans l'image Docker
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      # Pas de volumes nécessaires - code dans l'image Docker
+      restartPolicy: Always
+      # Attendre que le backend soit prêt
+      initContainers:
+      - name: wait-for-backend
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          until curl -f http://jarvis-backend:8000/health; do
+            echo "Attente Backend API..."
+            sleep 5
+          done
+          echo "Backend API prêt !"
+      - name: wait-for-tts
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          until curl -f http://jarvis-tts:8002/health; do
+            echo "Attente TTS API..."
+            sleep 5
+          done
+          echo "TTS API prêt !"
+      - name: wait-for-stt
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          until curl -f http://jarvis-stt:8003/health; do
+            echo "Attente STT API..."
+            sleep 5
+          done
+          echo "STT API prêt !"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-interface
+  namespace: jarvis
+  labels:
+    app: jarvis-interface
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: frontend
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: websocket
+  selector:
+    app: jarvis-interface
+---
+# Services exposés vers l'extérieur
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-frontend-external
+  namespace: jarvis
+  labels:
+    app: jarvis-interface
+    component: frontend
+    exposure: external
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30100
+    protocol: TCP
+    name: frontend
+  selector:
+    app: jarvis-interface
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-websocket-external
+  namespace: jarvis
+  labels:
+    app: jarvis-interface
+    component: websocket
+    exposure: external
+spec:
+  type: NodePort
+  ports:
+  - port: 8001
+    targetPort: 8001
+    nodePort: 30001
+    protocol: TCP
+    name: websocket
+  selector:
+    app: jarvis-interface

@@ -1,0 +1,40 @@
+# Configuration Qdrant pour Jarvis - Mémoire Vectorielle Neuromorphique
+service:
+  host: 0.0.0.0
+  http_port: 6333
+  grpc_port: 6334
+  enable_cors: true
+  max_request_size_mb: 32
+  max_workers: 4
+
+storage:
+  # Performance optimisée pour Jarvis
+  performance:
+    max_search_threads: 4
+    search_hnsw_ef: 128
+    index_hnsw_ef_construct: 200
+    index_hnsw_m: 16
+  
+  # Optimisations mémoire
+  optimizers:
+    default_segment_number: 2
+    max_segment_size_kb: 200000
+    indexing_threshold_kb: 20000
+    flush_interval_sec: 30
+    max_optimization_threads: 2
+  
+  # Rétention et backup
+  snapshots_path: ./snapshots
+  storage_path: ./storage
+  
+  # Configuration WAL (Write-Ahead Log)
+  wal:
+    wal_capacity_mb: 128
+    wal_segments_ahead: 2
+
+# Logging
+log_level: INFO
+
+# Cluster settings (pour futur scaling)
+cluster:
+  enabled: false

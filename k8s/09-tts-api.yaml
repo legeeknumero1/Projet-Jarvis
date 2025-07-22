@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-tts
+  namespace: jarvis
+  labels:
+    app: jarvis-tts
+    component: text-to-speech
+    version: v1.4.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-tts
+  template:
+    metadata:
+      labels:
+        app: jarvis-tts
+        component: text-to-speech
+    spec:
+      containers:
+      - name: tts-api
+        image: jarvis-tts:latest  # Image buildée depuis services/tts
+        imagePullPolicy: IfNotPresent  # Image locale avec fallback
+        ports:
+        - containerPort: 8002
+          name: http
+        envFrom:
+        - configMapRef:
+            name: jarvis-config
+        - secretRef:
+            name: jarvis-secrets
+        env:
+        - name: SERVICE_NAME
+          value: "tts-api"
+        - name: TTS_MODEL_PATH
+          value: "/app/models/tts"
+        - name: BACKEND_API_URL
+          value: "http://jarvis-backend:8000"
+        volumeMounts:
+        - name: models-volume
+          mountPath: /app/models
+        - name: logs-volume
+          mountPath: /app/logs
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: models-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-tts
+  namespace: jarvis
+  labels:
+    app: jarvis-tts
+    component: text-to-speech
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-tts
+---
+# Service exposé vers l'extérieur (optionnel)
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-tts-external
+  namespace: jarvis
+  labels:
+    app: jarvis-tts
+    component: text-to-speech
+    exposure: external
+spec:
+  type: NodePort
+  ports:
+  - port: 8002
+    targetPort: 8002
+    nodePort: 30002
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-tts

@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-backend
+  namespace: jarvis
+  labels:
+    app: jarvis-backend
+    component: api
+    version: v1.4.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-backend
+  template:
+    metadata:
+      labels:
+        app: jarvis-backend
+        component: api
+    spec:
+      containers:
+      - name: backend-api
+        image: jarvis-backend:latest  # Image buildée depuis backend/
+        imagePullPolicy: IfNotPresent  # Image locale avec fallback
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: jarvis-config
+        - secretRef:
+            name: jarvis-secrets
+        env:
+        - name: SERVICE_NAME
+          value: "backend-api"
+        volumeMounts:
+        - name: models-volume
+          mountPath: /app/models
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: data-volume
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: models-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+      - name: data-volume
+        emptyDir: {}
+      restartPolicy: Always
+      # Attendre que les services de données soient prêts
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h jarvis-postgres -p 5432 -U jarvis; do
+            echo "Attente PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL prêt !"
+      - name: wait-for-redis
+        image: redis:7-alpine
+        command:
+        - sh
+        - -c
+        - |
+          until redis-cli -h jarvis-redis ping; do
+            echo "Attente Redis..."
+            sleep 2
+          done
+          echo "Redis prêt !"
+      - name: wait-for-ollama
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          until curl -f http://jarvis-ollama:11434/api/version; do
+            echo "Attente Ollama..."
+            sleep 5
+          done
+          echo "Ollama prêt !"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-backend
+  namespace: jarvis
+  labels:
+    app: jarvis-backend
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-backend
+---
+# Service exposé vers l'extérieur
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-backend-external
+  namespace: jarvis
+  labels:
+    app: jarvis-backend
+    component: api
+    exposure: external
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+    nodePort: 30000
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-backend

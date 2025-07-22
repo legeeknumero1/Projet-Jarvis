@@ -2,7 +2,7 @@ import json
 import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-# from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer  # Import dynamique dans initialize()
 from sqlalchemy import select, update, delete
 import logging
 
@@ -16,34 +16,37 @@ class MemoryManager:
     
     async def initialize(self):
         try:
-            # Temporairement désactivé jusqu'à installation sentence-transformers
-            # self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-            self.embedding_model = None
-            self.logger.info("Memory manager initialized successfully (embeddings disabled)")
+            from sentence_transformers import SentenceTransformer
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            self.logger.info("Memory manager initialized successfully with embeddings enabled")
         except Exception as e:
             self.logger.error(f"Failed to initialize memory manager: {e}")
-            raise
+            # Fallback sans embeddings
+            self.embedding_model = None
+            self.logger.warning("Running without embeddings - basic memory only")
     
     async def save_conversation(self, user_id: str, message: str, response: str, context: Dict[str, Any] = None):
-        async with self.db.get_session() as session:
-            try:
-                conversation = Conversation(
-                    user_id=user_id,
-                    message=message,
-                    response=response,
-                    context=context or {},
-                    timestamp=datetime.utcnow()
-                )
-                session.add(conversation)
-                await session.commit()
+        session = self.db.get_session()
+        try:
+            conversation = Conversation(
+                user_id=user_id,
+                message=message,
+                response=response,
+                context=context or {},
+                timestamp=datetime.utcnow()
+            )
+            session.add(conversation)
+            await session.commit()
+            
+            # Créer une mémoire à partir de la conversation
+            await self._create_memory_from_conversation(user_id, message, response)
                 
-                # Créer une mémoire à partir de la conversation
-                await self._create_memory_from_conversation(user_id, message, response)
-                
-            except Exception as e:
-                await session.rollback()
-                self.logger.error(f"Failed to save conversation: {e}")
-                raise
+        except Exception as e:
+            await session.rollback()
+            self.logger.error(f"Failed to save conversation: {e}")
+            raise
+        finally:
+            await session.close()
     
     async def _create_memory_from_conversation(self, user_id: str, message: str, response: str):
         # Analyser le contenu pour extraire des informations importantes
@@ -228,4 +231,90 @@ class MemoryManager:
                 
             except Exception as e:
                 self.logger.error(f"Failed to text search memories: {e}")
+                return []
+    
+    async def save_memory(self, user_id: str, category: str, content: str) -> bool:
+        """Sauvegarde une nouvelle mémoire"""
+        async with self.db.get_session() as session:
+            try:
+                # Calculer l'importance et l'embedding si disponible
+                importance = await self._calculate_importance(content)
+                embedding = None
+                
+                if self.embedding_model:
+                    try:
+                        embedding = self.embedding_model.encode(content).tolist()
+                    except Exception as e:
+                        self.logger.warning(f"Failed to create embedding: {e}")
+                
+                memory = Memory(
+                    user_id=user_id,
+                    content=content,
+                    category=category,
+                    importance=importance,
+                    embedding=embedding,
+                    created_at=datetime.utcnow(),
+                    last_accessed=datetime.utcnow()
+                )
+                
+                session.add(memory)
+                await session.commit()
+                
+                self.logger.info(f"Memory saved for user {user_id}: {content[:50]}...")
+                return True
+                
+            except Exception as e:
+                await session.rollback()
+                self.logger.error(f"Failed to save memory: {e}")
+                return False
+    
+    async def get_memories(self, user_id: str, category: str = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """Récupère les mémoires d'un utilisateur"""
+        async with self.db.get_session() as session:
+            try:
+                query = select(Memory).where(Memory.user_id == user_id)
+                
+                if category:
+                    query = query.where(Memory.category == category)
+                
+                query = query.order_by(Memory.created_at.desc()).limit(limit)
+                
+                result = await session.execute(query)
+                memories = result.scalars().all()
+                
+                return [
+                    {
+                        "content": mem.content,
+                        "category": mem.category,
+                        "importance": mem.importance,
+                        "created_at": mem.created_at.isoformat()
+                    } for mem in memories
+                ]
+                
+            except Exception as e:
+                self.logger.error(f"Failed to get memories: {e}")
+                return []
+    
+    async def get_recent_conversations(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Récupère les conversations récentes d'un utilisateur"""
+        async with self.db.get_session() as session:
+            try:
+                result = await session.execute(
+                    select(Conversation)
+                    .where(Conversation.user_id == user_id)
+                    .order_by(Conversation.timestamp.desc())
+                    .limit(limit)
+                )
+                conversations = result.scalars().all()
+                
+                return [
+                    {
+                        "message": conv.message,
+                        "response": conv.response,
+                        "timestamp": conv.timestamp.isoformat()
+                    } for conv in conversations
+                ]
+                
+            except Exception as e:
+                self.logger.error(f"Failed to get recent conversations: {e}")
                 return []

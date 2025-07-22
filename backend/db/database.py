@@ -75,13 +75,16 @@ class Database:
             await self.engine.dispose()
             self.logger.info("Database disconnected")
     
-    async def get_session(self) -> AsyncSession:
+    def get_session(self) -> AsyncSession:
         if not self.session_maker:
             raise RuntimeError("Database not connected")
         return self.session_maker()
     
     async def execute_query(self, query: str, params: dict = None):
-        async with self.get_session() as session:
+        session = self.get_session()
+        try:
             result = await session.execute(query, params or {})
             await session.commit()
             return result
+        finally:
+            await session.close()

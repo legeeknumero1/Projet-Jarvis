@@ -18,9 +18,11 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# Installation des dépendances Python
-echo "🐍 Installation des dépendances Python..."
-pip3 install websockets asyncio
+# Activation de l'environnement virtuel et installation des dépendances
+echo "🐍 Activation de l'environnement virtuel..."
+source jarvis_env/bin/activate
+echo "📦 Installation des dépendances Python..."
+pip install websockets asyncio
 
 # Installation des dépendances Node.js
 echo "📦 Installation des dépendances Node.js..."
@@ -30,7 +32,7 @@ npm install
 # Démarrage du serveur WebSocket simple
 echo "🔧 Démarrage du serveur WebSocket..."
 cd ../services/interface
-python3 simple_server.py &
+source ../../jarvis_env/bin/activate && python simple_server.py &
 SERVER_PID=$!
 
 # Attendre que le serveur soit prêt

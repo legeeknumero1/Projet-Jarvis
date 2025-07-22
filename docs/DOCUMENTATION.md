@@ -20,6 +20,7 @@ Tous les fichiers .md de documentation se trouvent dans ce dossier :
 - **`CLAUDE_INSTANCES.md`** - 🤖 COORDINATION MULTI-INSTANCES (RÉSERVATIONS + HANDOVER)
 - **`CLAUDE.md`** - Instructions permanentes pour Claude
 - **`BUGS.md`** - Liste complète des bugs (passés, présents, futurs)
+- **`ANALYSE_BUGS.md`** - Analyse causes/solutions bugs (OBLIGATOIRE maintenance)
 - **`README.md`** - Documentation principale du projet
 - **`CHANGELOG.md`** - Historique des modifications
 - **`API.md`** - Documentation de l'API

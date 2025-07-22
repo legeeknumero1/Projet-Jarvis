@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-stt
+  namespace: jarvis
+  labels:
+    app: jarvis-stt
+    component: speech-to-text
+    version: v1.4.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-stt
+  template:
+    metadata:
+      labels:
+        app: jarvis-stt
+        component: speech-to-text
+    spec:
+      containers:
+      - name: stt-api
+        image: jarvis-stt:latest  # Image buildée depuis services/stt
+        imagePullPolicy: IfNotPresent  # Image locale avec fallback
+        ports:
+        - containerPort: 8003
+          name: http
+        envFrom:
+        - configMapRef:
+            name: jarvis-config
+        - secretRef:
+            name: jarvis-secrets
+        env:
+        - name: SERVICE_NAME
+          value: "stt-api"
+        - name: STT_MODEL_PATH
+          value: "/app/models/stt"
+        - name: BACKEND_API_URL
+          value: "http://jarvis-backend:8000"
+        volumeMounts:
+        - name: models-volume
+          mountPath: /app/models
+        - name: logs-volume
+          mountPath: /app/logs
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: models-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-stt
+  namespace: jarvis
+  labels:
+    app: jarvis-stt
+    component: speech-to-text
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8003
+    targetPort: 8003
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-stt
+---
+# Service exposé vers l'extérieur (optionnel)
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-stt-external
+  namespace: jarvis
+  labels:
+    app: jarvis-stt
+    component: speech-to-text
+    exposure: external
+spec:
+  type: NodePort
+  ports:
+  - port: 8003
+    targetPort: 8003
+    nodePort: 30003
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-stt

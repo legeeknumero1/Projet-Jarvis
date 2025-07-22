@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-ollama
+  namespace: jarvis
+  labels:
+    app: jarvis-ollama
+    component: llm
+    version: v1.4.0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jarvis-ollama
+  template:
+    metadata:
+      labels:
+        app: jarvis-ollama
+        component: llm
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+          name: http
+        env:
+        - name: OLLAMA_ORIGINS
+          value: "*"
+        - name: OLLAMA_HOST
+          value: "0.0.0.0"
+        - name: OLLAMA_KEEP_ALIVE
+          value: "24h"
+        volumeMounts:
+        - name: ollama-storage
+          mountPath: /root/.ollama
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        livenessProbe:
+          httpGet:
+            path: /api/version
+            port: 11434
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/version
+            port: 11434
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: ollama-storage
+        persistentVolumeClaim:
+          claimName: jarvis-ollama-pvc
+      restartPolicy: Always
+      # Configuration pour node standard (pas de GPU requis)
+      # tolerations: []
+      # nodeSelector: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-ollama
+  namespace: jarvis
+  labels:
+    app: jarvis-ollama
+    component: llm
+spec:
+  type: ClusterIP
+  ports:
+  - port: 11434
+    targetPort: 11434
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-ollama
+---
+# Job pour télécharger les modèles Ollama
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jarvis-ollama-setup
+  namespace: jarvis
+  labels:
+    app: jarvis-ollama
+    component: setup
+spec:
+  template:
+    metadata:
+      labels:
+        app: jarvis-ollama-setup
+    spec:
+      containers:
+      - name: ollama-setup
+        image: ollama/ollama:latest
+        env:
+        - name: OLLAMA_HOST
+          value: "http://jarvis-ollama:11434"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "🤖 Attente démarrage Ollama..."
+          sleep 30
+          echo "🤖 Téléchargement des modèles Ollama..."
+          ollama pull llama3.1:latest || echo "Erreur téléchargement llama3.1"
+          ollama pull llama3.2:1b || echo "Erreur téléchargement llama3.2"
+          echo "✅ Setup Ollama terminé !"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      restartPolicy: OnFailure
+  backoffLimit: 3

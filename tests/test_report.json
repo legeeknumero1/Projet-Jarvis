@@ -1,0 +1,119 @@
+{
+  "start_time": "2025-07-20T10:53:26.821390",
+  "tests": {
+    "Existence des fichiers": {
+      "success": true,
+      "duration": 1.7404556274414062e-05,
+      "details": {
+        "success": true,
+        "missing_files": [],
+        "total_files": 7
+      },
+      "error": null
+    },
+    "Syntaxe Python": {
+      "success": true,
+      "duration": 0.006731986999511719,
+      "details": {
+        "success": true,
+        "syntax_errors": [],
+        "total_files": 3
+      },
+      "error": null
+    },
+    "Configuration Docker Compose": {
+      "success": true,
+      "duration": 4.410743713378906e-05,
+      "details": {
+        "success": true,
+        "passed_checks": 12,
+        "total_checks": 12,
+        "failed_checks": []
+      },
+      "error": null
+    },
+    "Dépendances Requirements": {
+      "success": true,
+      "duration": 1.5974044799804688e-05,
+      "details": {
+        "success": true,
+        "missing_dependencies": [],
+        "total_dependencies": 8
+      },
+      "error": null
+    },
+    "Imports système mémoire": {
+      "success": false,
+      "duration": 0.02404499053955078,
+      "details": {
+        "success": false,
+        "successful_imports": 0,
+        "total_imports": 2,
+        "import_details": [
+          [
+            "brain_memory_system",
+            false,
+            "No module named 'asyncpg'"
+          ],
+          [
+            "qdrant_adapter",
+            false,
+            "No module named 'asyncpg'"
+          ]
+        ]
+      },
+      "error": null
+    },
+    "Fonctionnalité de base": {
+      "success": false,
+      "duration": 0.00037288665771484375,
+      "details": {
+        "success": false,
+        "error": "No module named 'asyncpg'"
+      },
+      "error": null
+    },
+    "Tests unitaires": {
+      "success": false,
+      "duration": 0.008833885192871094,
+      "details": {
+        "success": false,
+        "returncode": 1,
+        "stdout": "",
+        "stderr": "/usr/bin/python3: No module named pytest\n"
+      },
+      "error": null
+    },
+    "Tests d'intégration": {
+      "success": false,
+      "duration": 0.010128259658813477,
+      "details": {
+        "success": false,
+        "returncode": 1,
+        "stdout": "",
+        "stderr": "/usr/bin/python3: No module named pytest\n"
+      },
+      "error": null
+    },
+    "Tests de performance": {
+      "success": false,
+      "duration": 0.09757614135742188,
+      "details": {
+        "success": false,
+        "returncode": 1,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/home/enzo/Documents/Projet Jarvis/tests/test_performance_load.py\", line 22, in <module>\n    from memory.brain_memory_system import (\n    ...<2 lines>...\n    )\n  File \"/home/enzo/Documents/Projet Jarvis/tests/../backend/memory/brain_memory_system.py\", line 21, in <module>\n    from db.database import Database, Memory, Conversation, User\n  File \"/home/enzo/Documents/Projet Jarvis/tests/../backend/db/database.py\", line 2, in <module>\n    import asyncpg\nModuleNotFoundError: No module named 'asyncpg'\n"
+      },
+      "error": null
+    }
+  },
+  "summary": {
+    "total_tests": 9,
+    "successful_tests": 4,
+    "failed_tests": 5,
+    "success_rate": 44.44444444444444,
+    "total_duration": 0.1477656364440918
+  },
+  "errors": [],
+  "end_time": "2025-07-20T10:53:26.969246"
+}

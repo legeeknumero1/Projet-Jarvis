@@ -4,11 +4,15 @@ Assistant vocal intelligent local développé par Enzo, avec des capacités de c
 
 ## 🎯 Objectifs
 
-- Assistant vocal local et privé
-- Intégration complète avec Home Assistant
-- Mémoire contextuelle personnalisée
-- Interface web moderne et responsive
-- Modularité et extensibilité
+**JARVIS V1 - Vision Complète :**
+- **Assistant vocal local et privé** 100% offline avec mémoire persistante
+- **Intégration domotique** complète avec Home Assistant (Zigbee, MQTT)
+- **Mémoire contextuelle** personnalisée avec apprentissage des habitudes
+- **Interface web** moderne style ChatGPT ultra-optimisée
+- **Architecture modulaire** "poupée russe" avec microservices Docker
+- **Comportement intelligent** proactif et adaptatif selon contexte
+- **Gaming-aware** avec optimisations performances automatiques
+- **Sécurité réseau** intégrée avec monitoring et alertes
 
 ## 🏗️ Architecture
 
@@ -107,15 +111,17 @@ Projet Jarvis/
 
 ## 🎮 Utilisation
 
-### Interface Web
+### Interface Web ChatGPT Style
 - Accédez à `http://localhost:3000`
-- Utilisez le chat textuel ou vocal
-- Configurez vos préférences
+- **Chat textuel** : Tapez votre message et appuyez Entrée
+- **Chat vocal** : Cliquez sur 🎤, parlez, le texte se remplit automatiquement
+- **Réponses IA** : Ollama + LLaMA 3.1 en français
+- **Performance** : Interface ultra-optimisée, zéro lag
 
 ### Commandes vocales
-- "Jarvis, allume la lumière du salon"
-- "Jarvis, quelle est la température ?"
-- "Jarvis, rappelle-moi de sortir le chien à 15h"
+- "Bonjour Jarvis, comment ça va ?"
+- "Explique-moi la programmation Python"
+- "Aide-moi à organiser ma journée"
 
 ### API REST
 - `GET /health` - Statut du système
@@ -145,26 +151,35 @@ Configurez votre token et URL Home Assistant dans `.env` pour l'intégration dom
 
 ## 🎯 Fonctionnalités
 
-### ✅ Implémentées
-- [x] Interface web React
-- [x] API FastAPI avec WebSocket
-- [x] Architecture modulaire
-- [x] Configuration Docker
-- [x] Base de données PostgreSQL
-- [x] Intégration Ollama avec LLaMA 3.1
-- [x] Gestion des profils utilisateurs
-- [x] Système de mémoire vectorielle
-- [x] Reconnaissance vocale Whisper (backend)
-- [x] API endpoints vocaux (/voice/transcribe, /voice/synthesize)
-- [x] Interface vocale React (Speech Recognition API)
-- [x] Chat en temps réel avec WebSocket
-- [x] Synthèse vocale Piper (backend, partiellement)
+### ⚠️ V1 PARTIELLEMENT IMPLÉMENTÉE (76%)
+- [x] **Interface web React** style ChatGPT ultra-optimisée
+- [x] **API FastAPI** avec WebSocket temps réel (compilation OK)
+- [x] **Architecture Docker "poupée russe"** 5/7 services actifs
+- [x] **Base de données PostgreSQL** + mémoire vectorielle (config partielle)
+- [x] **Intégration Ollama** avec LLaMA 3.1 100% fonctionnelle
+- [x] **Gestion profils utilisateurs** avec CRUD complet
+- [x] **Système mémoire contextuelle** avec embeddings
+- [ ] **Reconnaissance vocale Whisper** (services demo uniquement)
+- [ ] **API endpoints vocaux** (présents mais non testés)
+- [ ] **Interface vocale React** (Speech Recognition API native)
+- [ ] **Chat textuel + vocal** en temps réel (backend manquant)
+- [ ] **Synthèse vocale TTS** (services demo uniquement)
+- [x] **Logs détaillés** avec emojis pour debugging
+- [x] **Performance optimisée** (RAM divisée par 10)
+- [ ] **WebSocket audio bridge** (non testé)
+- [x] **Mémoire conversationnelle** avec flags importance
+- [ ] **Auto-update mémoire** (configuration incomplète)
+- [ ] **Filtrage hallucinations STT** (non validé)
+- [ ] **CORS sécurisé** (à configurer)
+- [ ] **Logs conversations** automatiques (non actifs)
+
+**⚠️ AUDIT INSTANCE #1 (21/07/2025) : V1 FONCTIONNELLE MAIS INCOMPLÈTE**
 
 ### 🔄 En cours
 - [ ] Intégration Home Assistant complète
 - [ ] Système de plugins/modules
-- [ ] Amélioration de la synthèse vocale
-- [ ] Installation complète des dépendances audio
+- [ ] Amélioration synthèse vocale avec vraies voix
+- [ ] Optimisations performance avancées
 
 ### 📋 Planifiées
 - [ ] Reconnaissance de contexte ambiant

@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: jarvis-monitoring
+  namespace: jarvis
+  labels:
+    app: jarvis
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: jarvis
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-prometheus
+  namespace: jarvis
+  labels:
+    app: jarvis-prometheus
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-prometheus
+  template:
+    metadata:
+      labels:
+        app: jarvis-prometheus
+        component: monitoring
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+          name: prometheus
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+        command:
+        - /bin/prometheus
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/prometheus
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --web.console.templates=/etc/prometheus/consoles
+        - --storage.tsdb.retention.time=30d
+        - --web.enable-lifecycle
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: jarvis
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    scrape_configs:
+    # Scraping Jarvis services
+    - job_name: 'jarvis-backend'
+      static_configs:
+      - targets: ['jarvis-backend:8000']
+      metrics_path: '/metrics'
+      scrape_interval: 10s
+    
+    - job_name: 'jarvis-stt'
+      static_configs:
+      - targets: ['jarvis-stt:8003']
+      metrics_path: '/metrics'
+      scrape_interval: 15s
+    
+    - job_name: 'jarvis-tts'
+      static_configs:
+      - targets: ['jarvis-tts:8002']
+      metrics_path: '/metrics'
+      scrape_interval: 15s
+    
+    - job_name: 'jarvis-interface'
+      static_configs:
+      - targets: ['jarvis-interface:8001']
+      metrics_path: '/metrics'
+      scrape_interval: 15s
+    
+    # Monitoring infrastructure
+    - job_name: 'qdrant'
+      static_configs:
+      - targets: ['jarvis-qdrant:6333']
+      metrics_path: '/metrics'
+    
+    - job_name: 'postgres'
+      static_configs:
+      - targets: ['jarvis-postgres:5432']
+    
+    - job_name: 'redis'
+      static_configs:
+      - targets: ['jarvis-redis:6379']
+    
+    # Kubernetes monitoring
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [jarvis]
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-prometheus
+  namespace: jarvis
+  labels:
+    app: jarvis-prometheus
+    component: monitoring
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    targetPort: 9090
+    nodePort: 30090
+    protocol: TCP
+    name: prometheus
+  selector:
+    app: jarvis-prometheus
+---
+# Grafana pour visualisation (optionnel)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-grafana
+  namespace: jarvis
+  labels:
+    app: jarvis-grafana
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-grafana
+  template:
+    metadata:
+      labels:
+        app: jarvis-grafana
+        component: monitoring
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+          name: grafana
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "jarvis123"  # À changer en production
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-grafana
+  namespace: jarvis
+  labels:
+    app: jarvis-grafana
+    component: monitoring
+spec:
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
+    nodePort: 30300
+    protocol: TCP
+    name: grafana
+  selector:
+    app: jarvis-grafana

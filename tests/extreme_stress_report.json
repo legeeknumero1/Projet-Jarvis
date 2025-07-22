@@ -1,0 +1,249 @@
+{
+  "summary": {
+    "total_tests": 6,
+    "successful": 6,
+    "failed": 0,
+    "success_rate": 100.0,
+    "total_duration": 0.47873997688293457,
+    "error_count": 0
+  },
+  "results": {
+    "massive_concurrent_load": {
+      "success": true,
+      "duration": 0.02116703987121582,
+      "details": {
+        "total_tasks": 1000,
+        "successful": 1000,
+        "failed": 0,
+        "exception_count": 0,
+        "throughput": 47243.261508656135,
+        "avg_time_per_task": 2.1167039871215822e-05
+      },
+      "error": null,
+      "timestamp": 0.023693561553955078
+    },
+    "memory_leak_detection": {
+      "success": true,
+      "duration": 0,
+      "details": {
+        "initial_objects": 128211,
+        "final_objects": 123784,
+        "object_growth": -4427,
+        "memory_growth_mb": 0.0,
+        "cycles_completed": 10
+      },
+      "error": null,
+      "timestamp": 0.213303804397583
+    },
+    "malformed_inputs": {
+      "success": true,
+      "duration": 0,
+      "details": {
+        "total_inputs": 14,
+        "successful_handled": 14,
+        "errors": 0,
+        "results": [
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success",
+          "success_converted",
+          "success_converted",
+          "success_converted"
+        ]
+      },
+      "error": null,
+      "timestamp": 0.21750569343566895
+    },
+    "race_conditions": {
+      "success": true,
+      "duration": 0.03055405616760254,
+      "details": {
+        "total_operations": 1000,
+        "total_errors": 0,
+        "final_counter": 1000,
+        "fragments_stored": 1000,
+        "expected_counter": 1000,
+        "duration": 0.03055405616760254,
+        "ops_per_second": 32728.878762104672
+      },
+      "error": null,
+      "timestamp": 0.2480788230895996
+    },
+    "extreme_data_sizes": {
+      "success": true,
+      "duration": 0,
+      "details": {
+        "tested_sizes": [
+          1000,
+          10000,
+          100000,
+          500000,
+          1000000
+        ],
+        "successful_sizes": [
+          1000,
+          10000,
+          100000,
+          500000,
+          1000000
+        ],
+        "max_successful_size": 1000000,
+        "results": {
+          "1000": {
+            "success": true,
+            "duration": 0.00022792816162109375,
+            "memory_used_mb": 0.0,
+            "valence": 0.0,
+            "emotion": "neutre",
+            "chars_per_second": 4387347.280334728
+          },
+          "10000": {
+            "success": true,
+            "duration": 0.0008418560028076172,
+            "memory_used_mb": 0.0,
+            "valence": 0.0,
+            "emotion": "neutre",
+            "chars_per_second": 11878516.001132824
+          },
+          "100000": {
+            "success": true,
+            "duration": 0.0074656009674072266,
+            "memory_used_mb": 0.25,
+            "valence": 0.0,
+            "emotion": "neutre",
+            "chars_per_second": 13394768.945805257
+          },
+          "500000": {
+            "success": true,
+            "duration": 0.038664817810058594,
+            "memory_used_mb": 4.2265625,
+            "valence": 0.0,
+            "emotion": "neutre",
+            "chars_per_second": 12931652.813062673
+          },
+          "1000000": {
+            "success": true,
+            "duration": 0.07787847518920898,
+            "memory_used_mb": 0.8515625,
+            "valence": 0.0,
+            "emotion": "neutre",
+            "chars_per_second": 12840518.481781501
+          }
+        }
+      },
+      "error": null,
+      "timestamp": 0.4728083610534668
+    },
+    "error_injection_resilience": {
+      "success": true,
+      "duration": 0,
+      "details": {
+        "total_operations": 1000,
+        "successes": 864,
+        "failures": 136,
+        "success_rate": 0.864,
+        "error_types": {
+          "ConnectionError": 26,
+          "TimeoutError": 30,
+          "RuntimeError": 22,
+          "ValueError": 28,
+          "MemoryError": 30
+        }
+      },
+      "error": null,
+      "timestamp": 0.4786202907562256
+    }
+  },
+  "errors": [],
+  "memory_snapshots": [
+    {
+      "label": "debut_tests",
+      "rss_mb": 113.640625,
+      "vms_mb": 1443.4921875,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.0005755424499511719
+    },
+    {
+      "label": "avant_charge_massive",
+      "rss_mb": 113.640625,
+      "vms_mb": 1443.4921875,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.0006301403045654297
+    },
+    {
+      "label": "apres_charge_massive",
+      "rss_mb": 116.640625,
+      "vms_mb": 1445.87890625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.02368950843811035
+    },
+    {
+      "label": "avant_fuite_memoire",
+      "rss_mb": 116.640625,
+      "vms_mb": 1445.87890625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.023821115493774414
+    },
+    {
+      "label": "cycle_0",
+      "rss_mb": 117.390625,
+      "vms_mb": 1447.1015625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.04938626289367676
+    },
+    {
+      "label": "cycle_3",
+      "rss_mb": 117.390625,
+      "vms_mb": 1447.1015625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.10547304153442383
+    },
+    {
+      "label": "cycle_6",
+      "rss_mb": 117.390625,
+      "vms_mb": 1447.1015625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.15766286849975586
+    },
+    {
+      "label": "cycle_9",
+      "rss_mb": 117.390625,
+      "vms_mb": 1447.1015625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.21152400970458984
+    },
+    {
+      "label": "apres_fuite_memoire",
+      "rss_mb": 117.390625,
+      "vms_mb": 1447.1015625,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.21329975128173828
+    },
+    {
+      "label": "fin_tests",
+      "rss_mb": 122.71875,
+      "vms_mb": 1459.234375,
+      "cpu_percent": 0.0,
+      "threads": 32,
+      "timestamp": 0.47873449325561523
+    }
+  ],
+  "performance_metrics": {}
+}

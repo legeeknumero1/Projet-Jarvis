@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -8,7 +8,12 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
     portaudio19-dev \
+    build-essential \
+    git \
     && rm -rf /var/lib/apt/lists/*
+
+# Mise à jour pip et installation setuptools
+RUN pip install --upgrade pip setuptools wheel
 
 # Copie des fichiers de requirements
 COPY requirements.txt .

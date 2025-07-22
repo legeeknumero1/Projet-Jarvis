@@ -28,16 +28,20 @@
 
 ### 📊 Instances actives actuelles
 ```
-Instance #1: DISPONIBLE
-Instance #2: DISPONIBLE
-Instance #3: ACTIVE - Analyse complète fichiers projet (18:32) ✅ ARCHITECTURE DOCKER
-Instance #4: ACTIVE - Simplification système init (18:37) ✅ TERMINÉ
-Instance #5: ACTIVE - Lecture complète documentation (18:40) ✅ EN COURS
-Instance #6: DISPONIBLE
-Instance #7: DISPONIBLE
-Instance #8: DISPONIBLE
-Instance #9: DISPONIBLE
-Instance #10: DISPONIBLE
+Instance #1: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #2: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #3: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #4: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #5: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #6: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #7: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #8: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #9: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #10: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #11: TERMINÉE - Toutes tâches transférées à Instance #12
+Instance #12: FERMÉE - Tâches transférées à Instance #13  
+Instance #13: FERMÉE - Mission K8s terminée avec succès - Script deploy-jarvis-complete.sh livré (2025-07-21) ✅
+Instance #14: ACTIVE - Initialisation automatique (2025-07-22 16:42) ✅
 ```
 
 ### 🆔 Attribution automatique
@@ -77,6 +81,7 @@ POUR chaque nouveau démarrage d'instance :
    - /docs/CLAUDE_INSTANCES.md (coordination)
    - /docs/CLAUDE.md (instructions techniques)
    - /docs/BUGS.md (problèmes connus)
+   - /docs/ANALYSE_BUGS.md (analyse causes/solutions bugs - OBLIGATOIRE)
    - /docs/README.md (documentation projet)
    - /docs/CHANGELOG.md (historique)
    - /docs/API.md (documentation API)

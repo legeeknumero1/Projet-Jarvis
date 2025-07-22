@@ -1,6 +1,7 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
+pydantic-settings==2.5.2
 sqlalchemy==2.0.23
 asyncpg==0.29.0
 redis==5.0.1
@@ -21,3 +22,5 @@ python-dotenv==1.0.0
 httpx==0.25.2
 paho-mqtt==1.6.1
 aiosqlite==0.19.0
+ollama==0.3.3
+requests==2.31.0

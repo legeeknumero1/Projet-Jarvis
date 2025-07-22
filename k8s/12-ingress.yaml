@@ -1,0 +1,129 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jarvis-ingress
+  namespace: jarvis
+  labels:
+    app: jarvis
+    component: ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+    # WebSocket support
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/server-snippets: |
+      location /ws {
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+      }
+spec:
+  rules:
+  # Interface principale Jarvis
+  - host: jarvis.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-interface
+            port:
+              number: 3000
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-backend
+            port:
+              number: 8000
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-interface
+            port:
+              number: 8001
+  
+  # APIs spécialisées
+  - host: api.jarvis.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-backend
+            port:
+              number: 8000
+      - path: /tts
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-tts
+            port:
+              number: 8002
+      - path: /stt
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-stt
+            port:
+              number: 8003
+      - path: /ollama
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-ollama
+            port:
+              number: 11434
+      - path: /qdrant
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-qdrant
+            port:
+              number: 6333
+  
+  # Monitoring et développement
+  - host: qdrant.jarvis.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-qdrant
+            port:
+              number: 6333
+  
+  - host: ollama.jarvis.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jarvis-ollama
+            port:
+              number: 11434
+---
+# SSL/TLS Certificate (si cert-manager installé)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jarvis-tls
+  namespace: jarvis
+spec:
+  secretName: jarvis-tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - jarvis.local
+  - api.jarvis.local
+  - qdrant.jarvis.local
+  - ollama.jarvis.local

@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-qdrant
+  namespace: jarvis
+  labels:
+    app: jarvis-qdrant
+    component: vector-db
+    version: v1.4.0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jarvis-qdrant
+  template:
+    metadata:
+      labels:
+        app: jarvis-qdrant
+        component: vector-db
+    spec:
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:latest
+        ports:
+        - containerPort: 6333
+          name: http
+        - containerPort: 6334
+          name: grpc
+        env:
+        - name: QDRANT__SERVICE__HTTP_PORT
+          value: "6333"
+        - name: QDRANT__SERVICE__GRPC_PORT
+          value: "6334"
+        - name: QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS
+          value: "4"
+        - name: QDRANT__SERVICE__ENABLE_CORS
+          value: "true"
+        volumeMounts:
+        - name: qdrant-storage
+          mountPath: /qdrant/storage
+        - name: qdrant-config
+          mountPath: /qdrant/config
+          readOnly: true
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 6333
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 6333
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: qdrant-storage
+        persistentVolumeClaim:
+          claimName: jarvis-qdrant-pvc
+      - name: qdrant-config
+        configMap:
+          name: jarvis-qdrant-config
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-qdrant
+  namespace: jarvis
+  labels:
+    app: jarvis-qdrant
+    component: vector-db
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6333
+    targetPort: 6333
+    protocol: TCP
+    name: http
+  - port: 6334
+    targetPort: 6334
+    protocol: TCP
+    name: grpc
+  selector:
+    app: jarvis-qdrant
