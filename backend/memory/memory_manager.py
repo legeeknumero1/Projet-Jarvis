@@ -63,26 +63,33 @@ class MemoryManager:
         # Catégoriser le contenu
         category = await self._categorize_content(content)
         
-        async with self.db.get_session() as session:
-            try:
-                memory = Memory(
-                    user_id=user_id,
-                    content=content,
-                    embedding=embedding,
-                    category=category,
-                    importance=importance,
-                    created_at=datetime.utcnow(),
-                    last_accessed=datetime.utcnow()
-                )
-                session.add(memory)
-                await session.commit()
-                
-            except Exception as e:
-                await session.rollback()
-                self.logger.error(f"Failed to create memory: {e}")
+        try:
+            async with self.db.get_session() as session:
+                try:
+                    memory = Memory(
+                        user_id=user_id,
+                        content=content,
+                        embedding=embedding,
+                        category=category,
+                        importance=importance,
+                        created_at=datetime.utcnow(),
+                        last_accessed=datetime.utcnow()
+                    )
+                    session.add(memory)
+                    await session.commit()
+                    
+                except Exception as e:
+                    await session.rollback()
+                    self.logger.error(f"Failed to create memory: {e}")
+                    raise
+                    
+        except Exception as e:
+            self.logger.error(f"Failed to get database session: {e}")
+            return None
     
     async def get_user_context(self, user_id: str) -> Dict[str, Any]:
-        async with self.db.get_session() as session:
+        try:
+            async with self.db.get_session() as session:
             try:
                 # Récupérer les conversations récentes
                 recent_conversations = await session.execute(
@@ -124,6 +131,10 @@ class MemoryManager:
             except Exception as e:
                 self.logger.error(f"Failed to get user context: {e}")
                 return {"user_id": user_id, "recent_conversations": [], "relevant_memories": []}
+                
+        except Exception as e:
+            self.logger.error(f"Failed to get database session for user context: {e}")
+            return {"user_id": user_id, "recent_conversations": [], "relevant_memories": []}
     
     async def search_memories(self, user_id: str, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         if not self.embedding_model:

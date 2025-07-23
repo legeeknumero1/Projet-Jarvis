@@ -35,7 +35,7 @@
 **Code problématique** :
 ```python
 # AVANT (problématique)
-file_path = "/home/enzo/Documents/Projet Jarvis/data/file.txt"
+file_path = "./data/file.txt"
 
 # APRÈS (solution)
 import os

@@ -27,7 +27,8 @@ class HybridJarvisServer:
         self.session = None
         self.jarvis_ai = JarvisAI()  # IA locale intelligente
         self.conversation_memory = {}  # Mémoire par connexion
-        self.conversations_log_path = "/home/enzo/Documents/Projet Jarvis/docs/CONVERSATIONS.md"
+        import os
+        self.conversations_log_path = os.path.join(os.getcwd(), "docs", "CONVERSATIONS.md")
     
     async def init_session(self):
         """Initialize HTTP session for Ollama requests"""

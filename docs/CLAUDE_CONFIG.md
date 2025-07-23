@@ -41,7 +41,9 @@ Instance #10: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #11: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #12: FERMÉE - Tâches transférées à Instance #13  
 Instance #13: FERMÉE - Mission K8s terminée avec succès - Script deploy-jarvis-complete.sh livré (2025-07-21) ✅
-Instance #14: ACTIVE - Initialisation automatique (2025-07-22 16:42) ✅
+Instance #14: FERMÉE - Audit complet terminé (2025-07-22 17:05) ✅
+Instance #15: FERMÉE - Toutes tâches transférées à Instance #16
+Instance #16: ACTIVE - Initialisation automatique (2025-07-23 10:05) ✅
 ```
 
 ### 🆔 Attribution automatique
@@ -232,7 +234,7 @@ AI: Ollama (LLaMA 3.1)
 
 ### 📂 Chemins importants
 ```yaml
-PROJECT_ROOT: "/home/enzo/Documents/Projet Jarvis"
+PROJECT_ROOT: "./Projet Jarvis"
 BACKEND: "./backend/"
 FRONTEND: "./frontend/"
 DOCS: "./docs/"

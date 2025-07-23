@@ -37,17 +37,46 @@ async def health_check():
 
 @app.post("/transcribe", response_model=STTResponse)
 async def transcribe_audio(file: UploadFile = File(...)):
-    """Transcribe audio file to text"""
+    """Transcribe audio file to text using Whisper"""
     try:
-        # Simulate STT processing
         logger.info(f"Processing audio file: {file.filename}")
         
-        # For demo purposes, return a fixed response
-        return STTResponse(
-            text="Bonjour, ceci est un test de transcription audio.",
-            confidence=0.95,
-            duration=2.5
-        )
+        # Lire les données audio
+        audio_data = await file.read()
+        
+        # Sauvegarder temporairement le fichier
+        temp_path = f"/tmp/{file.filename}"
+        with open(temp_path, "wb") as f:
+            f.write(audio_data)
+        
+        try:
+            # Importer whisper seulement quand nécessaire
+            import whisper
+            
+            # Charger le modèle Whisper (base pour rapidité)
+            model = whisper.load_model("base")
+            
+            # Transcrire l'audio
+            result = model.transcribe(temp_path, language="fr")
+            
+            # Nettoyer le fichier temporaire
+            os.unlink(temp_path)
+            
+            return STTResponse(
+                text=result["text"].strip(),
+                confidence=0.95,  # Whisper ne donne pas de score de confiance
+                duration=result.get("duration", 0.0)
+            )
+            
+        except ImportError:
+            logger.warning("Whisper not available - using demo mode")
+            # Fallback vers mode demo si whisper n'est pas installé
+            return STTResponse(
+                text="[DEMO] Bonjour, transcription automatique en cours...",
+                confidence=0.85,
+                duration=2.0
+            )
+        
     except Exception as e:
         logger.error(f"STT processing error: {e}")
         raise HTTPException(status_code=500, detail="STT processing failed")

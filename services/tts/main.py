@@ -42,16 +42,44 @@ async def health_check():
 
 @app.post("/synthesize", response_model=TTSResponse)
 async def synthesize_speech(request: TTSRequest):
-    """Synthesize text to speech"""
+    """Synthesize text to speech using Coqui TTS"""
     try:
         logger.info(f"Synthesizing: {request.text[:50]}...")
         
-        # For demo purposes, return a fixed response
-        return TTSResponse(
-            audio_url="/audio/demo_response.wav",
-            duration=3.0,
-            voice_used=request.voice
-        )
+        try:
+            # Importer TTS seulement quand nécessaire
+            from TTS.api import TTS
+            import torch
+            
+            # Choisir le device (GPU si disponible)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            
+            # Initialiser TTS (modèle français)
+            tts = TTS("tts_models/fr/mai/tacotron2-DDC", device=device)
+            
+            # Générer l'audio
+            output_path = f"/tmp/tts_output_{hash(request.text)}.wav"
+            tts.tts_to_file(text=request.text, file_path=output_path)
+            
+            # Calculer la durée approximative (mots par minute)
+            word_count = len(request.text.split())
+            duration = (word_count / 150) * 60  # ~150 mots/min
+            
+            return TTSResponse(
+                audio_url=output_path,
+                duration=duration,
+                voice_used=request.voice
+            )
+            
+        except ImportError:
+            logger.warning("Coqui TTS not available - using demo mode")
+            # Fallback vers mode demo si TTS n'est pas installé
+            return TTSResponse(
+                audio_url="/audio/demo_response.wav",
+                duration=len(request.text) * 0.1,  # Estimation basique
+                voice_used=request.voice + "_demo"
+            )
+        
     except Exception as e:
         logger.error(f"TTS synthesis error: {e}")
         raise HTTPException(status_code=500, detail="TTS synthesis failed")

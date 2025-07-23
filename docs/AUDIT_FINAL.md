@@ -25,7 +25,7 @@
 ## 🏗️ ARCHITECTURE TECHNIQUE
 
 ### ✅ Backend (FastAPI) - 100% OPÉRATIONNEL
-**Structure** : `/home/enzo/Documents/Projet Jarvis/backend/`
+**Structure** : `./backend/`
 
 ```
 backend/
@@ -59,7 +59,7 @@ backend/
 - ✅ Configuration .env complète
 
 ### ✅ Frontend (React) - 100% OPÉRATIONNEL
-**Structure** : `/home/enzo/Documents/Projet Jarvis/frontend/`
+**Structure** : `./frontend/`
 
 ```
 frontend/
@@ -88,7 +88,7 @@ frontend/
 - ✅ Performance optimisée (plus de lag)
 
 ### ✅ Services Docker - 100% IMPLÉMENTÉS
-**Structure** : `/home/enzo/Documents/Projet Jarvis/services/`
+**Structure** : `./services/`
 
 ```
 services/
@@ -154,7 +154,7 @@ SECRET_KEY=your-secret-key-change-this-in-production
 ## 📚 DOCUMENTATION
 
 ### ✅ Documentation technique - 100% À JOUR
-**Structure** : `/home/enzo/Documents/Projet Jarvis/docs/`
+**Structure** : `./docs/`
 
 ```
 docs/
@@ -180,7 +180,7 @@ docs/
 ## 🧪 TESTS
 
 ### ✅ Suite tests unitaires - IMPLÉMENTÉE
-**Structure** : `/home/enzo/Documents/Projet Jarvis/tests/`
+**Structure** : `./tests/`
 
 ```
 tests/

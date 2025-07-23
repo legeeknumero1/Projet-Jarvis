@@ -81,10 +81,11 @@ class Database:
         return self.session_maker()
     
     async def execute_query(self, query: str, params: dict = None):
-        session = self.get_session()
-        try:
-            result = await session.execute(query, params or {})
-            await session.commit()
-            return result
-        finally:
-            await session.close()
+        async with self.get_session() as session:
+            try:
+                result = await session.execute(query, params or {})
+                await session.commit()
+                return result
+            except Exception as e:
+                await session.rollback()
+                raise

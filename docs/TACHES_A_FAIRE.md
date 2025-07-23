@@ -5,7 +5,7 @@
 ### TÂCHE-001 : Corriger chemins hardcodés
 **Statut** : ❌ À FAIRE
 **Priorité** : CRITIQUE
-**Description** : Remplacer chemins absolus "/home/enzo/..." par chemins relatifs
+**Description** : Remplacer chemins absolus hardcodés par chemins relatifs (./backend/, ./docs/, etc.)
 **Fichiers concernés** : `/backend/main.py`, `/backend/config/config.py`
 **Estimé** : 2 heures
 **Lié à** : BUG-009
@@ -348,7 +348,7 @@ Type	Nombre	Commentaires
 ⌛ Modules manquants	4+	profile_manager.py, audio_bridge.py, services/brain/
 💡 Étapes suivantes que je te recommande
 
-    Corriger les chemins hardcodés (/home/enzo/…) → passer à des chemins relatifs ou basés sur Path(__file__).
+    Corriger les chemins hardcodés → passer à des chemins relatifs (./backend/, ./docs/, etc.) ou basés sur Path(__file__).
 
     Mettre en place la configuration .env centralisée pour tous les services, puis loader dans les config.py respectifs.
 
@@ -394,7 +394,7 @@ Très bien. Voici une version ultra détaillée, exhaustive et structurée des p
 Objectif : Rendre le projet portable et évitable les erreurs d’environnement.
 🔍 Problème détecté
 
-    Chemins absolus /home/enzo/... utilisés dans le backend (notamment dans main.py, config.py).
+    Chemins absolus hardcodés utilisés dans le backend (notamment dans main.py, config.py) - À remplacer par chemins relatifs.
 
     Bloque l’exécution sur toute autre machine que la tienne.
 
@@ -420,7 +420,7 @@ class Settings(BaseSettings):
 
     backend/config/config.py
 
-    Tous les modules utilisant /home/enzo/
+    Tous les modules utilisant des chemins absolus hardcodés
 
 🛑 Risques
 
@@ -1978,7 +1978,7 @@ services:
     restart: unless-stopped
 
 Validation : Stoppe manuellement → doit redémarrer automatiquement.
-BUG-009 – Chemins hardcodés (/home/enzo/…)
+BUG-009 – Chemins hardcodés (absolus)
 
 Fix
 
@@ -1986,7 +1986,7 @@ Fix
 
     Ajoute un script CI qui détecte les /home/enzo/ via ripgrep :
 
-    rg "/home/enzo" -n backend/
+    rg "^/home/|^/root/|^/var/lib" -n backend/
 
 Validation : build sur une autre machine OK.
 BUG-010 – PostgreSQL partiellement configurée

@@ -8,10 +8,29 @@ import logging
 
 import whisper
 import torch
-# import soundfile as sf
-# from pydub import AudioSegment  # Temporairement désactivé - problème dépendances
 import numpy as np
-# from piper import PiperVoice  # Temporairement désactivé
+
+# Imports conditionnels pour éviter les erreurs
+try:
+    import soundfile as sf
+    SOUNDFILE_AVAILABLE = True
+except ImportError:
+    SOUNDFILE_AVAILABLE = False
+    logging.warning("soundfile non disponible - fonctionnalités audio limitées")
+
+try:
+    from pydub import AudioSegment
+    PYDUB_AVAILABLE = True
+except ImportError:
+    PYDUB_AVAILABLE = False
+    logging.warning("pydub non disponible - conversion audio limitée")
+
+try:
+    from piper import PiperVoice
+    PIPER_AVAILABLE = True
+except ImportError:
+    PIPER_AVAILABLE = False
+    logging.warning("Piper TTS non disponible - utilisation API externe")
 
 class SpeechManager:
     def __init__(self, config):

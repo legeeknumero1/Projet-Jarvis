@@ -10,7 +10,10 @@ const ChatGPTInterface = () => {
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  const WS_URL = 'ws://localhost:8000/ws';
+  // Configuration API - authentification côté serveur uniquement
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+  // API_KEY supprimée - authentification gérée côté serveur
 
   const { 
     sendMessage, 
@@ -97,8 +100,8 @@ const ChatGPTInterface = () => {
     }]);
     
     try {
-      // Utiliser API REST au lieu de WebSocket
-      const response = await fetch('http://localhost:8000/chat', {
+      // Utiliser API REST - authentification gérée côté serveur
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

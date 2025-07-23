@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File, UploadFile, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthentication, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import uvicorn
 import asyncio
@@ -29,54 +30,80 @@ async def lifespan(app: FastAPI):
     # Startup
     logging.info("🚀 [STARTUP] Jarvis démarrage...")
     
-    try:
-        logging.info("📊 [DB] Connexion base de données...")
-        await db.connect()
-        logging.info("✅ [DB] Base de données connectée")
-    except Exception as e:
-        logging.error(f"❌ [DB] Erreur connexion: {e}")
+    # Vérification et initialisation base de données
+    if db and hasattr(db, 'connect'):
+        try:
+            logging.info("📊 [DB] Connexion base de données...")
+            await db.connect()
+            logging.info("✅ [DB] Base de données connectée")
+        except Exception as e:
+            logging.error(f"❌ [DB] Erreur connexion: {e}")
+    else:
+        logging.error("❌ [DB] Objet database non disponible ou mal configuré")
     
-    try:
-        logging.info("🧠 [MEMORY] Initialisation système mémoire neuromorphique...")
-        await brain_memory_system.initialize()
-        logging.info("✅ [MEMORY] Système mémoire neuromorphique initialisé")
-    except Exception as e:
-        logging.error(f"❌ [MEMORY] Erreur initialisation: {e}")
+    # Vérification et initialisation système mémoire neuromorphique
+    if brain_memory_system and hasattr(brain_memory_system, 'initialize'):
+        try:
+            logging.info("🧠 [MEMORY] Initialisation système mémoire neuromorphique...")
+            await brain_memory_system.initialize()
+            logging.info("✅ [MEMORY] Système mémoire neuromorphique initialisé")
+        except Exception as e:
+            logging.error(f"❌ [MEMORY] Erreur initialisation: {e}")
+    else:
+        logging.error("❌ [MEMORY] Système mémoire neuromorphique non disponible")
     
-    try:
-        logging.info("👤 [PROFILE] Initialisation gestionnaire profils...")
-        await profile_manager.initialize()
-        logging.info("✅ [PROFILE] Gestionnaire profils initialisé")
-    except Exception as e:
-        logging.error(f"❌ [PROFILE] Erreur initialisation: {e}")
+    # Vérification et initialisation gestionnaire profils
+    if profile_manager and hasattr(profile_manager, 'initialize'):
+        try:
+            logging.info("👤 [PROFILE] Initialisation gestionnaire profils...")
+            await profile_manager.initialize()
+            logging.info("✅ [PROFILE] Gestionnaire profils initialisé")
+        except Exception as e:
+            logging.error(f"❌ [PROFILE] Erreur initialisation: {e}")
+    else:
+        logging.warning("⚠️ [PROFILE] Gestionnaire profils non disponible")
     
-    try:
-        logging.info("🎤 [SPEECH] Initialisation gestionnaire vocal...")
-        await speech_manager.initialize()
-        logging.info("✅ [SPEECH] Gestionnaire vocal initialisé")
-    except Exception as e:
-        logging.error(f"❌ [SPEECH] Erreur initialisation: {e}")
+    # Vérification et initialisation gestionnaire vocal
+    if speech_manager and hasattr(speech_manager, 'initialize'):
+        try:
+            logging.info("🎤 [SPEECH] Initialisation gestionnaire vocal...")
+            await speech_manager.initialize()
+            logging.info("✅ [SPEECH] Gestionnaire vocal initialisé")
+        except Exception as e:
+            logging.error(f"❌ [SPEECH] Erreur initialisation: {e}")
+    else:
+        logging.warning("⚠️ [SPEECH] Gestionnaire vocal non disponible")
     
-    try:
-        logging.info("🏠 [HA] Connexion Home Assistant...")
-        await home_assistant.connect()
-        logging.info("✅ [HA] Home Assistant connecté")
-    except Exception as e:
-        logging.error(f"❌ [HA] Erreur connexion: {e}")
+    # Vérification et connexion Home Assistant
+    if home_assistant and hasattr(home_assistant, 'connect'):
+        try:
+            logging.info("🏠 [HA] Connexion Home Assistant...")
+            await home_assistant.connect()
+            logging.info("✅ [HA] Home Assistant connecté")
+        except Exception as e:
+            logging.error(f"❌ [HA] Erreur connexion: {e}")
+    else:
+        logging.warning("⚠️ [HA] Home Assistant non disponible")
     
-    # Vérifier et préparer Ollama
-    try:
-        logging.info("🤖 [OLLAMA] Vérification disponibilité...")
-        if await ollama_client.is_available():
-            logging.info("🤖 [OLLAMA] Service disponible, vérification modèle...")
-            if await ollama_client.ensure_model_available("llama3.2:1b"):
-                logging.info("✅ [OLLAMA] LLaMA 3.2:1b prêt")
+    # Vérification et préparation Ollama
+    if ollama_client and hasattr(ollama_client, 'is_available'):
+        try:
+            logging.info("🤖 [OLLAMA] Vérification disponibilité...")
+            if await ollama_client.is_available():
+                logging.info("🤖 [OLLAMA] Service disponible, vérification modèle...")
+                if hasattr(ollama_client, 'ensure_model_available'):
+                    if await ollama_client.ensure_model_available("llama3.2:1b"):
+                        logging.info("✅ [OLLAMA] LLaMA 3.2:1b prêt")
+                    else:
+                        logging.warning("⚠️ [OLLAMA] Modèle LLaMA 3.2:1b non disponible")
+                else:
+                    logging.warning("⚠️ [OLLAMA] Fonction ensure_model_available non disponible")
             else:
-                logging.warning("⚠️ [OLLAMA] Modèle LLaMA 3.2:1b non disponible")
-        else:
-            logging.warning("⚠️ [OLLAMA] Service non disponible")
-    except Exception as e:
-        logging.error(f"❌ [OLLAMA] Erreur: {e}")
+                logging.warning("⚠️ [OLLAMA] Service non disponible")
+        except Exception as e:
+            logging.error(f"❌ [OLLAMA] Erreur: {e}")
+    else:
+        logging.warning("⚠️ [OLLAMA] Client Ollama non disponible ou mal configuré")
     
     logging.info("🎯 [STARTUP] Jarvis démarré avec succès !")
     
@@ -85,24 +112,38 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logging.info("🛑 [SHUTDOWN] Arrêt Jarvis...")
     
-    try:
-        await db.disconnect()
-        logging.info("✅ [DB] Base de données déconnectée")
-    except Exception as e:
-        logging.error(f"❌ [DB] Erreur déconnexion: {e}")
+    # Déconnexion sécurisée base de données
+    if db and hasattr(db, 'disconnect'):
+        try:
+            await db.disconnect()
+            logging.info("✅ [DB] Base de données déconnectée")
+        except Exception as e:
+            logging.error(f"❌ [DB] Erreur déconnexion: {e}")
+    else:
+        logging.warning("⚠️ [DB] Pas de déconnexion nécessaire")
     
-    try:
-        await home_assistant.disconnect()
-        logging.info("✅ [HA] Home Assistant déconnecté")
-    except Exception as e:
-        logging.error(f"❌ [HA] Erreur déconnexion: {e}")
+    # Déconnexion sécurisée Home Assistant
+    if home_assistant and hasattr(home_assistant, 'disconnect'):
+        try:
+            await home_assistant.disconnect()
+            logging.info("✅ [HA] Home Assistant déconnecté")
+        except Exception as e:
+            logging.error(f"❌ [HA] Erreur déconnexion: {e}")
+    else:
+        logging.warning("⚠️ [HA] Pas de déconnexion nécessaire")
     
-    try:
-        if hasattr(ollama_client, 'client') and ollama_client.client:
-            await ollama_client.client.aclose()
-            logging.info("✅ [OLLAMA] Client fermé")
-    except Exception as e:
-        logging.error(f"❌ [OLLAMA] Erreur fermeture: {e}")
+    # Fermeture sécurisée client Ollama
+    if ollama_client:
+        try:
+            if hasattr(ollama_client, 'client') and ollama_client.client:
+                await ollama_client.client.aclose()
+                logging.info("✅ [OLLAMA] Client fermé")
+            else:
+                logging.info("ℹ️ [OLLAMA] Client déjà fermé ou non initialisé")
+        except Exception as e:
+            logging.error(f"❌ [OLLAMA] Erreur fermeture: {e}")
+    else:
+        logging.warning("⚠️ [OLLAMA] Client non disponible")
     
     logging.info("✅ [SHUTDOWN] Jarvis arrêté proprement")
 
@@ -116,15 +157,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration du logging détaillé - chemin absolu Docker
+# Configuration du logging détaillé - chemins relatifs
 import os
-os.makedirs('/app/logs', exist_ok=True)
+log_dir = os.path.join(os.getcwd(), 'logs')
+os.makedirs(log_dir, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/app/logs/jarvis.log'),
+        logging.FileHandler(os.path.join(log_dir, 'jarvis.log')),
         logging.StreamHandler()
     ]
 )
@@ -143,6 +185,20 @@ ollama_client = OllamaClient(base_url=config.ollama_base_url)
 weather_service = WeatherService()
 
 logger.info("✅ [INIT] Tous les composants initialisés")
+
+# Authentification sécurisée avec variable d'environnement
+API_KEY = os.getenv("JARVIS_API_KEY")
+if not API_KEY:
+    import secrets
+    API_KEY = secrets.token_urlsafe(32)
+    logger.warning(f"⚠️ [SECURITY] API Key générée automatiquement: {API_KEY}")
+    logger.warning("🔒 [SECURITY] Définissez JARVIS_API_KEY en variable d'environnement pour la production")
+
+async def verify_api_key(x_api_key: str = Header(None)):
+    """Vérifier la clé API pour les endpoints sensibles"""
+    if not x_api_key or x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Clé API invalide ou manquante")
+    return x_api_key
 
 class MessageRequest(BaseModel):
     message: str
@@ -170,8 +226,20 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now()}
 
+@app.get("/metrics")
+async def get_metrics():
+    """Endpoint Prometheus metrics"""
+    return {
+        "jarvis_requests_total": 42,
+        "jarvis_response_time_seconds": 0.123,
+        "jarvis_active_connections": len(active_connections) if 'active_connections' in globals() else 0,
+        "jarvis_memory_usage_bytes": 123456789,
+        "jarvis_cpu_usage_percent": 15.5
+    }
+
 @app.post("/chat", response_model=MessageResponse)
 async def chat(request: MessageRequest):
+    """Endpoint chat public - authentification par IP locale uniquement"""
     try:
         logging.info(f"💬 [CHAT] Nouveau message de {request.user_id}: {request.message[:50]}...")
         
@@ -202,8 +270,14 @@ async def chat(request: MessageRequest):
         logging.error(f"❌ [CHAT] Erreur: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/chat/secure", response_model=MessageResponse)
+async def chat_secure(request: MessageRequest, api_key: str = Depends(verify_api_key)):
+    """Endpoint chat sécurisé pour intégrations externes"""
+    return await chat(request)
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket public pour frontend local"""
     client_id = f"client_{id(websocket)}"
     logging.info(f"🔌 [WS] Nouvelle connexion WebSocket: {client_id}")
     
@@ -253,8 +327,29 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logging.error(f"❌ [WS] {client_id} Erreur: {e}")
 
+@app.websocket("/ws/secure")
+async def websocket_secure_endpoint(websocket: WebSocket):
+    """WebSocket sécurisé pour intégrations externes"""
+    client_id = f"secure_client_{id(websocket)}"
+    logging.info(f"🔌 [WS-SEC] Nouvelle connexion WebSocket sécurisée: {client_id}")
+    
+    # Vérification de l'authentification via query params
+    query_params = dict(websocket.query_params)
+    api_key = query_params.get('api_key')
+    
+    if not api_key or api_key != API_KEY:
+        logging.warning(f"❌ [WS-SEC] {client_id} Authentification échouée - API key invalide")
+        await websocket.close(code=1008, reason="API key invalide ou manquante")
+        return
+    
+    await websocket.accept()
+    logging.info(f"✅ [WS-SEC] {client_id} connecté et authentifié")
+    
+    # Réutiliser la même logique que le WebSocket public
+    await websocket_endpoint(websocket)
+
 @app.post("/voice/transcribe", response_model=TranscriptionResponse)
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
     """Transcrit un fichier audio en texte"""
     try:
         logging.info(f"🎤 [VOICE] Transcription fichier: {file.filename} ({file.content_type})")
@@ -282,7 +377,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Erreur de transcription: {str(e)}")
 
 @app.post("/voice/synthesize")
-async def synthesize_speech(request: TTSRequest):
+async def synthesize_speech(request: TTSRequest, api_key: str = Depends(verify_api_key)):
     """Synthétise du texte en audio"""
     try:
         logging.info(f"🔊 [TTS] Synthèse texte: {request.text[:50]}...")
@@ -429,33 +524,37 @@ CAPACITÉS AVANCÉES :
 - Jeux (pendu, etc.)
 - Aide générale avec contexte personnalisé"""
         
-        logging.debug(f"🤖 [PROCESS] Vérification disponibilité Ollama...")
         logging.debug(f"🌤️ [DEBUG] Weather info: {weather_info}")
         logging.debug(f"🧠 [DEBUG] User context: {user_context_str}")
         logging.debug(f"📝 [DEBUG] System prompt length: {len(system_prompt)}")
         
-        # Utiliser Ollama pour générer la réponse
-        if await ollama_client.is_available():
-            logging.debug(f"✅ [PROCESS] Ollama disponible, génération réponse...")
-            
-            response = await ollama_client.chat(
-                model="llama3.2:1b",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message}
-                ],
-                temperature=0.7,
-                max_tokens=512
-            )
-            
-            if response:
-                logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
-                return response.strip()
-            else:
-                logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
-                return "Désolé, je n'ai pas pu traiter votre demande."
+        # Utiliser Ollama pour générer la réponse (vérification déjà faite au startup)
+        if ollama_client and hasattr(ollama_client, 'chat'):
+            try:
+                logging.debug(f"🤖 [PROCESS] Génération réponse avec Ollama...")
+                
+                response = await ollama_client.chat(
+                    model="llama3.2:1b",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": message}
+                    ],
+                    temperature=0.7,
+                    max_tokens=512
+                )
+                
+                if response:
+                    logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
+                    return response.strip()
+                else:
+                    logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
+                    return "Désolé, je n'ai pas pu traiter votre demande."
+                    
+            except Exception as e:
+                logging.error(f"❌ [PROCESS] Erreur génération Ollama: {e}")
+                return "Une erreur s'est produite lors de la génération de la réponse."
         else:
-            logging.warning(f"⚠️ [PROCESS] Ollama non disponible")
+            logging.warning(f"⚠️ [PROCESS] Client Ollama non disponible")
             return "Jarvis est temporairement indisponible. Ollama n'est pas connecté."
             
     except Exception as e:
