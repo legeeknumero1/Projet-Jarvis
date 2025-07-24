@@ -22,8 +22,8 @@ class Config(BaseSettings):
     redis_url: str = "redis://172.20.0.110:6379"
     
     # Ollama
-    ollama_base_url: str = "http://172.20.0.30:11434"
-    ollama_model: str = "llama3.2:1b"
+    ollama_base_url: str = Field(alias="OLLAMA_BASE_URL", default="http://172.20.0.30:11434")
+    ollama_model: str = Field(alias="OLLAMA_MODEL", default="llama3.2:1b")
     
     # Services API
     tts_api_url: str = "http://172.20.0.20:8002"

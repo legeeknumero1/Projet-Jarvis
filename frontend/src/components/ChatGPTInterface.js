@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useWebSocket from 'react-use-websocket';
+import DOMPurify from 'dompurify';
 
 const ChatGPTInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -10,10 +11,11 @@ const ChatGPTInterface = () => {
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Configuration API - authentification côté serveur uniquement
+  // Configuration API avec authentification WebSocket
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
-  // API_KEY supprimée - authentification gérée côté serveur
+  const API_KEY = process.env.REACT_APP_API_KEY || 'dev-key'; // Pour développement uniquement
+  const WS_URL = `${process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws'}?api_key=${API_KEY}`;
+  // WebSocket maintenant authentifié avec query parameter
 
   const { 
     sendMessage, 
@@ -45,7 +47,7 @@ const ChatGPTInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Reconnaissance vocale
+  // Reconnaissance vocale avec nettoyage approprié
   useEffect(() => {
     if (window.SpeechRecognition || window.webkitSpeechRecognition) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -66,6 +68,14 @@ const ChatGPTInterface = () => {
       recognitionRef.current.onend = () => setIsListening(false);
       recognitionRef.current.onerror = () => setIsListening(false);
     }
+
+    // Nettoyage approprié des ressources
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -86,8 +96,22 @@ const ChatGPTInterface = () => {
     }
   }, [lastMessage]);
 
+  // Fonction de validation et sanitisation
+  const validateAndSanitizeInput = (input) => {
+    if (!input || typeof input !== 'string') return '';
+    
+    // Nettoyer et limiter la longueur
+    const trimmed = input.trim();
+    if (trimmed.length === 0) return '';
+    if (trimmed.length > 5000) return trimmed.substring(0, 5000); // Limite sécurité
+    
+    // Sanitiser contre XSS
+    return DOMPurify.sanitize(trimmed, { ALLOWED_TAGS: [] });
+  };
+
   const handleSendMessage = async (message) => {
-    if (!message.trim()) return;
+    const sanitizedMessage = validateAndSanitizeInput(message);
+    if (!sanitizedMessage) return;
     
     setIsLoading(true);
     
@@ -95,7 +119,7 @@ const ChatGPTInterface = () => {
     setMessages(prev => [...prev, {
       id: Date.now(),
       type: 'user',
-      content: message.trim(),
+      content: sanitizedMessage,
       timestamp: new Date()
     }]);
     
@@ -107,7 +131,7 @@ const ChatGPTInterface = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message.trim(),
+          message: sanitizedMessage,
           user_id: 'enzo'
         })
       });

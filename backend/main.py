@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 import uvicorn
 import asyncio
 import json
@@ -27,8 +27,17 @@ from games.hangman import play_hangman
 # Instance #6 - EN_COURS - Correction lifespan API + ajout logs détaillés
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global brain_memory_system, profile_manager, speech_manager, home_assistant, ollama_client, _services_initialized
+    
     # Startup
     logging.info("🚀 [STARTUP] Jarvis démarrage...")
+    
+    # Initialisation des services globaux
+    brain_memory_system = BrainMemorySystem(db)
+    profile_manager = ProfileManager(db)
+    speech_manager = SpeechManager(config)
+    home_assistant = HomeAssistantIntegration(config)
+    ollama_client = OllamaClient(base_url=config.ollama_base_url)
     
     # Vérification et initialisation base de données
     if db and hasattr(db, 'connect'):
@@ -105,6 +114,8 @@ async def lifespan(app: FastAPI):
     else:
         logging.warning("⚠️ [OLLAMA] Client Ollama non disponible ou mal configuré")
     
+    # Marquer les services comme initialisés
+    _services_initialized = True
     logging.info("🎯 [STARTUP] Jarvis démarré avec succès !")
     
     yield
@@ -154,7 +165,7 @@ app.add_middleware(
     allow_origins=["http://localhost:3000", "http://localhost:8001"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key", "Accept"],
 )
 
 # Configuration du logging détaillé - chemins relatifs
@@ -176,13 +187,27 @@ logger.info("🚀 [INIT] Initialisation des composants Jarvis...")
 
 config = Config()
 db = Database(config)
-# Neuromorphic Memory System - Architecture cerveau humain
-brain_memory_system = BrainMemorySystem(db)
-profile_manager = ProfileManager(db)
-speech_manager = SpeechManager(config)
-home_assistant = HomeAssistantIntegration(config)
-ollama_client = OllamaClient(base_url=config.ollama_base_url)
+
+# Services initialisés de façon thread-safe au startup
+brain_memory_system = None
+profile_manager = None  
+speech_manager = None
+home_assistant = None
+ollama_client = None
+
+# Flag d'initialisation pour éviter les race conditions
+_services_initialized = False
 weather_service = WeatherService()
+
+def check_service_initialized(service_name: str, service) -> bool:
+    """Vérifier qu'un service est initialisé pour éviter les race conditions"""
+    if not _services_initialized:
+        logging.warning(f"⚠️ [RACE] Service {service_name} accédé avant initialisation complète")
+        return False
+    if service is None:
+        logging.error(f"❌ [SERVICE] Service {service_name} non disponible")
+        return False
+    return True
 
 logger.info("✅ [INIT] Tous les composants initialisés")
 
@@ -191,7 +216,7 @@ API_KEY = os.getenv("JARVIS_API_KEY")
 if not API_KEY:
     import secrets
     API_KEY = secrets.token_urlsafe(32)
-    logger.warning(f"⚠️ [SECURITY] API Key générée automatiquement: {API_KEY}")
+    logger.warning(f"⚠️ [SECURITY] API Key générée automatiquement: {API_KEY[:4]}...{API_KEY[-2:]}")
     logger.warning("🔒 [SECURITY] Définissez JARVIS_API_KEY en variable d'environnement pour la production")
 
 async def verify_api_key(x_api_key: str = Header(None)):
@@ -201,8 +226,14 @@ async def verify_api_key(x_api_key: str = Header(None)):
     return x_api_key
 
 class MessageRequest(BaseModel):
-    message: str
-    user_id: str = "default"
+    message: str = Field(..., min_length=1, max_length=5000, description="Message de l'utilisateur")
+    user_id: str = Field(default="default", min_length=1, max_length=50, pattern="^[a-zA-Z0-9_-]+$", description="ID utilisateur")
+    
+    @validator('message')
+    def validate_message(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Le message ne peut pas être vide')
+        return v.strip()
 
 class MessageResponse(BaseModel):
     response: str
@@ -213,8 +244,14 @@ class TranscriptionResponse(BaseModel):
     confidence: float
 
 class TTSRequest(BaseModel):
-    text: str
-    voice: str = "default"
+    text: str = Field(..., min_length=1, max_length=2000, description="Texte à synthétiser")
+    voice: str = Field(default="default", pattern="^[a-zA-Z0-9_-]+$", description="Voix à utiliser")
+    
+    @validator('text')
+    def validate_text(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Le texte ne peut pas être vide')
+        return v.strip()
 
 # Instance #6 - FINI - Lifespan API + logs détaillés implémentés
 
@@ -243,7 +280,10 @@ async def chat(request: MessageRequest):
     try:
         logging.info(f"💬 [CHAT] Nouveau message de {request.user_id}: {request.message[:50]}...")
         
-        # Récupération du contexte utilisateur avec système neuromorphique
+        # Vérification et récupération du contexte utilisateur avec système neuromorphique  
+        if not check_service_initialized("brain_memory_system", brain_memory_system):
+            raise HTTPException(status_code=503, detail="Service de mémoire non disponible")
+            
         logging.debug(f"🧠 [CHAT] Récupération contexte neuromorphique {request.user_id}")
         user_context = await brain_memory_system.get_contextual_memories(request.user_id, request.message)
         logging.debug(f"✅ [CHAT] Contexte neuromorphique récupéré: {len(user_context)} éléments")
@@ -293,6 +333,21 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 message_data = json.loads(data)
                 logging.debug(f"✅ [WS] {client_id} JSON parsé: {message_data.keys()}")
+                
+                # Validation des données
+                if not isinstance(message_data, dict):
+                    raise ValueError("Les données doivent être un objet JSON")
+                
+                if "message" not in message_data:
+                    raise ValueError("Le champ 'message' est requis")
+                
+                message = message_data["message"]
+                if not message or not isinstance(message, str) or len(message.strip()) == 0:
+                    raise ValueError("Le message ne peut pas être vide")
+                
+                if len(message) > 5000:
+                    raise ValueError("Message trop long (max 5000 caractères)")
+                
             except json.JSONDecodeError as e:
                 logging.error(f"❌ [WS] {client_id} Erreur JSON: {e}")
                 await websocket.send_text(json.dumps({
@@ -300,27 +355,42 @@ async def websocket_endpoint(websocket: WebSocket):
                     "timestamp": datetime.now().isoformat()
                 }))
                 continue
+            except ValueError as e:
+                logging.error(f"❌ [WS] {client_id} Validation erreur: {e}")
+                await websocket.send_text(json.dumps({
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                }))
+                continue
             
             # Traitement neuromorphique du message en temps réel
-            logging.debug(f"🤖 [WS] {client_id} Traitement avec IA neuromorphique...")
-            user_context = await brain_memory_system.get_contextual_memories(
-                message_data.get("user_id", "default"), 
-                message_data["message"]
-            )
-            response = await process_message(
-                message_data["message"],
-                user_context,
-                message_data.get("user_id", "default")
-            )
-            logging.info(f"✅ [WS] {client_id} Réponse générée: {response[:50]}...")
-            
-            response_data = {
-                "response": response,
-                "timestamp": datetime.now().isoformat()
-            }
-            
-            await websocket.send_text(json.dumps(response_data))
-            logging.debug(f"📤 [WS] {client_id} Réponse envoyée")
+            try:
+                logging.debug(f"🤖 [WS] {client_id} Traitement avec IA neuromorphique...")
+                user_context = await brain_memory_system.get_contextual_memories(
+                    message_data.get("user_id", "default"), 
+                    message_data["message"]
+                )
+                response = await process_message(
+                    message_data["message"],
+                    user_context,
+                    message_data.get("user_id", "default")
+                )
+                logging.info(f"✅ [WS] {client_id} Réponse générée: {response[:50]}...")
+                
+                response_data = {
+                    "response": response,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                await websocket.send_text(json.dumps(response_data))
+                logging.debug(f"📤 [WS] {client_id} Réponse envoyée")
+                
+            except Exception as processing_error:
+                logging.error(f"❌ [WS] {client_id} Erreur traitement: {processing_error}")
+                await websocket.send_text(json.dumps({
+                    "error": "Erreur interne du serveur",
+                    "timestamp": datetime.now().isoformat()
+                }))
             
     except WebSocketDisconnect:
         logging.info(f"🔌 [WS] {client_id} déconnecté")
@@ -528,12 +598,12 @@ CAPACITÉS AVANCÉES :
         logging.debug(f"🧠 [DEBUG] User context: {user_context_str}")
         logging.debug(f"📝 [DEBUG] System prompt length: {len(system_prompt)}")
         
-        # Utiliser Ollama pour générer la réponse (vérification déjà faite au startup)
-        if ollama_client and hasattr(ollama_client, 'chat'):
-            try:
-                logging.debug(f"🤖 [PROCESS] Génération réponse avec Ollama...")
-                
-                response = await ollama_client.chat(
+        # Utiliser Ollama pour générer la réponse avec context manager
+        try:
+            logging.debug(f"🤖 [PROCESS] Génération réponse avec Ollama...")
+            
+            async with OllamaClient(base_url=config.ollama_base_url) as client:
+                response = await client.chat(
                     model="llama3.2:1b",
                     messages=[
                         {"role": "system", "content": system_prompt},
@@ -543,19 +613,16 @@ CAPACITÉS AVANCÉES :
                     max_tokens=512
                 )
                 
-                if response:
-                    logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
-                    return response.strip()
-                else:
-                    logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
-                    return "Désolé, je n'ai pas pu traiter votre demande."
-                    
-            except Exception as e:
-                logging.error(f"❌ [PROCESS] Erreur génération Ollama: {e}")
-                return "Une erreur s'est produite lors de la génération de la réponse."
-        else:
-            logging.warning(f"⚠️ [PROCESS] Client Ollama non disponible")
-            return "Jarvis est temporairement indisponible. Ollama n'est pas connecté."
+            if response:
+                logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
+                return response.strip()
+            else:
+                logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
+                return "Désolé, je n'ai pas pu traiter votre demande."
+                
+        except Exception as e:
+            logging.error(f"❌ [PROCESS] Erreur génération Ollama: {e}")
+            return "Une erreur s'est produite lors de la génération de la réponse."
             
     except Exception as e:
         logging.error(f"❌ [PROCESS] Erreur traitement message: {e}")

@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List, AsyncGenerator
 import httpx
 
 class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434"):
+    def __init__(self, base_url: str = "http://172.20.0.30:11434"):
         self.base_url = base_url
         self.client = None
         self.logger = logging.getLogger(__name__)
@@ -18,7 +18,8 @@ class OllamaClient:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.client.aclose()
+        if self.client:
+            await self.client.aclose()
     
     async def is_available(self) -> bool:
         """Vérifie si Ollama est disponible"""

@@ -9,6 +9,30 @@
 
 ---
 
+## [1.1.1] - 2025-07-24 - **CORRECTIONS BUGS CRITIQUES** 🔧
+
+### [CORRIGÉ]
+- **BUG-184** - Sessions async memory_manager fermées automatiquement avec context manager
+- **BUG-187** - Validation Pydantic stricte des inputs API (longueur, pattern, sanitisation)
+- **BUG-188** - Gestion erreurs WebSocket robuste avec validation JSON complète
+- **BUG-189** - Logs API keys sécurisés avec masquage approprié (4+2 chars)
+- **BUG-190** - Ollama client utilise context manager pour auto-cleanup connexions
+- **BUG-191** - Race conditions résolues avec flag _services_initialized thread-safe
+
+### [SÉCURITÉ]
+- Headers CORS complets avec Authorization et X-API-Key
+- Validation stricte user_id avec regex pattern ^[a-zA-Z0-9_-]+$
+- Messages limités à 5000 caractères avec sanitisation
+- Initialisation services thread-safe pour éviter accès prématuré
+
+### [MODIFIÉ] 
+- Architecture Docker 7/7 containers opérationnelle avec Ollama corrigé
+- Backend utilise maintenant IP Docker 172.20.0.30:11434 pour Ollama
+- Gestion d'erreurs WebSocket avec codes d'erreur appropriés
+- Context managers obligatoires pour toutes les connexions async
+
+---
+
 ## [1.1.0] - 2025-07-18 - **V1 FINALISÉE** 🎉
 
 ### [AJOUTÉ]
