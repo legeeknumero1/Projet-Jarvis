@@ -212,12 +212,20 @@ def check_service_initialized(service_name: str, service) -> bool:
 logger.info("✅ [INIT] Tous les composants initialisés")
 
 # Authentification sécurisée avec variable d'environnement
+def mask_sensitive_data(data: str, show_start: int = 4, show_end: int = 2) -> str:
+    """Masquer les données sensibles pour les logs"""
+    if not data or len(data) <= show_start + show_end:
+        return "***"
+    return f"{data[:show_start]}{'*' * (len(data) - show_start - show_end)}{data[-show_end:]}"
+
 API_KEY = os.getenv("JARVIS_API_KEY")
 if not API_KEY:
     import secrets
     API_KEY = secrets.token_urlsafe(32)
-    logger.warning(f"⚠️ [SECURITY] API Key générée automatiquement: {API_KEY[:4]}...{API_KEY[-2:]}")
+    logger.warning(f"⚠️ [SECURITY] API Key générée automatiquement: {mask_sensitive_data(API_KEY)}")
     logger.warning("🔒 [SECURITY] Définissez JARVIS_API_KEY en variable d'environnement pour la production")
+else:
+    logger.info(f"✅ [SECURITY] API Key chargée depuis l'environnement: {mask_sensitive_data(API_KEY)}")
 
 async def verify_api_key(x_api_key: str = Header(None)):
     """Vérifier la clé API pour les endpoints sensibles"""
@@ -233,7 +241,52 @@ class MessageRequest(BaseModel):
     def validate_message(cls, v):
         if not v or not v.strip():
             raise ValueError('Le message ne peut pas être vide')
-        return v.strip()
+        
+        # Sanitisation contre XSS basique
+        import html
+        v_sanitized = html.escape(v.strip())
+        
+        # Validation longueur après sanitisation
+        if len(v_sanitized) > 5000:
+            raise ValueError('Message trop long après sanitisation')
+        
+        # Bloquer certains patterns dangereux
+        dangerous_patterns = [
+            '<script',
+            'javascript:',
+            'data:text/html',
+            'vbscript:',
+            'onload=',
+            'onerror=',
+            'eval(',
+            'Function(',
+            'setTimeout(',
+            'setInterval('
+        ]
+        
+        v_lower = v_sanitized.lower()
+        for pattern in dangerous_patterns:
+            if pattern in v_lower:
+                raise ValueError(f'Contenu potentiellement dangereux détecté: {pattern}')
+        
+        return v_sanitized
+    
+    @validator('user_id')
+    def validate_user_id(cls, v):
+        if not v or not v.strip():
+            return "default"
+        
+        # Sanitisation user_id
+        import re
+        v_cleaned = re.sub(r'[^a-zA-Z0-9_-]', '', v.strip())
+        
+        if len(v_cleaned) == 0:
+            return "default"
+        
+        if len(v_cleaned) > 50:
+            v_cleaned = v_cleaned[:50]
+            
+        return v_cleaned
 
 class MessageResponse(BaseModel):
     response: str
@@ -598,12 +651,18 @@ CAPACITÉS AVANCÉES :
         logging.debug(f"🧠 [DEBUG] User context: {user_context_str}")
         logging.debug(f"📝 [DEBUG] System prompt length: {len(system_prompt)}")
         
-        # Utiliser Ollama pour générer la réponse avec context manager
+        # Utiliser Ollama pour générer la réponse avec context manager corrigé
         try:
             logging.debug(f"🤖 [PROCESS] Génération réponse avec Ollama...")
             
-            async with OllamaClient(base_url=config.ollama_base_url) as client:
-                response = await client.chat(
+            # Vérifier que le client Ollama global est disponible avant utilisation
+            if not check_service_initialized("ollama_client", ollama_client):
+                logging.error("❌ [PROCESS] Client Ollama non initialisé")
+                return "Service IA temporairement indisponible, veuillez réessayer."
+            
+            # Utiliser le client global avec gestion d'erreur robuste
+            try:
+                response = await ollama_client.chat(
                     model="llama3.2:1b",
                     messages=[
                         {"role": "system", "content": system_prompt},
@@ -613,12 +672,19 @@ CAPACITÉS AVANCÉES :
                     max_tokens=512
                 )
                 
-            if response:
-                logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
-                return response.strip()
-            else:
-                logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
-                return "Désolé, je n'ai pas pu traiter votre demande."
+                if response:
+                    logging.info(f"✅ [PROCESS] Réponse Ollama générée: {response[:50]}...")
+                    return response.strip()
+                else:
+                    logging.warning(f"⚠️ [PROCESS] Ollama a retourné une réponse vide")
+                    return "Désolé, je n'ai pas pu traiter votre demande."
+                    
+            except asyncio.TimeoutError:
+                logging.error("❌ [PROCESS] Timeout Ollama - Service trop lent")
+                return "Le service IA met trop de temps à répondre, veuillez réessayer."
+            except ConnectionError as e:
+                logging.error(f"❌ [PROCESS] Erreur connexion Ollama: {e}")
+                return "Service IA temporairement indisponible, veuillez réessayer."
                 
         except Exception as e:
             logging.error(f"❌ [PROCESS] Erreur génération Ollama: {e}")

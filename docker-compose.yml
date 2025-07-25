@@ -107,15 +107,23 @@ services:
         ipv4_address: 172.20.0.40
     ports:
       - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
     environment:
-      - DATABASE_URL=postgresql://jarvis:jarvis@172.20.0.100:5432/jarvis_db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@172.20.0.100:5432/${POSTGRES_DB:-jarvis_db}
       - REDIS_URL=redis://172.20.0.110:6379
       - OLLAMA_BASE_URL=http://172.20.0.30:11434
       - TTS_API_URL=http://172.20.0.20:8002
       - STT_API_URL=http://172.20.0.10:8003
       - INTERFACE_URL=http://172.20.0.50:8001
       - QDRANT_URL=http://172.20.0.120:6333
-      - TIMESCALE_URL=postgresql://jarvis:jarvis@172.20.0.130:5432/jarvis_timeseries
+      - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@172.20.0.130:5432/${TIMESCALE_DB:-jarvis_timeseries}
       - MEMORY_UPDATE_INTERVAL=604800
       - MEMORY_RETENTION_DAYS=365
       - BRAIN_MEMORY_ENABLED=true
@@ -157,6 +165,14 @@ services:
     ports:
       - "3000:3000"
       - "8001:8001"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     environment:
       - REACT_APP_API_URL=http://localhost:8000
       - REACT_APP_WS_URL=ws://localhost:8001
@@ -186,8 +202,8 @@ services:
       jarvis_network:
         ipv4_address: 172.20.0.100
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-jarvis}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -247,9 +263,9 @@ services:
       jarvis_network:
         ipv4_address: 172.20.0.130
     environment:
-      POSTGRES_DB: jarvis_timeseries
-      POSTGRES_USER: jarvis
-      POSTGRES_PASSWORD: jarvis
+      POSTGRES_DB: ${TIMESCALE_DB:-jarvis_timeseries}
+      POSTGRES_USER: ${TIMESCALE_USER:-jarvis}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
       TIMESCALEDB_TELEMETRY: off
     volumes:
       - timescale_data:/var/lib/postgresql/data
