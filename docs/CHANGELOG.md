@@ -33,6 +33,46 @@
 
 ---
 
+## [1.1.2] - 2025-07-31 - **MIGRATION DOCKER CRITIQUE** 🚚
+
+### [CRITIQUE]
+- **PROBLÈME IDENTIFIÉ** - Partition root 120GB saturée par Docker
+- **SOLUTION PLANIFIÉE** - Migration Docker vers /home/enzo/jarvis-docker/
+- **PROCÉDURE CRÉÉE** - docs/MIGRATION_DOCKER_HOME.md avec étapes détaillées
+
+### [AJOUTÉ]
+- **MIGRATION_DOCKER_HOME.md** - Guide complet migration Docker
+- **Configuration daemon.json** - Nouveau data-root vers /home
+- **Commandes rsync** - Transfert sécurisé des données Docker
+- **Validation post-migration** - Checklist complète
+
+### [MODIFIÉ]
+- **README.md** - Prérequis migration Docker ajoutés
+- **CLAUDE_PARAMS.md** - Actions priorité absolue mise à jour
+- **CLAUDE_UPDATES.md** - Log migration planifiée
+- **Installation guide** - Étapes migration obligatoires
+
+### [BLOQUÉ]
+- **Backend container** - Build impossible (no space left on device)
+- **Interface container** - En attente migration Docker
+- **Architecture 7/7** - Dépendante de la migration
+
+### [CRITIQUE - ACTION REQUISE]
+```bash
+# EXÉCUTER IMMÉDIATEMENT :
+sudo systemctl stop docker
+sudo rsync -aP /var/lib/docker/ /home/enzo/jarvis-docker/
+sudo tee /etc/docker/daemon.json << EOF
+{
+  "data-root": "/home/enzo/jarvis-docker",
+  "storage-driver": "overlay2"
+}
+EOF
+sudo systemctl start docker
+```
+
+---
+
 ## [1.1.0] - 2025-07-18 - **V1 FINALISÉE** 🎉
 
 ### [AJOUTÉ]

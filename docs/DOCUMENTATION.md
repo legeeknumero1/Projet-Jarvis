@@ -24,6 +24,7 @@ Tous les fichiers .md de documentation se trouvent dans ce dossier :
 - **`README.md`** - Documentation principale du projet
 - **`CHANGELOG.md`** - Historique des modifications
 - **`API.md`** - Documentation de l'API
+- **`MIGRATION_DOCKER_HOME.md`** - 🚨 CRITIQUE : Migration Docker vers /home
 - **`DEPLOYMENT.md`** - Guide de déploiement
 - **`TROUBLESHOOTING.md`** - Guide de résolution des problèmes
 

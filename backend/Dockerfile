@@ -3,10 +3,12 @@ FROM python:3.12-slim as builder
 
 WORKDIR /app
 
-# Installation dépendances build uniquement
+# Installation dépendances build + PostgreSQL dev
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
+    libpq-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Installation dépendances Python

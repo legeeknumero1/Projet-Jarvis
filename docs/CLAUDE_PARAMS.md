@@ -33,11 +33,14 @@ docker ps
 # ❌ jarvis_interface - Interface (PRÊT À CONSTRUIRE)
 ```
 
-### 🔧 CORRECTIONS APPLIQUÉES
+### 🔧 CORRECTIONS APPLIQUÉES & PROBLÈME ESPACE DISQUE IDENTIFIÉ
 - **Requirements restaurées** : Toutes dépendances Backend/STT/TTS complètes
 - **Dockerfile amélioré** : Ajout build-essential, setuptools, wheel  
 - **Build fixes** : Python 3.12 avec outils de compilation
 - **Connectivité testée** : Communication inter-containers validée ✅
+- **🚨 PROBLÈME CRITIQUE** : Partition root 120GB saturée par Docker
+- **📋 SOLUTION PLANIFIÉE** : Migration Docker vers /home/jarvis-docker/
+- **📄 PROCÉDURE** : Voir docs/MIGRATION_DOCKER_HOME.md
 
 ### 🎯 RÈGLES DE COMPLETION ABSOLUES
 
@@ -49,11 +52,17 @@ docker ps
 
 ### 🔧 ACTIONS IMMÉDIATES REQUISES
 
-1. **Terminer le build Backend** en cours
-2. **Démarrer le container jarvis_backend** 
-3. **Construire l'image jarvis_interface**
-4. **Démarrer le container jarvis_interface**
-5. **Valider l'architecture complète 7/7**
+**🚨 PRIORITÉ ABSOLUE - MIGRATION DOCKER :**
+1. **Exécuter migration Docker** vers /home (voir MIGRATION_DOCKER_HOME.md)
+2. **Libérer espace disque** partition root (120GB → /home)
+3. **Reconfigurer Docker daemon** avec nouveau data-root
+
+**📋 APRÈS MIGRATION :**
+4. **Terminer le build Backend** avec plus d'espace
+5. **Démarrer le container jarvis_backend** 
+6. **Construire l'image jarvis_interface**
+7. **Démarrer le container jarvis_interface**
+8. **Valider l'architecture complète 7/7**
 
 ---
 

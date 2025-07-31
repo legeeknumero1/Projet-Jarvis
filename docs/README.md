@@ -38,29 +38,43 @@ Assistant vocal intelligent local développé par Enzo, avec des capacités de c
 
 ## 🚀 Installation
 
-### Prérequis
-- Docker et Docker Compose
+### ⚠️ PRÉREQUIS CRITIQUES
+- **OBLIGATOIRE** : Migration Docker vers /home (voir `docs/MIGRATION_DOCKER_HOME.md`)
+- Docker et Docker Compose 
 - Node.js 18+
 - Python 3.11+
 - Ollama (optionnel, inclus dans Docker)
+- **Espace disque** : 50GB minimum sur partition /home
 
 ### Démarrage rapide
 
-1. **Clonez le projet**
-```bash
-git clone <repository-url>
-cd "Projet Jarvis"
+**🚨 ÉTAPE OBLIGATOIRE - Migration Docker :**
+```bash  
+# Exécuter AVANT tout déploiement
+# Voir procédure complète dans docs/MIGRATION_DOCKER_HOME.md
+sudo systemctl stop docker
+sudo rsync -aP /var/lib/docker/ /home/enzo/jarvis-docker/
+sudo tee /etc/docker/daemon.json << EOF
+{
+  "data-root": "/home/enzo/jarvis-docker",
+  "storage-driver": "overlay2"
+}
+EOF
+sudo systemctl start docker
 ```
 
-2. **Configuration**
+**📋 Après migration Docker :**
+
+1. **Configuration**
 ```bash
+cd "Projet Jarvis"
 cp .env.example .env
 # Éditez .env avec vos paramètres
 ```
 
-3. **Démarrage avec Docker**
+2. **Démarrage architecture complète**
 ```bash
-docker-compose up -d
+./start_jarvis_docker.sh
 ```
 
 4. **Ou développement local**
@@ -151,7 +165,14 @@ Configurez votre token et URL Home Assistant dans `.env` pour l'intégration dom
 
 ## 🎯 Fonctionnalités
 
-### ⚠️ V1 PARTIELLEMENT IMPLÉMENTÉE (76%)
+### ⚠️ V1 PARTIELLEMENT IMPLÉMENTÉE - MIGRATION DOCKER REQUISE
+
+**🚨 PROBLÈME CRITIQUE IDENTIFIÉ (2025-07-31) :**
+- **Partition root saturée** : 120GB occupés par Docker
+- **Builds impossibles** : Plus d'espace pour Backend/Interface  
+- **SOLUTION** : Migration Docker vers /home (voir `docs/MIGRATION_DOCKER_HOME.md`)
+
+**📋 ÉTAT ACTUEL (5/7 containers) :**
 - [x] **Interface web React** style ChatGPT ultra-optimisée
 - [x] **API FastAPI** avec WebSocket temps réel (compilation OK)
 - [x] **Architecture Docker "poupée russe"** 5/7 services actifs
