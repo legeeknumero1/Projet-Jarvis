@@ -5,6 +5,7 @@ import { FiCpu, FiActivity, FiWifi, FiMic, FiSettings, FiPower, FiVolume2, FiHom
 import JarvisSphere from './JarvisSphere';
 import MessageList from './chat/MessageList';
 import Composer from './chat/Composer';
+import { useChat } from '../context/ChatContext';
 
 // Animations massives
 const matrixRain = keyframes`
@@ -432,7 +433,8 @@ const SocialLinks = styled.div`
   }
 `;
 
-const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, onVoiceInput, setIsListening }) => {
+const MassiveInterface = ({ onSendMessage, onVoiceInput }) => {
+  const { state, actions } = useChat();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -449,9 +451,7 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
   };
 
   const handleVoiceToggle = () => {
-    if (setIsListening) {
-      setIsListening(!isListening);
-    }
+    actions.setListening(!state.isListening);
   };
 
   const MatrixEffect = () => {
@@ -510,7 +510,7 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
           </StatItem>
           <StatItem>
             <FiWifi className="icon" />
-            <div className="value">{isConnected ? 'Online' : 'Offline'}</div>
+            <div className="value">{state.isConnected ? 'Online' : 'Offline'}</div>
             <div>Network</div>
           </StatItem>
         </SystemStats>
@@ -589,21 +589,21 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
       <CentralArea>
         <SphereContainer>
           <JarvisSphere 
-            isActive={isConnected && isListening}
+            isActive={state.isConnected && state.isListening}
             audioLevel={0.5}
           />
         </SphereContainer>
         
         <ChatZone>
           <MessageContainer>
-            <MessageList messages={messages} />
+            <MessageList messages={state.messages} />
           </MessageContainer>
         </ChatZone>
         
         <Composer 
           onSubmit={handleSendMessage}
-          disabled={false}
-          isListening={isListening}
+          disabled={state.isLoading}
+          isListening={state.isListening}
           onVoiceToggle={handleVoiceToggle}
         />
       </CentralArea>
