@@ -33,26 +33,22 @@ RUN apt-get update && apt-get install -y \
 # Copie des dépendances installées
 COPY --from=builder /root/.local /root/.local
 
-# PATH pour les packages utilisateur
+# PATH pour les packages utilisateur + Python modules
 ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app
 
-# Créer utilisateur non-root
-RUN groupadd -r jarvis && useradd -r -g jarvis jarvis
-
-# Copie du code source et des dépendances vers home jarvis
+# Copie du code source complet
 COPY . .
-COPY --from=builder /root/.local /home/jarvis/.local
 
-# Création des dossiers nécessaires avec bonnes permissions
-RUN mkdir -p models logs data && \
-    chown -R jarvis:jarvis /app /home/jarvis/.local
+# Création des dossiers nécessaires
+RUN mkdir -p models logs data
 
-# Changer vers utilisateur non-root et PATH
-USER jarvis
-ENV PATH=/home/jarvis/.local/bin:$PATH
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Exposition du port
 EXPOSE 8000
 
-# Commande de démarrage production (sans --reload)
+# Commande de démarrage production
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

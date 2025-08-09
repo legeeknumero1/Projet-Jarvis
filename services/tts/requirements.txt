@@ -1,2 +1,16 @@
-# Référence vers requirements unifiés
--r ../../requirements-unified.txt
+# Requirements TTS API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+coqui-tts>=0.22.0
+torch
+torchaudio
+numpy
+scipy
+librosa
+soundfile
+phonemizer
+inflect
+unidecode
+setuptools>=65.0.0
+wheel

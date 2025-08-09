@@ -1,6 +1,12 @@
-# Référence vers requirements unifiés
--r ../../requirements-unified.txt
-
-# Dépendances spécifiques STT
+# Requirements STT API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+whisper>=1.0.0
+torch
+numpy
+scipy
+librosa
+soundfile
 setuptools>=65.0.0
 wheel

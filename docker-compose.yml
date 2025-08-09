@@ -83,13 +83,14 @@ services:
     environment:
       - OLLAMA_ORIGINS=*
       - OLLAMA_HOST=0.0.0.0
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # GPU désactivé - Mode CPU uniquement
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
       interval: 30s
