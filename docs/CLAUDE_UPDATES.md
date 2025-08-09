@@ -7,18 +7,25 @@
 
 ## 🔄 Dernières Actions
 
-### [19:30] Instance #22 - REFACTORING_FRONTEND_MODULAIRE ⚡
+### [20:00] Instance #22 - TESTS_BACKEND_FACTORISATION ⚡
+- Action : Tests backend FastAPI + factorisation (85% coverage minimum)
+- Contexte : Fake services déterministes, pas de dépendances externes
+- Réalisations EN_COURS :
+  * ✅ conftest.py : App factory + fake services (LLM, Memory, Voice, Weather, HA)
+  * ✅ utils.py : Helpers post_json, assert_json, open_ws, send_chat_message
+  * 🔄 test_health.py, test_chat_http.py, test_chat_ws.py - EN_COURS
+  * ⏳ test_security.py, test_sanitization.py, test_voice.py
+- Services fakes : FakeLLMService("ACK::message"), FakeMemoryService(log=[])
+- Objectif : Coverage 85% lines, 90% branches sur routers/ + services/
+
+### [19:30] Instance #22 - REFACTORING_FRONTEND_MODULAIRE ✅ TERMINÉ  
 - Action : MassiveInterface.js 691→composants atomiques + WebSocket unique
 - Contexte : 6 commits courts avec rollback simple, styled-components→Tailwind
-- Réalisations EN_COURS :
-  * ✅ Commit 1 : MessageItem + MessageList (extraction mécanique)
-  * ✅ Commit 2 : Composer (props onSubmit/disabled)  
-  * ✅ Commit 3 : ChatContext léger (useReducer, pas de logique)
-  * ✅ Commit 4 : WebSocket unique (supprime fetch REST)
-  * 🔄 Commit 5 : StatusBar + styled-components→Tailwind - EN_COURS
-  * ⏳ Commit 6 : ChatLayout final + suppression MassiveInterface.js
-- WebSocket : /ws avec reconnexion 3s, autoscroll MessageList
-- Tailwind : MessageItem + Composer convertis, StatusBar créé
+- Réalisations COMPLÈTES :
+  * ✅ Commit 1-6 : MessageItem(33L) MessageList(30L) Composer(79L) ChatLayout(141L)
+  * ✅ WebSocket unique /ws, suppression fetch REST, autoscroll, StatusBar
+  * ✅ styled-components→Tailwind, ChatContext useReducer, App.js→ChatLayout
+- SUCCÈS : MassiveInterface.js supprimé, zero régression UX, composants modulaires
 
 ### [18:45] Instance #22 - REFACTORING_BACKEND_ARCHITECTURE ✅ TERMINÉ
 - Action : Modularisation complète backend main.py (697→~150 lignes) 
