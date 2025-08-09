@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+
+  "filters": {
+    "request_context": {
+      "()": "backend.utils.logging.RequestContextFilter"
+    }
+  },
+
+  "formatters": {
+    "json": {
+      "()": "backend.utils.logging.JsonFormatter",
+      "extras": ["request_id", "user_id", "path", "method", "status_code", "latency_ms", "client_ip", "component"]
+    },
+    "console": {
+      "format": "%(asctime)s | %(levelname)s | %(name)s | %(message)s | req=%(request_id)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  },
+
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "console",
+      "filters": ["request_context"],
+      "stream": "ext://sys.stdout"
+    },
+    "json_file": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "level": "INFO",
+      "formatter": "json",
+      "filters": ["request_context"],
+      "filename": "/var/log/jarvis/app.jsonl",
+      "when": "midnight",
+      "interval": 1,
+      "backupCount": 14,
+      "encoding": "utf-8",
+      "utc": true
+    }
+  },
+
+  "root": {
+    "level": "INFO",
+    "handlers": ["console", "json_file"]
+  },
+
+  "loggers": {
+    "uvicorn":        { "level": "INFO", "handlers": ["console"], "propagate": false },
+    "uvicorn.error":  { "level": "INFO", "handlers": ["console", "json_file"], "propagate": false },
+    "uvicorn.access": { "level": "INFO", "handlers": ["console", "json_file"], "propagate": false },
+    "httpx":          { "level": "WARNING" },
+    "backend":        { "level": "INFO", "handlers": ["console", "json_file"], "propagate": false }
+  }
+}

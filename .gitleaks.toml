@@ -1,0 +1,34 @@
+# Configuration Gitleaks pour détection secrets
+[extend]
+# useDefault = true utilise les règles par défaut
+
+[[rules]]
+id = "jarvis-api-key"
+description = "Jarvis API Key"
+regex = '''jarvis-[a-zA-Z0-9-]{10,}'''
+keywords = ["jarvis-"]
+
+[[rules]]
+id = "database-password"
+description = "Database password in connection string"
+regex = '''postgresql://[^:]+:([^@]{8,})@'''
+keywords = ["postgresql://"]
+
+[[rules]]
+id = "ha-token"
+description = "Home Assistant Long-Lived Access Token"
+regex = '''eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*'''
+keywords = ["eyJ"]
+
+# Allowlist pour éviter faux positifs
+[[allowlist]]
+description = "Exemple dans documentation"
+regex = '''jarvis-dev-key'''
+
+[[allowlist]]  
+description = "Token exemple dans config"
+regex = '''your-home-assistant-token'''
+
+[[allowlist]]
+description = "Placeholders env example"
+regex = '''your-[a-z-]+'''

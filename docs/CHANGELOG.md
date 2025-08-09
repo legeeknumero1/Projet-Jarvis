@@ -9,6 +9,37 @@
 
 ---
 
+## [1.2.0] - 2025-08-09 - **REFACTORING ARCHITECTURE BACKEND** 🏗️
+
+### [MODIFIÉ] - Refactoring Complet
+- **Backend modularisé** : main.py 697→150 lignes (-78% de complexité)
+- **Architecture Factory Pattern** : App factory avec lifespan management  
+- **Services Layer** : LLMService, MemoryService, VoiceService, WeatherService, HomeAssistantService
+- **Routers modulaires** : health, chat, voice, websocket (plus de monolithe)
+- **Schemas Pydantic** : chat, voice, memory, common (validation stricte)
+- **Utils centralisés** : validators.py avec sanitisation sécurisée
+
+### [AJOUTÉ] - Nouvelles Capacités
+- **Injection dépendances** : app.state avec services singleton
+- **Configuration centralisée** : Pydantic Settings avec validation  
+- **Logging structuré** : Emojis + handlers fichier/console
+- **CORS sécurisé** : Middleware avec origins configurables
+- **API standardisée** : Réponses typées + gestion erreurs uniforme
+
+### [SÉCURITÉ]
+- **Validation renforcée** : Tous inputs sanitisés contre XSS
+- **API keys sécurisées** : Comparaison timing-attack safe
+- **Services isolés** : Chaque service avec sa logique métier
+- **Memory neuromorphique** : Contexte utilisateur sécurisé
+
+### [TECHNIQUE]
+- **Zero placeholders** : Tous services connectés aux vraies implémentations
+- **Ollama intégré** : LLM avec prompts système complets + contexte neuromorphique
+- **WebSocket sécurisé** : Authentication query params + validation JSON
+- **STT/TTS connectés** : Whisper + Piper via VoiceService réel
+
+---
+
 ## [1.1.1] - 2025-07-24 - **CORRECTIONS BUGS CRITIQUES** 🔧
 
 ### [CORRIGÉ]

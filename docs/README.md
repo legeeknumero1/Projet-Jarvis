@@ -16,13 +16,17 @@ Assistant vocal intelligent local développé par Enzo, avec des capacités de c
 
 ## 🏗️ Architecture
 
-### Backend (FastAPI + Python)
+### Backend (FastAPI + Python) - **REFACTORISÉ v1.2.0** 🏗️
+- **Architecture modulaire** : Factory Pattern + Services + Routers + Schemas
+- **Services Layer** : LLMService, MemoryService, VoiceService, WeatherService, HomeAssistantService
 - **API REST** et **WebSocket** pour la communication temps réel
-- **Reconnaissance vocale** avec Whisper
-- **Synthèse vocale** avec Piper TTS
-- **LLM local** via Ollama (LLaMA 3.1)
-- **Mémoire vectorielle** avec PostgreSQL et embeddings
-- **Intégration domotique** via Home Assistant et MQTT
+- **Reconnaissance vocale** avec Whisper (VoiceService connecté)
+- **Synthèse vocale** avec Piper TTS (VoiceService connecté)
+- **LLM local** via Ollama (LLaMA 3.2:1b) avec LLMService intégré
+- **Mémoire neuromorphique** avec système contextuel réel
+- **Intégration domotique** via HomeAssistantService
+- **Validation stricte** : Pydantic schemas + sanitisation XSS
+- **Injection dépendances** : app.state avec services singleton
 
 ### Frontend (React)
 - Interface utilisateur moderne et intuitive
