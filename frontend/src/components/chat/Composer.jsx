@@ -1,63 +1,5 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { FiCommand, FiMic } from 'react-icons/fi';
-
-const InputZone = styled.div`
-  width: 100%;
-  margin-top: 20px;
-  display: flex;
-  gap: 15px;
-  align-items: center;
-`;
-
-const MassiveInput = styled.input`
-  flex: 1;
-  padding: 15px 20px;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: 15px;
-  color: #ffffff;
-  font-family: 'Exo 2', sans-serif;
-  font-size: 16px;
-  backdrop-filter: blur(10px);
-  
-  &:focus {
-    outline: none;
-    border-color: #00ffff;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-  }
-  
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-`;
-
-const ActionButton = styled.button`
-  padding: 15px 20px;
-  background: rgba(0, 255, 255, 0.2);
-  border: 1px solid rgba(0, 255, 255, 0.5);
-  border-radius: 15px;
-  color: #00ffff;
-  font-family: 'Orbitron', monospace;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(0, 255, 255, 0.3);
-    transform: scale(1.05);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
 
 const Composer = ({ onSubmit, disabled, isListening, onVoiceToggle }) => {
   const [inputValue, setInputValue] = useState('');
@@ -77,30 +19,61 @@ const Composer = ({ onSubmit, disabled, isListening, onVoiceToggle }) => {
   };
 
   return (
-    <InputZone>
-      <MassiveInput
+    <div className="w-full mt-5 flex gap-4 items-center">
+      <input
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder="Posez votre question à J.A.R.V.I.S..."
         onKeyPress={handleKeyPress}
         disabled={disabled}
+        className="
+          flex-1 px-5 py-4 
+          bg-black/80 backdrop-blur-md 
+          border border-cyan-500/30 rounded-2xl 
+          text-white placeholder-white/50
+          font-mono text-base
+          focus:outline-none focus:border-cyan-400 focus:shadow-[0_0_20px_rgba(0,255,255,0.3)]
+          disabled:opacity-50 disabled:cursor-not-allowed
+          transition-all duration-300
+        "
       />
-      <ActionButton onClick={handleSubmit} disabled={disabled}>
+      
+      <button 
+        onClick={handleSubmit} 
+        disabled={disabled}
+        className="
+          px-5 py-4 
+          bg-cyan-500/20 border border-cyan-500/50 rounded-2xl 
+          text-cyan-400 
+          font-mono text-sm cursor-pointer
+          hover:bg-cyan-500/30 hover:scale-105 
+          active:scale-95
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+          transition-all duration-300
+        "
+      >
         <FiCommand />
-      </ActionButton>
+      </button>
+      
       {onVoiceToggle && (
-        <ActionButton 
+        <button 
           onClick={onVoiceToggle}
-          style={{ 
-            background: isListening ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 255, 0.2)',
-            borderColor: isListening ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 255, 255, 0.5)'
-          }}
+          className={`
+            px-5 py-4 rounded-2xl border
+            font-mono text-sm cursor-pointer
+            hover:scale-105 active:scale-95
+            transition-all duration-300
+            ${isListening 
+              ? 'bg-red-500/30 border-red-500/50 text-red-400' 
+              : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30'
+            }
+          `}
         >
           <FiMic />
-        </ActionButton>
+        </button>
       )}
-    </InputZone>
+    </div>
   );
 };
 
