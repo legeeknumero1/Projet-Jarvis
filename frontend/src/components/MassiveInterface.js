@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FiCpu, FiActivity, FiWifi, FiMic, FiSettings, FiPower, FiVolume2, FiHome, FiShield, FiDatabase, FiMonitor, FiHardDrive, FiClock, FiGlobe, FiUser, FiMail, FiCalendar, FiMap, FiCamera, FiMusic, FiVideo, FiTrend, FiSun, FiMoon, FiCloud, FiZap, FiCommand, FiTerminal, FiCode, FiGithub, FiLinkedin, FiTwitter, FiInstagram } from 'react-icons/fi';
 import JarvisSphere from './JarvisSphere';
 import MessageList from './chat/MessageList';
+import Composer from './chat/Composer';
 
 // Animations massives
 const matrixRain = keyframes`
@@ -432,7 +433,6 @@ const SocialLinks = styled.div`
 `;
 
 const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, onVoiceInput, setIsListening }) => {
-  const [inputValue, setInputValue] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -442,11 +442,15 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (inputValue.trim() && onSendMessage) {
-      onSendMessage(inputValue);
-      setInputValue('');
+  const handleSendMessage = (text) => {
+    if (onSendMessage) {
+      onSendMessage(text);
+    }
+  };
+
+  const handleVoiceToggle = () => {
+    if (setIsListening) {
+      setIsListening(!isListening);
     }
   };
 
@@ -596,27 +600,12 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
           </MessageContainer>
         </ChatZone>
         
-        <InputZone>
-          <MassiveInput
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Posez votre question à J.A.R.V.I.S..."
-            onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
-          />
-          <ActionButton onClick={handleSubmit}>
-            <FiCommand />
-          </ActionButton>
-          <ActionButton 
-            onClick={() => setIsListening(!isListening)}
-            style={{ 
-              background: isListening ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 255, 0.2)',
-              borderColor: isListening ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 255, 255, 0.5)'
-            }}
-          >
-            <FiMic />
-          </ActionButton>
-        </InputZone>
+        <Composer 
+          onSubmit={handleSendMessage}
+          disabled={false}
+          isListening={isListening}
+          onVoiceToggle={handleVoiceToggle}
+        />
       </CentralArea>
       
       {/* Panneau droit */}
