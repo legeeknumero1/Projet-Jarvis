@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { FiCpu, FiActivity, FiWifi, FiMic, FiSettings, FiPower, FiVolume2, FiHome, FiShield, FiDatabase, FiMonitor, FiHardDrive, FiClock, FiGlobe, FiUser, FiMail, FiCalendar, FiMap, FiCamera, FiMusic, FiVideo, FiTrend, FiSun, FiMoon, FiCloud, FiZap, FiCommand, FiTerminal, FiCode, FiGithub, FiLinkedin, FiTwitter, FiInstagram } from 'react-icons/fi';
 import JarvisSphere from './JarvisSphere';
+import MessageList from './chat/MessageList';
 
 // Animations massives
 const matrixRain = keyframes`
@@ -591,11 +592,7 @@ const MassiveInterface = ({ isConnected, isListening, messages, onSendMessage, o
         
         <ChatZone>
           <MessageContainer>
-            {messages.map((message, index) => (
-              <Message key={index} isUser={message.type === 'user'}>
-                {message.content}
-              </Message>
-            ))}
+            <MessageList messages={messages} />
           </MessageContainer>
         </ChatZone>
         
