@@ -1,8 +1,8 @@
 import React from 'react';
-import ChatGPTInterface from './components/ChatGPTInterface';
+import ChatLayout from './components/layout/ChatLayout';
 
 function App() {
-  return <ChatGPTInterface />;
+  return <ChatLayout />;
 }
 
 export default App;
