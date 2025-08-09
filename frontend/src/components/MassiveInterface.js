@@ -433,9 +433,75 @@ const SocialLinks = styled.div`
   }
 `;
 
-const MassiveInterface = ({ onSendMessage, onVoiceInput }) => {
+const MassiveInterface = ({ onVoiceInput }) => {
   const { state, actions } = useChat();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [ws, setWs] = useState(null);
+
+  // Configuration WebSocket
+  const API_KEY = process.env.REACT_APP_API_KEY || 'jarvis-dev-key';
+  const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+
+  // Hook WebSocket interne
+  useEffect(() => {
+    const connectWebSocket = () => {
+      try {
+        const websocket = new WebSocket(WS_URL);
+        
+        websocket.onopen = () => {
+          console.log('✅ WebSocket connecté');
+          actions.setConnected(true);
+          setWs(websocket);
+        };
+
+        websocket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('📨 WS message reçu:', data);
+            
+            if (data.response) {
+              // Réponse assistant via WebSocket
+              actions.addMessage({
+                id: Date.now(),
+                type: 'assistant',
+                content: data.response,
+                timestamp: new Date()
+              });
+            }
+          } catch (error) {
+            console.error('❌ Erreur parsing WS message:', error);
+          }
+        };
+
+        websocket.onclose = () => {
+          console.log('🔌 WebSocket déconnecté');
+          actions.setConnected(false);
+          setWs(null);
+          
+          // Reconnexion automatique après 3s
+          setTimeout(connectWebSocket, 3000);
+        };
+
+        websocket.onerror = (error) => {
+          console.error('❌ WebSocket erreur:', error);
+          actions.setConnected(false);
+        };
+        
+      } catch (error) {
+        console.error('❌ Erreur connexion WebSocket:', error);
+        actions.setConnected(false);
+      }
+    };
+
+    connectWebSocket();
+
+    // Cleanup
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -445,9 +511,24 @@ const MassiveInterface = ({ onSendMessage, onVoiceInput }) => {
   }, []);
 
   const handleSendMessage = (text) => {
-    if (onSendMessage) {
-      onSendMessage(text);
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.error('❌ WebSocket non connecté');
+      return;
     }
+
+    // Ajouter message utilisateur
+    actions.addMessage({
+      id: Date.now(),
+      type: 'user', 
+      content: text,
+      timestamp: new Date()
+    });
+
+    // Envoyer via WebSocket
+    ws.send(JSON.stringify({
+      message: text,
+      user_id: 'enzo'
+    }));
   };
 
   const handleVoiceToggle = () => {
