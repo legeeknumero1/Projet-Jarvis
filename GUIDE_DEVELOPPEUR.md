@@ -100,16 +100,11 @@ frontend/src/
 ### Monitoring
 `GET /health`, `/metrics` (Prometheus)
 
-## 🧪 Tests (à implémenter)
+## 🧪 Tests
 
 ```bash
-# Backend (pytest + coverage)
-cd backend
-pytest --cov=backend --cov-fail-under=85
-
-# Frontend (Jest/Vitest)  
-cd frontend
-npm test -- --watchAll=false  # ou npm run test:ci
+# Backend: pytest --cov=backend --cov-fail-under=85
+# Frontend: npm test -- --watchAll=false
 ```
 
 ## 🔒 Sécurité
@@ -168,36 +163,11 @@ gunicorn app:app -w 4 -k uvicorn.workers.UvicornWorker
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🚨 Dépannage Rapide
+## 🚨 Dépannage
 
-### WebSocket ne se connecte pas
-```bash
-# Vérifier CORS
-export ALLOWED_ORIGINS='["http://localhost:3000"]'
-
-# Vérifier port
-curl http://localhost:8000/health
-
-# Logs backend
-tail -f logs/jarvis.log
-```
-
-### Services non disponibles
-```bash
-# Ollama
-curl http://localhost:11434/api/tags
-
-# PostgreSQL
-docker exec -it jarvis_postgres psql -U jarvis -d jarvis_db
-
-# Memory neuromorphique
-curl -H "X-API-Key: dev-key" http://localhost:8000/chat -d '{"message":"test"}'
-```
-
-### Performance TTS/STT lents
-- ✅ Activer GPU pour Ollama (`docker-compose.gpu.yml`)
-- ✅ Vérifier Piper TTS configuré
-- ✅ Utiliser modèles optimisés (LLaMA 3.2:1b)
+**WebSocket**: Vérifier CORS `ALLOWED_ORIGINS`, port 8000, logs `tail -f logs/jarvis.log`  
+**Services**: `curl http://localhost:11434/api/tags` (Ollama), `docker exec -it jarvis_postgres psql -U jarvis -d jarvis_db`  
+**Performance**: Activer GPU Ollama, modèles optimisés (LLaMA 3.2:1b)
 
 ## 📊 Métriques Architecture
 
@@ -211,31 +181,11 @@ curl -H "X-API-Key: dev-key" http://localhost:8000/chat -d '{"message":"test"}'
 - **Memory** : Contexte neuromorphique < 500ms
 - **Build** : Frontend < 30s, Backend < 10s
 
-## 🔄 CI/CD (Recommandé)
+## 📝 Todo
 
-```yaml
-# .github/workflows/tests.yml (exemple)
-jobs:
-  backend:
-    run: |
-      pip install -r requirements-dev.txt
-      pytest --cov=backend --cov-fail-under=85
-      
-  frontend:  
-    run: |
-      npm ci
-      npm run build
-      npm test -- --watchAll=false
-```
-
-## 📝 Todo Prochaines Versions
-
-- [ ] Tests backend pytest (85% coverage)
-- [ ] Tests frontend React Testing Library
-- [ ] Migration complète main.py → routers
-- [ ] Monitoring Prometheus/Grafana
+- [ ] Tests complets (85% coverage)
+- [ ] Monitoring Prometheus/Grafana  
 - [ ] CI/CD GitHub Actions
-- [ ] Documentation API OpenAPI complète
 
 ---
 

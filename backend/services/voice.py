@@ -1,5 +1,8 @@
-"""Service Voice pour STT/TTS - wrapper pour speech_manager"""
+"""Service Voice pour STT/TTS avec timeouts et retries"""
 import logging
+import httpx
+import asyncio
+import random
 from typing import Optional, bytes
 from ..schemas.voice import TTSRequest, TranscriptionResponse
 
@@ -11,6 +14,15 @@ class VoiceService:
     def __init__(self, settings):
         self.settings = settings
         self.speech_manager = None
+        # Clients HTTP pour STT/TTS avec timeouts
+        self.stt_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(15.0, connect=5.0),
+            base_url=settings.stt_api_url
+        )
+        self.tts_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(10.0, connect=5.0),
+            base_url=settings.tts_api_url
+        )
         
     async def initialize(self):
         """Initialise le gestionnaire vocal"""
@@ -29,6 +41,35 @@ class VoiceService:
                 
         except Exception as e:
             logger.error(f"❌ [VOICE] Erreur initialisation: {e}")
+    
+    async def close(self):
+        """Ferme les clients HTTP"""
+        await self.stt_client.aclose()
+        await self.tts_client.aclose()
+        
+    async def _retry_with_backoff(self, func, max_retries=3, base_delay=1.0):
+        """Retry avec backoff exponentiel"""
+        for attempt in range(max_retries):
+            try:
+                return await func()
+            except (httpx.TimeoutException, httpx.ConnectError, asyncio.TimeoutError) as e:
+                if attempt == max_retries - 1:
+                    raise e
+                
+                delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                logger.warning(f"⚠️ [VOICE] Tentative {attempt + 1}/{max_retries} échouée, retry dans {delay:.1f}s: {e}")
+                await asyncio.sleep(delay)
+    
+    async def ping(self) -> bool:
+        """Health check pour STT/TTS services"""
+        try:
+            async def _ping_stt():
+                resp = await self.stt_client.get("/health")
+                return resp.status_code == 200
+            
+            return await self._retry_with_backoff(_ping_stt, max_retries=2, base_delay=0.5)
+        except Exception:
+            return False
     
     def is_available(self) -> bool:
         """Vérifie si le service Voice est disponible"""

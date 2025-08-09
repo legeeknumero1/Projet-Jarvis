@@ -10,7 +10,14 @@
       "Bash(touch:*)",
       "Bash(git config:*)",
       "Bash(rg:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(python -m pytest tests/backend/test_health.py -q --maxfail=1)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/backend/test_health.py::test_health -v)",
+      "Bash(chmod:*)",
+      "Bash(jq:*)",
+      "Bash(python:*)",
+      "Bash(git add .)"
     ],
     "deny": []
   }

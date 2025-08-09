@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+
+  "filters": {
+    "request_context": {
+      "()": "backend.utils.logging.RequestContextFilter"
+    }
+  },
+
+  "formatters": {
+    "json": {
+      "()": "backend.utils.logging.JsonFormatter",
+      "extras": ["request_id", "user_id", "path", "method", "status_code", "latency_ms", "client_ip", "component"]
+    }
+  },
+
+  "handlers": {
+    "stdout_json": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "json",
+      "filters": ["request_context"],
+      "stream": "ext://sys.stdout"
+    }
+  },
+
+  "root": {
+    "level": "INFO", 
+    "handlers": ["stdout_json"]
+  },
+
+  "loggers": {
+    "uvicorn":        { "level": "INFO", "handlers": ["stdout_json"], "propagate": false },
+    "uvicorn.error":  { "level": "INFO", "handlers": ["stdout_json"], "propagate": false },
+    "uvicorn.access": { "level": "INFO", "handlers": ["stdout_json"], "propagate": false },
+    "httpx":          { "level": "WARNING" },
+    "backend":        { "level": "INFO", "handlers": ["stdout_json"], "propagate": false }
+  }
+}

@@ -1,8 +1,23 @@
-"""Service LLM avec Ollama - extrait de main.py"""
+"""Service LLM avec Ollama - timeouts et retries"""
 import asyncio
 import logging
+import httpx
+import time
 from typing import Optional, Dict, List, Any
 from datetime import datetime
+import random
+
+# Import métriques Prometheus
+try:
+    from ..observability.metrics import llm_latency, update_service_health, service_response_time
+except ImportError:
+    # Fallback si prometheus_client pas installé
+    def llm_latency_observe(*args, **kwargs):
+        pass
+    llm_latency = type('MockHistogram', (), {'observe': llm_latency_observe})()
+    def update_service_health(*args, **kwargs):
+        pass
+    service_response_time = type('MockHistogram', (), {'labels': lambda **kw: type('', (), {'observe': lambda x: None})()})()
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +28,11 @@ class LLMService:
         self.settings = settings
         self.ollama_client = None
         self.model_name = "llama3.2:1b"
+        # Client HTTP avec timeouts robustes
+        self.http_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(10.0, connect=5.0),
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+        )
         
     async def initialize(self):
         """Initialise le client Ollama"""
@@ -40,7 +60,7 @@ class LLMService:
             logger.error(f"❌ [LLM] Erreur initialisation: {e}")
     
     async def close(self):
-        """Ferme proprement le client Ollama"""
+        """Ferme proprement les clients"""
         if self.ollama_client:
             try:
                 if hasattr(self.ollama_client, 'client') and self.ollama_client.client:
@@ -50,10 +70,47 @@ class LLMService:
                     logger.info("ℹ️ [LLM] Client déjà fermé ou non initialisé")
             except Exception as e:
                 logger.error(f"❌ [LLM] Erreur fermeture: {e}")
+        
+        # Fermer client HTTP
+        await self.http_client.aclose()
+        
+    async def _retry_with_backoff(self, func, max_retries=3, base_delay=1.0):
+        """Retry avec backoff exponentiel"""
+        for attempt in range(max_retries):
+            try:
+                return await func()
+            except (httpx.TimeoutException, httpx.ConnectError, asyncio.TimeoutError) as e:
+                if attempt == max_retries - 1:
+                    raise e
+                
+                delay = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                logger.warning(f"⚠️ [LLM] Tentative {attempt + 1}/{max_retries} échouée, retry dans {delay:.1f}s: {e}")
+                await asyncio.sleep(delay)
     
     def is_available(self) -> bool:
         """Vérifie si le service LLM est disponible"""
         return self.ollama_client is not None
+    
+    async def ping(self) -> bool:
+        """Health check pour readiness probe avec métriques"""
+        start_time = time.perf_counter()
+        is_healthy = False
+        
+        try:
+            async def _ping():
+                url = f"{self.settings.ollama_base_url}/api/version"
+                resp = await self.http_client.get(url)
+                return resp.status_code == 200
+            
+            is_healthy = await self._retry_with_backoff(_ping, max_retries=2, base_delay=0.5)
+            return is_healthy
+        except Exception:
+            return False
+        finally:
+            # Enregistrer métriques
+            duration = time.perf_counter() - start_time
+            service_response_time.labels(service="ollama").observe(duration)
+            update_service_health("ollama", is_healthy)
     
     async def generate_response(
         self,
@@ -62,9 +119,11 @@ class LLMService:
         user_id: str = "default"
     ) -> str:
         """
-        Génère une réponse IA avec contexte
+        Génère une réponse IA avec contexte et métriques
         Extrait de la fonction process_message() de main.py:530-696
         """
+        start_time = time.perf_counter()
+        
         try:
             if not self.is_available():
                 logger.error("❌ [LLM] Client Ollama non initialisé")
@@ -103,6 +162,10 @@ class LLMService:
         except Exception as e:
             logger.error(f"❌ [LLM] Erreur génération: {e}")
             return "Une erreur s'est produite lors de la génération de la réponse."
+        finally:
+            # Enregistrer latence LLM dans métriques
+            duration = time.perf_counter() - start_time
+            llm_latency.observe(duration)
     
     def _build_system_prompt(
         self, 

@@ -1,0 +1,76 @@
+# Docker Compose avec observabilité production complète
+version: "3.8"
+
+services:
+  jarvis-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      - JARVIS_LOG_CONFIG=/etc/jarvis/logs-config.json
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs-config.json:/etc/jarvis/logs-config.json:ro
+      - jarvis-logs:/var/log/jarvis
+      - jarvis-secrets:/run/secrets:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  # Log collector (optionnel)
+  fluent-bit:
+    image: fluent/fluent-bit:3.0
+    volumes:
+      - jarvis-logs:/var/log/jarvis:ro
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    environment:
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST:-elasticsearch}
+    depends_on:
+      - jarvis-api
+
+  # Monitoring stack (optionnel)
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=jarvis123
+
+volumes:
+  jarvis-logs:
+    driver: local
+  jarvis-secrets:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  default:
+    name: jarvis-observability

@@ -2,20 +2,30 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from ..schemas.chat import MessageRequest, MessageResponse
 from ..security.deps import api_key_required
+from ..security.rate_limit import check_chat_rate_limit
 from ..utils.logging import get_logger
 import re
+import json
 from datetime import datetime
 
 router = APIRouter()
 logger = get_logger(__name__)
 
 @router.post("/", response_model=MessageResponse)
-async def chat(message_request: MessageRequest, request: Request):
+async def chat(
+    message_request: MessageRequest, 
+    request: Request,
+    _: None = Depends(check_chat_rate_limit)
+):
     """
-    Endpoint chat public - extrait de main.py:330-364
+    Endpoint chat public avec rate limiting anti-abus
     Authentification par IP locale uniquement
     """
     try:
+        # Anti-abus: limite taille message
+        if len(message_request.message) > 4096:
+            raise HTTPException(status_code=413, detail="Message trop long (max 4096 caractères)")
+        
         logger.info(f"💬 [CHAT] Nouveau message de {message_request.user_id}: {message_request.message[:50]}...")
         
         # Services depuis app.state (injection de dépendance)
@@ -39,6 +49,7 @@ async def chat(message_request: MessageRequest, request: Request):
         response_text = await process_message_with_services(
             message_request, user_context, llm_service, weather_service
         )
+        
         logger.info(f"✅ [CHAT] Réponse générée: {response_text[:50]}...")
         
         # Sauvegarde neuromorphique (main.py:350-356)
