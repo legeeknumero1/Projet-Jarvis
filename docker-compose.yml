@@ -131,11 +131,11 @@ services:
       - EMOTIONAL_ANALYSIS_ENABLED=true
       - AUTO_CONSOLIDATION_ENABLED=true
     volumes:
-      - ./backend:/app
       - ./models:/app/models
       - ./logs:/app/logs
       - ./data:/app/data
-      - ./memory:/app/memory
+      # ./backend:/app volume supprimé pour éviter d'écraser les fichiers buildés
+      # ./memory:/app/memory volume supprimé pour éviter d'écraser les fichiers buildés
     restart: unless-stopped
     depends_on:
       postgres:

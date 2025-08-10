@@ -1,5 +1,5 @@
 """
->à Package mémoire neuromorphique Jarvis
+Package memoire neuromorphique Jarvis
 """
 
 # Export des classes principales
@@ -26,5 +26,5 @@ try:
 except ImportError as e:
     # Fallback en cas d'imports manquants
     import logging
-    logging.warning(f"  Imports mémoire partiels: {e}")
+    logging.warning(f"Imports memoire partiels: {e}")
     __all__ = []
