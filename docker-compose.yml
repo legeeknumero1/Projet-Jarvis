@@ -117,7 +117,7 @@ services:
           memory: 512M
           cpus: '0.5'
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@172.20.0.100:5432/${POSTGRES_DB:-jarvis_db}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@172.20.0.100:5432/${POSTGRES_DB:-jarvis_db}
       - REDIS_URL=redis://172.20.0.110:6379
       - OLLAMA_BASE_URL=http://172.20.0.30:11434
       - TTS_API_URL=http://172.20.0.20:8002
@@ -157,15 +157,15 @@ services:
   # Container 5: Interface Container - Cinquième dans le schéma
   interface:
     build:
-      context: ./services/interface
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/interface/Dockerfile
     container_name: jarvis_interface
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.50
     ports:
-      - "3000:3000"
-      - "8001:8001"
+      - "3000:8000"
+      - "8001:8000"
     deploy:
       resources:
         limits:
@@ -190,7 +190,7 @@ services:
       - tts-api
       - stt-api
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -251,7 +251,7 @@ services:
       - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/"]
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -87,6 +87,20 @@ docker ps
 15. **COMMANDE "STOP JARVIS"** : Quand Enzo dit "stop jarvis", arrêter PROPREMENT tous les services Jarvis (graceful shutdown) pour éviter la corruption
 16. **ERREURS RÉCURRENTES À ÉVITER** : Toujours vérifier l'état des containers avant de les recréer, utiliser "docker start" au lieu de "docker run" pour containers existants
 
+### 🚨 RÈGLES TESTS ET DÉVELOPPEMENT - PRIORITÉ ABSOLUE
+
+**⚠️ RÉFÉRENCE OBLIGATOIRE : `/docs/REGLE_ABSOLUE_TESTS.md`**
+
+17. **JAMAIS DE FAUX TESTS** : INTERDICTION TOTALE de simuler des résultats, prétendre qu'un test fonctionne sans l'exécuter, approximer l'état d'un service. OBLIGATION d'exécuter RÉELLEMENT chaque test et montrer les résultats authentiques.
+
+18. **JAMAIS DE SIMPLIFICATION** : INTERDICTION de simplifier les problèmes complexes, omettre des détails techniques, présenter une version édulcorée. OBLIGATION d'analyser TOUS les aspects et diagnostiquer jusqu'à la cause racine.
+
+19. **TOUJOURS RECHERCHER INTERNET** : INTERDICTION de se baser uniquement sur connaissances internes. OBLIGATION de rechercher SYSTÉMATIQUEMENT les meilleures pratiques actuelles, vérifier les dernières versions/vulnérabilités.
+
+20. **JAMAIS RIEN HARDCODER** : INTERDICTION absolue de valeurs fixes, chemins absolus, URLs/ports/IPs hardcodés, mots de passe en dur. OBLIGATION d'utiliser variables d'environnement et configuration externalisée.
+
+**CES RÈGLES SONT APPLIQUÉES EN PERMANENCE - AUCUNE EXCEPTION**
+
 ### 🤖 AUTO-INITIALISATION OBLIGATOIRE
 
 **🚨 DÉCLENCHEMENT AUTOMATIQUE À L'OUVERTURE DU PROJET :**

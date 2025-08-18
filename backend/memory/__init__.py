@@ -1,30 +1,29 @@
 """
-Package memoire neuromorphique Jarvis
+🧠 Module de Mémoire Neuromorphique Jarvis
+Architecture inspirée du cerveau humain avec système limbique, cortex préfrontal et hippocampe
 """
 
-# Export des classes principales
-try:
-    from .brain_memory_system import BrainMemorySystem
-    from .memory_manager import MemoryManager
-    from .memory_types import (
-        EmotionalValence, MemoryType, ConsolidationLevel,
-        EmotionalContext, MemoryFragment
-    )
-    from .qdrant_adapter import QdrantMemoryAdapter
-    
-    __all__ = [
-        'BrainMemorySystem',
-        'MemoryManager',
-        'EmotionalValence',
-        'MemoryType', 
-        'ConsolidationLevel',
-        'EmotionalContext',
-        'MemoryFragment',
-        'QdrantMemoryAdapter'
-    ]
-    
-except ImportError as e:
-    # Fallback en cas d'imports manquants
-    import logging
-    logging.warning(f"Imports memoire partiels: {e}")
-    __all__ = []
+from .brain_memory_system import (
+    BrainMemorySystem,
+    MemoryFragment,
+    EmotionalContext,
+    MemoryType,
+    ConsolidationLevel,
+    EmotionalValence
+)
+
+from .limbic_system import LimbicSystem
+from .prefrontal_cortex import PrefrontalCortex  
+from .hippocampus import Hippocampus
+
+__all__ = [
+    'BrainMemorySystem',
+    'LimbicSystem', 
+    'PrefrontalCortex',
+    'Hippocampus',
+    'MemoryFragment',
+    'EmotionalContext',
+    'MemoryType',
+    'ConsolidationLevel',
+    'EmotionalValence'
+]

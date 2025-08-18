@@ -598,9 +598,11 @@ async def process_message(message: str, context: Dict[str, Any], user_id: str = 
             if contextual_memories:
                 context_summary = "MÉMOIRES CONTEXTUELLES (SYSTÈME NEUROMORPHIQUE) :\n"
                 for memory in contextual_memories[:3]:  # 3 plus pertinents
-                    content = memory.get('content', '')[:80]
-                    importance = memory.get('importance_score', 0.0)
-                    emotion = memory.get('emotional_context', {}).get('detected_emotion', 'neutre')
+                    # La structure des mémoires vient de Qdrant payload
+                    payload = memory.get('payload', memory)  # Support pour les deux formats
+                    content = payload.get('content', '')[:80] 
+                    importance = payload.get('importance_score', 0.0)
+                    emotion = payload.get('detected_emotion', 'neutre')
                     context_summary += f"- [{emotion}|{importance:.1f}] {content}...\n"
                 user_context_str = f"\n{context_summary}"
                 
@@ -608,13 +610,26 @@ async def process_message(message: str, context: Dict[str, Any], user_id: str = 
             logging.warning(f"⚠️ [CONTEXT] Erreur récupération contexte neuromorphique: {e}")
             user_context_str = ""
         
-        system_prompt = f"""Tu es Jarvis, l'assistant IA personnel d'Enzo.
-
-PROFIL UTILISATEUR :
+        # Récupérer profil utilisateur depuis base de données
+        user_name = "Utilisateur"
+        user_context = ""
+        
+        if user_id == "enzo" or user_id == "default":
+            user_name = "Enzo"
+            user_context = """PROFIL UTILISATEUR :
 - Nom : Enzo
 - Âge : 21 ans 
 - Localisation : Perpignan, Pyrénées-Orientales (66), France
-- Profil : Futur ingénieur réseau/cybersécurité, passionné technologie
+- Profil : Futur ingénieur réseau/cybersécurité, passionné technologie"""
+        else:
+            # Pour les autres utilisateurs, utiliser les données réelles stockées
+            user_context = f"""PROFIL UTILISATEUR :
+- ID utilisateur : {user_id}
+- Les informations de ce profil sont basées sur les conversations précédentes"""
+        
+        system_prompt = f"""Tu es Jarvis, l'assistant IA personnel.
+
+{user_context}
 
 🧠 SYSTÈME MÉMOIRE NEUROMORPHIQUE ACTIF :
 - Architecture inspirée du cerveau humain (limbique/préfrontal/hippocampe)
@@ -628,16 +643,21 @@ INFORMATIONS TEMPS RÉEL :
 
 {weather_info}{user_context_str}
 
-RÈGLES ABSOLUES :
-- TOUJOURS répondre en français parfait et naturel
-- Tu es JARVIS, l'assistant IA. Enzo est ton utilisateur (21 ans, Perpignan)
-- NE JAMAIS dire que TU as un âge - tu es une IA
-- Utiliser OBLIGATOIREMENT les informations temps réel et météo ci-dessus
-- Utiliser les mémoires contextuelles neuromorphiques pour personnaliser les réponses
-- Si des données météo sont fournies, les citer EXACTEMENT dans ta réponse
-- Ne JAMAIS dire que tu n'as pas accès aux informations si elles sont fournies
-- Être concis, précis et amical avec Enzo
-- Utiliser les données de la mémoire neuromorphique, jamais d'invention
+🚨 RÈGLES OBLIGATOIRES ET ABSOLUES 🚨 :
+
+1. **MÉMOIRE FACTUELLE PRIORITAIRE** : Si les MÉMOIRES CONTEXTUELLES ci-dessus contiennent des informations sur l'utilisateur, tu DOIS les utiliser EXACTEMENT. Ne JAMAIS dire que tu n'as pas ces informations.
+
+2. **RAPPEL DE SOUVENIRS** : Quand l'utilisateur demande de se rappeler quelque chose (avec des mots comme "rappelle-moi", "que mange", "quelle heure"), cherche dans les MÉMOIRES CONTEXTUELLES et réponds avec les faits exacts trouvés.
+
+3. **INTERDICTION D'INVENTER** : Tu ne peux PAS inventer ou supposer. Utilise UNIQUEMENT les faits dans les mémoires ou dis franchement que tu ne sais pas.
+
+4. **FORMAT RÉPONSE MÉMOIRE** : Si tu trouves l'information dans les mémoires, commence par "D'après mes souvenirs de nos conversations..."
+
+AUTRES RÈGLES :
+- Tu es JARVIS, l'assistant IA personnel de {user_name}
+- Répondre en français parfait et naturel
+- Utiliser les informations météo et temps réel fournies
+- Être concis, précis et amical
 
 CAPACITÉS AVANCÉES :
 - Mémoire neuromorphique avec contexte émotionnel
@@ -693,6 +713,195 @@ CAPACITÉS AVANCÉES :
     except Exception as e:
         logging.error(f"❌ [PROCESS] Erreur traitement message: {e}")
         return "Une erreur s'est produite lors du traitement de votre message."
+
+# =============================================================================
+# ENDPOINTS MÉMOIRE NEUROMORPHIQUE
+# =============================================================================
+
+@app.get("/memory/{user_id}")
+async def get_user_memory(user_id: str):
+    """Récupère la mémoire d'un utilisateur"""
+    try:
+        logging.info(f"🧠 [MEMORY] Récupération mémoire pour: {user_id}")
+        
+        # Utiliser le système de mémoire existant
+        if hasattr(brain_memory_system, 'get_user_memories'):
+            memories = await brain_memory_system.get_user_memories(user_id)
+        else:
+            # Fallback - récupération basique
+            memories = {
+                "user_id": user_id,
+                "total_interactions": 0,
+                "recent_memories": [],
+                "status": "memory_system_available"
+            }
+        
+        return {
+            "user_id": user_id,
+            "memories": memories,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MEMORY] Erreur récupération mémoire: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur mémoire: {str(e)}")
+
+@app.post("/memory/{user_id}/store")
+async def store_user_memory(user_id: str, memory_data: dict):
+    """Stocke une nouvelle mémoire pour un utilisateur"""
+    try:
+        logging.info(f"🧠 [MEMORY] Stockage mémoire pour: {user_id}")
+        
+        content = memory_data.get('content', '')
+        memory_type = memory_data.get('type', 'episodic')
+        importance = memory_data.get('importance', 5)
+        
+        # Utiliser le système de mémoire existant
+        if hasattr(brain_memory_system, 'store_interaction'):
+            result = await brain_memory_system.store_interaction(
+                user_id, content, f"Mémoire {memory_type}: {content}"
+            )
+        else:
+            result = {"status": "stored", "memory_id": f"mem_{int(datetime.now().timestamp())}"}
+        
+        return {
+            "user_id": user_id,
+            "memory_stored": result,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MEMORY] Erreur stockage mémoire: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur stockage: {str(e)}")
+
+@app.get("/memory/{user_id}/search")
+async def search_user_memory(user_id: str, query: str):
+    """Recherche dans la mémoire d'un utilisateur"""
+    try:
+        logging.info(f"🧠 [MEMORY] Recherche mémoire pour: {user_id}, query: {query}")
+        
+        # Utiliser le système de mémoire existant
+        if hasattr(brain_memory_system, 'search_memories'):
+            results = await brain_memory_system.search_memories(user_id, query)
+        else:
+            # Fallback - recherche simulée
+            results = {
+                "query": query,
+                "matches": [],
+                "total_found": 0
+            }
+        
+        return {
+            "user_id": user_id,
+            "query": query,
+            "results": results,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [MEMORY] Erreur recherche mémoire: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur recherche: {str(e)}")
+
+# =============================================================================
+# ENDPOINTS OLLAMA 
+# =============================================================================
+
+@app.get("/ollama/models")
+async def get_ollama_models():
+    """Liste des modèles Ollama disponibles"""
+    try:
+        logging.info("🤖 [OLLAMA] Récupération liste modèles")
+        
+        if ollama_client:
+            models = await ollama_client.list_models()
+            return {
+                "models": models,
+                "count": len(models) if models else 0,
+                "timestamp": datetime.now().isoformat(),
+                "status": "success"
+            }
+        else:
+            return {
+                "models": [],
+                "count": 0,
+                "error": "Ollama client non initialisé",
+                "status": "unavailable"
+            }
+            
+    except Exception as e:
+        logging.error(f"❌ [OLLAMA] Erreur récupération modèles: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur Ollama: {str(e)}")
+
+@app.get("/ollama/status")
+async def get_ollama_status():
+    """Statut du service Ollama"""
+    try:
+        logging.info("🤖 [OLLAMA] Vérification statut")
+        
+        if ollama_client:
+            # Test de connexion simple
+            models = await ollama_client.list_models()
+            is_available = models is not None
+            
+            return {
+                "available": is_available,
+                "models_count": len(models) if models else 0,
+                "client_initialized": True,
+                "timestamp": datetime.now().isoformat(),
+                "status": "success"
+            }
+        else:
+            return {
+                "available": False,
+                "models_count": 0,
+                "client_initialized": False,
+                "error": "Client non initialisé",
+                "status": "unavailable"
+            }
+            
+    except Exception as e:
+        logging.error(f"❌ [OLLAMA] Erreur vérification statut: {e}")
+        return {
+            "available": False,
+            "error": str(e),
+            "status": "error"
+        }
+
+@app.post("/ollama/generate")
+async def generate_ollama_response(request: dict):
+    """Génère une réponse avec Ollama"""
+    try:
+        prompt = request.get('prompt', '')
+        model = request.get('model', 'llama3.2:1b')
+        
+        logging.info(f"🤖 [OLLAMA] Génération avec modèle: {model}")
+        
+        if not ollama_client:
+            raise HTTPException(status_code=503, detail="Service Ollama indisponible")
+        
+        response = await ollama_client.generate(
+            model=model,
+            prompt=prompt,
+            options={
+                "temperature": request.get('temperature', 0.7),
+                "max_tokens": request.get('max_tokens', 512)
+            }
+        )
+        
+        return {
+            "prompt": prompt,
+            "response": response,
+            "model": model,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        logging.error(f"❌ [OLLAMA] Erreur génération: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur génération: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

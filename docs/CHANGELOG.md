@@ -9,6 +9,35 @@
 
 ---
 
+## [1.1.2] - 2025-08-18 - **RÉSOLUTION MASSIVE BUGS INFRASTRUCTURE** ⚡
+
+### [CORRIGÉ]
+- **BUG Docker Interface React** - Dockerfile multi-stage build implémenté avec Node.js 18 + Python 3.12
+- **BUG Contexte build interface** - docker-compose.yml context path corrigé de ./services/interface vers . 
+- **BUG Package espeak obsolète** - Migration vers libespeak-ng-dev et espeak-ng pour Debian Trixie
+- **BUG Tests factices** - Nouvelle règle absolue : recherche internet obligatoire dès un problème
+
+### [AJOUTÉ]
+- **Règle absolue 5** - REGLE_ABSOLUE_TESTS.md étendue avec recherche internet systématique
+- **Tests réels infrastructure** - Validation curl complète de tous containers
+- **Multi-stage Docker builds** - Optimisation interface (React+Python) et TTS (PyTorch CPU)
+
+### [MODIFIÉ]
+- Interface Dockerfile : build multi-stage avec optimisations Node.js + Python séparées
+- TTS Dockerfile : build multi-stage avec PyTorch CPU-only pour containers légers
+- docker-compose.yml : contexte build global pour accès au dossier frontend/
+
+### [SÉCURITÉ]
+- Containers TTS : utilisateur non-root (uid 1000) pour sécurité renforcée
+- Build optimisations : packages minimaux en runtime, nettoyage apt automatique
+
+### [EN COURS]
+- Finalisation TTS container build (packages Debian)
+- Endpoints mémoire API manquants backend/main.py
+- Tests complets infrastructure post-corrections
+
+---
+
 ## [1.1.1] - 2025-07-24 - **CORRECTIONS BUGS CRITIQUES** 🔧
 
 ### [CORRIGÉ]

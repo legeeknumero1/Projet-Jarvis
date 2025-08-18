@@ -49,7 +49,10 @@ Instance #18: FERMÉE - Toutes tâches transférées à Instance #20
 Instance #19: FERMÉE - Audit exhaustif terminé (2025-07-24 10:15) ✅  
 Instance #20: ACTIVE - Initialisation automatique (2025-07-24 10:25) ✅
 Instance #21: FERMÉE - Mission documentation migration Docker terminée (2025-07-31 16:05) ✅
-Instance #22: ACTIVE - Initialisation automatique (2025-08-09 19:15) ✅
+Instance #22: FERMÉE - Toutes tâches transférées à Instance #23
+Instance #23: ACTIVE - Initialisation automatique (2025-08-18 14:07) ✅
+Instance #24: ACTIVE - Initialisation automatique (2025-08-18 18:21) ✅
+Instance #25: ACTIVE - Initialisation automatique (2025-08-18 19:10) ✅
 ```
 
 ### 🆔 Attribution automatique
@@ -83,6 +86,7 @@ POUR chaque nouveau démarrage d'instance :
    ```
    AVANT CHAQUE RÉPONSE - LECTURE COMPLÈTE :
    - /docs/CLAUDE_PARAMS.md (PRIORITÉ ABSOLUE)
+   - /docs/REGLE_ABSOLUE_TESTS.md (RÈGLES FONDAMENTALES)
    - /docs/CLAUDE_CONFIG.md (ce fichier)
    - /docs/CLAUDE_UPDATES.md (log temps réel)
    - /docs/CLAUDE_THOUGHTS.md (réflexions partagées)
@@ -95,6 +99,7 @@ POUR chaque nouveau démarrage d'instance :
    - /docs/API.md (documentation API)
    - /docs/PROFIL_JARVIS.md (contexte Enzo/projet)
    - /docs/DOCUMENTATION.md (structure générale)
+   - /docs/MEMOIRE_NEUROMORPHIQUE.md (architecture cognitive)
    ```
 
 2. **ATTRIBUTION DU NUMÉRO D'INSTANCE**

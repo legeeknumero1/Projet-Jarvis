@@ -399,55 +399,118 @@ async def manifest_handler(request):
     return web.json_response(manifest)
 
 async def home_handler(request):
-    """Handle home page requests"""
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Jarvis Backend Server</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 40px; background: #0f0f0f; color: #00ff00; }
-            .container { max-width: 800px; margin: 0 auto; }
-            .status { background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0; }
-            .endpoint { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 5px; }
-            .online { color: #00ff00; }
-            .offline { color: #ff0000; }
-            a { color: #00aaff; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🤖 Jarvis Backend Server</h1>
-            <div class="status">
-                <h2>État du serveur: <span class="online">🟢 En ligne</span></h2>
-                <p>Serveur hybride HTTP/WebSocket pour Jarvis AI Assistant</p>
+    """Handle home page requests - serve React app or fallback"""
+    import os
+    
+    # Try to serve React build first
+    static_path = os.path.join(os.getcwd(), "static")
+    index_path = os.path.join(static_path, "index.html")
+    
+    if os.path.exists(index_path):
+        # Serve React app
+        return web.FileResponse(index_path, headers={'Content-Type': 'text/html'})
+    else:
+        # Fallback - serve debug page
+        html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Jarvis Backend Server</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; background: #0f0f0f; color: #00ff00; }
+                .container { max-width: 800px; margin: 0 auto; }
+                .status { background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                .endpoint { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                .online { color: #00ff00; }
+                .offline { color: #ff0000; }
+                .warning { color: #ffaa00; }
+                a { color: #00aaff; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🤖 Jarvis Backend Server</h1>
+                <div class="status">
+                    <h2>État du serveur: <span class="online">🟢 En ligne</span></h2>
+                    <p>Serveur hybride HTTP/WebSocket pour Jarvis AI Assistant</p>
+                </div>
+                
+                <div class="status">
+                    <h2 class="warning">⚠️ Interface React non disponible</h2>
+                    <p>Le frontend React n'est pas build. Chemin cherché: """ + static_path + """</p>
+                    <p>Pour corriger: Rebuild le container avec le Dockerfile multi-stage</p>
+                </div>
+                
+                <div class="status">
+                    <h2>Points d'accès disponibles:</h2>
+                    <div class="endpoint">
+                        <strong>Interface actuelle:</strong> Cette page de debug
+                    </div>
+                    <div class="endpoint">
+                        <strong>WebSocket:</strong> ws://localhost:8000/ws
+                    </div>
+                    <div class="endpoint">
+                        <strong>Health Check:</strong> <a href="/health">/health</a>
+                    </div>
+                    <div class="endpoint">
+                        <strong>Manifest:</strong> <a href="/manifest.json">/manifest.json</a>
+                    </div>
+                </div>
+                
+                <div class="status">
+                    <h2>Connexions actives:</h2>
+                    <p>WebSocket: """ + str(len(jarvis_server.active_connections)) + """ connexions</p>
+                </div>
             </div>
-            
-            <div class="status">
-                <h2>Points d'accès disponibles:</h2>
-                <div class="endpoint">
-                    <strong>Interface principale:</strong> <a href="http://localhost:3000">http://localhost:3000</a>
-                </div>
-                <div class="endpoint">
-                    <strong>WebSocket:</strong> ws://localhost:8000/ws
-                </div>
-                <div class="endpoint">
-                    <strong>Health Check:</strong> <a href="/health">/health</a>
-                </div>
-                <div class="endpoint">
-                    <strong>Manifest:</strong> <a href="/manifest.json">/manifest.json</a>
-                </div>
-            </div>
-            
-            <div class="status">
-                <h2>Connexions actives:</h2>
-                <p>WebSocket: """ + str(len(jarvis_server.active_connections)) + """ connexions</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-    return web.Response(text=html, content_type='text/html')
+        </body>
+        </html>
+        """
+        return web.Response(text=html, content_type='text/html')
+
+async def static_handler(request):
+    """Handle static file requests for React assets"""
+    import os
+    
+    # Get the file path from URL
+    file_path = request.path.strip('/')
+    static_path = os.path.join(os.getcwd(), "static")
+    full_path = os.path.join(static_path, file_path)
+    
+    # Security check - prevent directory traversal
+    if not full_path.startswith(static_path):
+        return web.Response(status=403, text="Forbidden")
+    
+    # Check if file exists
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        # Determine content type
+        content_type = "text/plain"
+        if file_path.endswith('.js'):
+            content_type = "application/javascript"
+        elif file_path.endswith('.css'):
+            content_type = "text/css"
+        elif file_path.endswith('.json'):
+            content_type = "application/json"
+        elif file_path.endswith('.png'):
+            content_type = "image/png"
+        elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+            content_type = "image/jpeg"
+        elif file_path.endswith('.svg'):
+            content_type = "image/svg+xml"
+        elif file_path.endswith('.ico'):
+            content_type = "image/x-icon"
+        elif file_path.endswith('.woff') or file_path.endswith('.woff2'):
+            content_type = "font/woff"
+        elif file_path.endswith('.ttf'):
+            content_type = "font/ttf"
+        
+        return web.FileResponse(full_path, headers={'Content-Type': content_type})
+    else:
+        # For SPA - fallback to index.html for client-side routing
+        index_path = os.path.join(static_path, "index.html")
+        if os.path.exists(index_path):
+            return web.FileResponse(index_path, headers={'Content-Type': 'text/html'})
+        else:
+            return web.Response(status=404, text="File not found")
 
 def create_app():
     """Create the web application"""
@@ -468,6 +531,10 @@ def create_app():
     app.router.add_get('/ws', websocket_handler)
     app.router.add_get('/health', health_check)
     app.router.add_get('/manifest.json', manifest_handler)
+    
+    # Add static file routes for React assets
+    app.router.add_get('/static/{path:.*}', static_handler)
+    app.router.add_get('/{path:.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|json)}', static_handler)
     
     # Add CORS to all routes
     for route in list(app.router.routes()):

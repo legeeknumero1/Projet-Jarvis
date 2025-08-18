@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(docker:*)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(git --version)",
+      "Bash(sudo docker:*)",
+      "Bash(python3:*)",
+      "Bash(pip --version)",
+      "Bash(bun:*)",
+      "Bash(sudo usermod:*)",
+      "Bash(newgrp:*)",
+      "Bash(cat:*)",
+      "Bash(sudo chmod:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "/run"
+    ]
+  }
+}
