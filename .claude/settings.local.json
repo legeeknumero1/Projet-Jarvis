@@ -26,7 +26,11 @@
       "Bash(git fetch:*)",
       "Bash(tree:*)",
       "Bash(time curl:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npm run build:*)",
+      "Bash(sudo rm:*)",
+      "Bash(cp:*)",
+      "Bash(sudo cp:*)"
     ],
     "deny": [],
     "additionalDirectories": [
