@@ -92,9 +92,9 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/11434' || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 5
 
   # Container 4: Backend API (Main Backend Logic) - Quatrième dans le schéma
@@ -251,9 +251,9 @@ services:
       - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/ || exit 1"]
+      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 5
 
   # 🧠 TimescaleDB - Mémoire temporelle pour logs et métriques

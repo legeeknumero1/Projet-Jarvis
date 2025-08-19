@@ -1,0 +1,48 @@
+/* CYBERPUNK JARVIS - CSS GLOBAL */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: #0a0a0a;
+  color: #00ffff;
+  overflow: hidden;
+}
+
+.App {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Scrollbar personnalisée cyberpunk */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #ff006e, #00d4ff);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #ff4081, #00e5ff);
+}
+
+/* Sélection de texte néon */
+::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #ff006e;
+}
+
+::-moz-selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #ff006e;
+}

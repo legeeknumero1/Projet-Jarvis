@@ -1,8 +1,13 @@
 import React from 'react';
-import ChatGPTInterface from './components/ChatGPTInterface';
+import CyberpunkJarvisInterface from './components/CyberpunkJarvisInterface';
+import './App.css';
 
 function App() {
-  return <ChatGPTInterface />;
+  return (
+    <div className="App">
+      <CyberpunkJarvisInterface />
+    </div>
+  );
 }
 
 export default App;

@@ -534,7 +534,7 @@ def create_app():
     
     # Add static file routes for React assets
     app.router.add_get('/static/{path:.*}', static_handler)
-    app.router.add_get('/{path:.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|json)}', static_handler)
+    app.router.add_get(r'/{path:.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|json)}', static_handler)
     
     # Add CORS to all routes
     for route in list(app.router.routes()):

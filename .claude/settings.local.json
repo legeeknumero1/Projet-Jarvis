@@ -20,12 +20,18 @@
       "Bash(rm:*)",
       "Bash(rmdir:*)",
       "Bash(grep:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(npm start:*)",
+      "Bash(git fetch:*)",
+      "Bash(tree:*)",
+      "Bash(time curl:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
-    "ask": [],
     "additionalDirectories": [
       "/run"
-    ]
+    ],
+    "ask": []
   }
 }

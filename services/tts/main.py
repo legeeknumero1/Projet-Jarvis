@@ -55,7 +55,9 @@ async def synthesize_speech(request: TTSRequest):
             device = "cuda" if torch.cuda.is_available() else "cpu"
             
             # Initialiser TTS (modèle français)
-            tts = TTS("tts_models/fr/mai/tacotron2-DDC", device=device)
+            tts = TTS("tts_models/fr/mai/tacotron2-DDC")
+            if device == "cuda":
+                tts = tts.to(device)
             
             # Générer l'audio
             output_path = f"/tmp/tts_output_{hash(request.text)}.wav"
