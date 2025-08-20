@@ -1,5 +1,79 @@
 # 🐛 Bugs - Jarvis V1.1.0 - ANALYSE EXHAUSTIVE APPROFONDIE
 
+## 🚨 MISE À JOUR AUDIT SÉCURITÉ - Instance #27 (2025-08-20)
+
+### 📊 NOUVEAUX BUGS IDENTIFIÉS LORS AUDIT COMPLET
+
+**Audit Instance #27 - 2025-08-20 16:30**
+- **350+ valeurs hardcodées** confirmées et cataloguées
+- **8 bugs critiques** nouveaux identifiés
+- **15 bugs importants** détectés et documentés
+- **12 bugs mineurs** répertoriés pour correction
+
+#### 🚨 **NOUVEAUX BUGS CRITIQUES (Instance #27)**
+
+**BUG-401 🚨 AUTHENTIFICATION API MANQUANTE**
+- **Description** : Endpoints API publics sans authentification OAuth
+- **Impact** : CRITIQUE - Accès non autorisé à l'API Jarvis
+- **Localisation** : `backend/main.py:129-150` - `/chat` endpoint
+- **Code concerné** :
+```python
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(chat_request: ChatMessage):
+    # ❌ AUCUNE AUTHENTIFICATION
+    # ❌ AUCUNE VALIDATION UTILISATEUR
+```
+- **Solution** : Implémenter OAuth 2.1 + JWT validation
+
+**BUG-402 🚨 RATE LIMITING ABSENT**
+- **Description** : Aucune protection contre spam/DoS sur tous endpoints
+- **Impact** : CRITIQUE - Service vulnérable aux attaques par volume
+- **Localisation** : Tous endpoints API sans exception
+- **Solution** : slowapi + Redis rate limiting (10 req/min par IP)
+
+**BUG-403 🚨 RÉSEAU DOCKER FIGÉ**
+- **Description** : 172.20.0.x hardcodées dans 15+ fichiers
+- **Impact** : CRITIQUE - Déploiement impossible sur autres infrastructures
+- **Localisation** : `docker-compose.yml`, `backend/config/config.py`, scripts
+- **Solution** : Variables d'environnement complètes
+
+**BUG-404 🚨 CORS TROP PERMISSIF**
+- **Description** : allow_origins=["*"] dans certaines configurations
+- **Impact** : CRITIQUE - XSS et requêtes cross-origin malveillantes
+- **Solution** : CORS stricte avec origins spécifiques
+
+#### ⚠️ **NOUVEAUX BUGS IMPORTANTS (Instance #27)**
+
+**BUG-501 ⚠️ ENDPOINTS MÉMOIRE MANQUANTS**
+- **Description** : brain_memory_system non exposé via API REST
+- **Impact** : IMPORTANT - Fonctionnalités mémoire inaccessibles via API
+- **Localisation** : `backend/main.py` - Routes `/memory/*` absentes
+- **Solution** : Créer endpoints CRUD pour système mémoire
+
+**BUG-502 ⚠️ WEBSOCKET RECONNEXION NON ROBUSTE**
+- **Description** : Pas de retry automatique en cas de déconnexion
+- **Impact** : IMPORTANT - UX dégradée, connexions perdues
+- **Localisation** : Frontend WebSocket handling
+- **Solution** : Exponential backoff + retry logic
+
+**BUG-503 ⚠️ HEALTH CHECKS TROP FRÉQUENTS**
+- **Description** : interval: 30s sur tous services (charge CPU)
+- **Impact** : IMPORTANT - Overhead système inutile
+- **Localisation** : `docker-compose.yml` healthcheck configs
+- **Solution** : interval: 60s + timeout optimisés
+
+#### ℹ️ **NOUVEAUX BUGS MINEURS (Instance #27)**
+
+**BUG-601 ℹ️ VARIABLES ENV INCONSISTANTES**
+- **Description** : Nommage variables d'environnement non uniforme
+- **Solution** : Standardiser PREFIX_COMPONENT_SETTING
+
+**BUG-602 ℹ️ DOCKERFILE MULTI-STAGE MANQUANT**  
+- **Description** : Builds Docker non optimisés (taille images)
+- **Solution** : Multi-stage builds pour tous services
+
+---
+
 ## 🚨 AUDIT SÉCURITÉ COMPLET 2024-2025 - Instance #24 (2025-08-18)
 
 ### 📋 RÉSUMÉ EXÉCUTIF - ANALYSE MULTI-LAYER

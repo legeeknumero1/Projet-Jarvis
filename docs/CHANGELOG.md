@@ -9,6 +9,80 @@
 
 ---
 
+## [1.2.0] - 2025-08-20 - **CAPACITÉS INTERNET MCP + AUDIT SÉCURITÉ COMPLET** 🌐🔍
+
+### [AJOUTÉ]
+- **🌐 Capacités Internet Complètes** - Intégration MCP (Model Context Protocol) pour accès web
+  - Navigation web automatisée via Browserbase
+  - Recherche internet en temps réel
+  - Captures d'écran intelligentes de sites web
+  - Extraction de contenu et données web
+  - Interactions programmables (clic, formulaires, actions)
+- **🔌 Architecture MCP** - Stack complète Model Context Protocol
+  - MCP Manager (`MCP/mcp_manager.py`) - Gestionnaire centralisé serveurs
+  - MCP Client (`backend/integration/mcp_client.py`) - Client intégré backend
+  - Web Service (`backend/services/web_service.py`) - Service web haut niveau
+  - API Endpoints (`backend/api/endpoints/web.py`) - Routes REST web
+  - Serveur Browserbase (`MCP/servers/browserbase_web_automation/`) - Installé et configuré
+- **🧪 Tests MCP Complets** - Validation et démonstration capacités internet
+  - Tests d'intégration MCP (`MCP/test_mcp_integration.py`)
+  - Tests capacités web Jarvis (`MCP/test_jarvis_web_capabilities.py`)
+  - Scripts d'installation automatisés (`MCP/scripts/install_*.sh`)
+- **📊 Documentation Audit Complet** - Analyse exhaustive sécurité et performance
+  - Rapport audit complet 2025 (`docs/AUDIT_COMPLET_2025.md`)
+  - Plan d'action sécurité priorisé (`docs/PLAN_ACTION_SECURITE.md`)
+  - Mise à jour bugs avec nouveaux findings (`docs/BUGS.md`)
+
+### [MODIFIÉ]
+- **🔧 Variables Environnement** - Ajout configuration MCP
+  - BROWSERBASE_API_KEY, BROWSERBASE_PROJECT_ID, GEMINI_API_KEY ajoutés dans .env
+- **📝 Documentation Mise à Jour** - Intégration changements et audit
+  - CLAUDE_UPDATES.md avec détails MCP + audit complet
+  - README.md avec nouvelles capacités internet
+  - API.md avec endpoints web MCP
+
+### [IDENTIFIÉ] 
+- **🚨 350+ Valeurs Hardcodées** - Audit sécurité révèle problèmes critiques
+  - IPs Docker 172.20.0.x hardcodées dans 15+ fichiers
+  - Ports fixes non configurables (8000, 8002, 8003, etc.)
+  - Configuration réseau figée empêchant déploiements flexibles
+- **🔒 Vulnérabilités Sécurité Critiques** - 8 bugs critiques identifiés
+  - API endpoints sans authentification OAuth
+  - Absence de rate limiting (vulnérabilité DoS)
+  - CORS trop permissif sur certains services
+  - Gestion secrets à améliorer
+- **⚠️ 15 Bugs Importants** - Performance et robustesse à améliorer
+  - Endpoints mémoire brain_memory_system non exposés
+  - WebSocket reconnexion non robuste
+  - Health checks trop fréquents (overhead CPU)
+  - Monitoring et observabilité insuffisants
+
+### [RECOMMANDÉ]
+- **🚨 Phase 1 Critique (3 jours)** - Sécurisation urgente requise
+  - Variables d'environnement pour toutes IPs/ports hardcodées
+  - Implémentation OAuth 2.1 + JWT sur tous endpoints
+  - Rate limiting avec Redis (10 req/min par IP)
+  - CORS stricte avec origins spécifiques
+- **⚡ Phase 2 Performance (1 semaine)** - Monitoring et robustesse
+  - Stack Prometheus + Grafana pour monitoring
+  - Logging centralisé ELK Stack
+  - Tests automatisés coverage 90%+
+  - Optimisations Docker et base de données
+- **🚀 Phase 3 Scalabilité (1 mois)** - Production et CI/CD
+  - Manifests Kubernetes améliorés avec auto-scaling
+  - Pipeline CI/CD complet avec security scans
+  - Fine-tuning IA et optimisations RAG
+  - Analytics avancés et métriques business
+
+### [STATUT TECHNIQUE]
+- **✅ Services Opérationnels** : 9/9 conteneurs Docker healthy
+- **✅ Performance** : API 50-200ms, mémoire ~4GB stable
+- **✅ Fonctionnalités** : Interface cyberpunk + capacités internet MCP
+- **⚠️ Sécurité** : Note 4/10 - Amélirations critiques urgentes
+- **⚠️ Maintenabilité** : Note 5/10 - Configuration hardcodée problématique
+
+---
+
 ## [1.1.2] - 2025-08-18 - **RÉSOLUTION MASSIVE BUGS INFRASTRUCTURE** ⚡
 
 ### [CORRIGÉ]

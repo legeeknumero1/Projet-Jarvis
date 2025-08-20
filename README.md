@@ -1,40 +1,90 @@
-# 🤖 Jarvis - Assistant IA Personnel v1.3.0
+# 🤖 Jarvis - Assistant IA Personnel v1.2.0
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Ollama](https://img.shields.io/badge/Ollama-llama3.2:1b-purple)](https://ollama.ai/)
+[![MCP](https://img.shields.io/badge/MCP-Internet%20Access-orange)](https://modelcontextprotocol.io/)
 
-## 🚀 **STATUS: JARVIS OPÉRATIONNEL !** 
+## 🚀 **STATUS: JARVIS OPÉRATIONNEL + INTERNET ACCESS !** 
 
-**Architecture 7/7 services déployée avec succès :**
-- ✅ STT (Speech-to-Text) - Port 8003
-- ✅ TTS (Text-to-Speech) - Port 8002  
-- ✅ Ollama LLM - Port 11434
-- ✅ PostgreSQL + Redis + Qdrant
-- 🔄 Backend API (en cours de correction)
-- 🔄 Interface Web (en cours)
+**🌐 NOUVELLE FONCTIONNALITÉ : Jarvis peut maintenant accéder à Internet !**
+
+**Architecture 9/9 services déployée avec succès :**
+- ✅ STT (Speech-to-Text) - Port 8003 - Reconnaissance vocale
+- ✅ TTS (Text-to-Speech) - Port 8002 - Synthèse vocale
+- ✅ Ollama LLM - Port 11434 - Intelligence artificielle locale
+- ✅ Backend API - Port 8000 - **Nouveau : Endpoints Internet MCP**
+- ✅ Interface Web - Port 3000 - React cyberpunk avec WebSocket
+- ✅ PostgreSQL - Base de données principale  
+- ✅ Redis - Cache et sessions
+- ✅ Qdrant - Mémoire vectorielle neuromorphique
+- ✅ TimescaleDB - Métriques temporelles
+- 🌐 **MCP Browserbase** - **NOUVEAU** - Navigation web automatisée
+
+---
+
+## 🌐 **NOUVELLES CAPACITÉS INTERNET**
+
+### 🔍 **Jarvis peut maintenant :**
+- **Naviguer sur le web** : Accéder à n'importe quelle page internet
+- **Rechercher en temps réel** : Effectuer des recherches automatiques
+- **Prendre des captures d'écran** : Screenshots de sites web
+- **Extraire des données** : Analyser et extraire contenu web
+- **Interagir avec les pages** : Cliquer, remplir des formulaires, actions automatisées
+
+### 🔧 **Endpoints Internet API**
+```bash
+# Recherche web
+curl -X POST http://localhost:8000/web/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "actualités technologie 2025"}'
+
+# Récupérer contenu d'une page
+curl -X POST http://localhost:8000/web/content \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+
+# Capture d'écran
+curl -X POST http://localhost:8000/web/screenshot \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "full_page": true}'
+```
+
+### ⚙️ **Configuration MCP (Optionnel)**
+Pour activer toutes les capacités internet :
+```bash
+# 1. Créer un compte sur https://www.browserbase.com/
+# 2. Ajouter vos clés dans .env
+BROWSERBASE_API_KEY=votre_clé_ici
+BROWSERBASE_PROJECT_ID=votre_projet_ici
+GEMINI_API_KEY=votre_clé_gemini  # Optionnel
+```
 
 ---
 
 ## 💬 **COMMENT PARLER À JARVIS**
 
-### 🎯 **Méthode Rapide - Chat Direct**
+### 🎯 **API Backend Complète**
 ```bash
-# Chat simple avec Jarvis
+# Chat avec Jarvis (API principale)
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Bonjour Jarvis!", "user_id": "enzo"}'
+
+# Chat avec Ollama direct
 curl -X POST http://localhost:11434/api/generate \
   -H "Content-Type: application/json" \
-  -d '{"model": "llama3.2:1b", "prompt": "Bonjour Jarvis!", "stream": false}' \
+  -d '{"model": "llama3.2:1b", "prompt": "Bonjour!", "stream": false}' \
   | jq -r '.response'
-
-# Ou utiliser le script pratique
-./scripts/chat-jarvis.sh "Votre question ici"
 ```
 
-### 🌐 **Interface Web**
+### 🌐 **Interfaces Disponibles**
+- **Interface React** : http://localhost:3000 - Interface cyberpunk principale
+- **API Backend** : http://localhost:8000 - Documentation Swagger
+- **WebSocket** : ws://localhost:8001/ws - Communication temps réel
 - **Documentation STT** : http://localhost:8003/docs
 - **Documentation TTS** : http://localhost:8002/docs
-- **Ollama** : http://localhost:11434
 
 ---
 

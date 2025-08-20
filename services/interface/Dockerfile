@@ -44,7 +44,7 @@ COPY --from=frontend-builder /app/frontend/build ./static/
 # Create environment file with proper configuration
 RUN echo "NODE_ENV=production" > .env && \
     echo "REACT_APP_API_URL=http://localhost:8000" >> .env && \
-    echo "REACT_APP_WS_URL=ws://localhost:8000" >> .env
+    echo "REACT_APP_WS_URL=ws://localhost:8000/ws" >> .env
 
 # Health check on correct port
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

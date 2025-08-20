@@ -246,18 +246,35 @@
   justify-content: center;
 }
 
-.voice-btn:hover {
+.voice-btn:hover:not(:disabled) {
   background: var(--neon-purple);
   color: var(--dark-bg);
   transform: scale(1.1);
 }
 
+.voice-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .voice-info {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
-  min-width: 80px;
+  min-width: 90px;
   text-align: center;
   font-weight: 500;
+  line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.voice-info small {
+  font-size: 9px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin-top: 2px;
 }
 
 .status-indicators {
@@ -306,6 +323,41 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
+/* Bandeau d'état de connexion */
+.connection-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 8px 20px 0;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 64, 129, 0.08);
+  color: var(--text-primary);
+}
+
+.connection-banner.rest-only {
+  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(0, 212, 255, 0.25);
+}
+
+.connection-banner.offline {
+  background: rgba(255, 64, 129, 0.12);
+  border-color: rgba(255, 64, 129, 0.3);
+}
+
+.banner-actions { display: flex; gap: 8px; }
+.banner-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--dark-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.banner-btn:hover { filter: brightness(1.1); }
 
 .listening-indicator, .speaking-indicator {
   padding: 4px 8px;
@@ -827,20 +879,75 @@
   line-height: 1.4;
 }
 
+/* Interface mode vocal uniquement */
+.voice-only-interface {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  background: var(--glass-bg);
+  border: 2px solid var(--neon-blue);
+  border-radius: 25px;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.voice-only-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.voice-only-btn {
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: var(--dark-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+
 /* Bouton micro en mode vocal uniquement */
 .mic-btn.voice-only-mic {
-  width: 60px;
-  height: 60px;
-  font-size: 24px;
+  width: 80px;
+  height: 80px;
+  font-size: 28px;
   background: var(--neon-blue);
   color: var(--dark-bg);
   box-shadow: 0 0 25px var(--neon-blue);
+  border: 3px solid var(--neon-blue);
 }
 
 .mic-btn.voice-only-mic.listening {
   background: var(--neon-red);
   box-shadow: 0 0 35px var(--neon-red);
+  border-color: var(--neon-red);
   animation: pulse-voice-only 1s ease-in-out infinite;
+}
+
+.voice-only-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  color: var(--text-primary);
+}
+
+.voice-only-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.voice-only-btn.active {
+  background: var(--neon-green);
+  color: var(--dark-bg);
+  box-shadow: 0 0 20px var(--neon-green);
 }
 
 @keyframes pulse-voice-only {
@@ -850,7 +957,7 @@
   }
   50% { 
     box-shadow: 0 0 45px var(--neon-red), 0 0 60px var(--neon-red);
-    transform: scale(1.05);
+    transform: scale(1.1);
   }
 }
 
@@ -893,8 +1000,12 @@
   }
   
   .voice-info {
-    min-width: 60px;
-    font-size: 10px;
+    min-width: 70px;
+    font-size: 9px;
+  }
+  
+  .voice-info small {
+    font-size: 8px;
   }
   
   .voice-btn {
@@ -1006,9 +1117,23 @@
     font-size: 16px;
   }
   
+  .voice-only-interface {
+    padding: 20px 15px;
+  }
+  
+  .voice-only-controls {
+    gap: 15px;
+  }
+  
+  .voice-only-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 16px;
+  }
+  
   .mic-btn.voice-only-mic {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
   }
 }

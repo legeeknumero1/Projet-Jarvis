@@ -1,11 +1,18 @@
 import asyncio
 import json
 import logging
+import os
 from typing import Dict, Any, Optional, List, AsyncGenerator
 import httpx
 
 class OllamaClient:
-    def __init__(self, base_url: str = "http://172.20.0.30:11434"):
+    def __init__(self, base_url: str = None):
+        # Utiliser variables d'environnement ou fallback dynamique
+        if base_url is None:
+            ollama_ip = os.getenv('OLLAMA_IP', '172.20.0.30')
+            ollama_port = os.getenv('OLLAMA_INTERNAL_PORT', '11434')
+            base_url = f"http://{ollama_ip}:{ollama_port}"
+        
         self.base_url = base_url
         self.client = None
         self.logger = logging.getLogger(__name__)

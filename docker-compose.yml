@@ -1,19 +1,21 @@
-version: '3.8'
+# Docker Compose configuration - Jarvis v1.3.0
+# Configuration 100% dynamique via variables d'environnement
 
 networks:
   jarvis_network:
+    name: ${DOCKER_NETWORK_NAME:-jarvis_network}
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
-          gateway: 172.20.0.1
+        - subnet: ${DOCKER_SUBNET:-172.20.0.0/16}
+          gateway: ${DOCKER_GATEWAY:-172.20.0.1}
     external: false
     attachable: true
     driver_opts:
       com.docker.network.bridge.name: jarvis-br0
       com.docker.network.bridge.enable_icc: "true"
       com.docker.network.bridge.enable_ip_masquerade: "true"
-      com.docker.network.driver.mtu: 1500
+      com.docker.network.driver.mtu: ${DOCKER_MTU:-1500}
 
 services:
   # Container 1: STT API (Speech-to-Text) - Premier dans le schéma
@@ -21,122 +23,146 @@ services:
     build:
       context: ./services/stt
       dockerfile: Dockerfile
-    container_name: jarvis_stt_api
+    container_name: ${STT_CONTAINER_NAME:-jarvis_stt_api}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.10
+        ipv4_address: ${STT_API_IP:-172.20.0.10}
     ports:
-      - "8003:8003"
+      - "${STT_API_PORT:-8003}:8003"
     environment:
-      - SERVICE_NAME=stt-api
-      - STT_MODEL_PATH=/app/models/stt
-      - BACKEND_API_URL=http://172.20.0.40:8000
+      - SERVICE_NAME=${STT_SERVICE_NAME:-stt-api}
+      - STT_MODEL_PATH=${STT_MODEL_PATH:-/app/models/stt}
+      - BACKEND_API_URL=http://${BACKEND_IP:-172.20.0.40}:${BACKEND_INTERNAL_PORT:-8000}
     volumes:
       - ./services/stt:/app
-      - ./models/stt:/app/models/stt
-      - ./logs:/app/logs
-    restart: unless-stopped
+      - ${STT_MODEL_PATH:-./models/stt}:/app/models/stt
+      - ${LOGS_PATH:-./logs}:/app/logs
+    restart: ${RESTART_POLICY:-unless-stopped}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Container 2: TTS API (Text-to-Speech) - Deuxième dans le schéma
   tts-api:
     build:
       context: ./services/tts
       dockerfile: Dockerfile
-    container_name: jarvis_tts_api
+    container_name: ${TTS_CONTAINER_NAME:-jarvis_tts_api}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.20
+        ipv4_address: ${TTS_API_IP:-172.20.0.20}
     ports:
-      - "8002:8002"
+      - "${TTS_API_PORT:-8002}:${TTS_INTERNAL_PORT:-8002}"
     environment:
-      - SERVICE_NAME=tts-api
-      - TTS_MODEL_PATH=/app/models/tts
-      - BACKEND_API_URL=http://172.20.0.40:8000
+      - SERVICE_NAME=${TTS_SERVICE_NAME:-tts-api}
+      - TTS_MODEL_PATH=${TTS_MODEL_PATH:-/app/models/tts}
+      - BACKEND_API_URL=http://${BACKEND_IP:-172.20.0.40}:${BACKEND_INTERNAL_PORT:-8000}
     volumes:
       - ./services/tts:/app
-      - ./models/tts:/app/models/tts
-      - ./logs:/app/logs
-    restart: unless-stopped
+      - ${TTS_MODEL_PATH:-./models/tts}:/app/models/tts
+      - ${LOGS_PATH:-./logs}:/app/logs
+    restart: ${RESTART_POLICY:-unless-stopped}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:${TTS_INTERNAL_PORT:-8002}/health"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Container 3: Ollama Container - Troisième dans le schéma
   ollama:
-    image: ollama/ollama:latest
-    container_name: jarvis_ollama
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    container_name: ${OLLAMA_CONTAINER_NAME:-jarvis_ollama}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.30
+        ipv4_address: ${OLLAMA_IP:-172.20.0.30}
     ports:
-      - "11434:11434"
+      - "${OLLAMA_PORT:-11434}:11434"
     volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
+      - ${OLLAMA_VOLUME:-ollama_data}:/root/.ollama
+    restart: ${RESTART_POLICY:-unless-stopped}
     environment:
-      - OLLAMA_ORIGINS=*
-      - OLLAMA_HOST=0.0.0.0
-    # GPU désactivé - Mode CPU uniquement
+      - OLLAMA_ORIGINS=${OLLAMA_ORIGINS:-*}
+      - OLLAMA_HOST=${OLLAMA_HOST:-0.0.0.0}
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-/root/.ollama/models}
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-4G}
+          cpus: ${OLLAMA_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${OLLAMA_MEMORY_RESERVATION:-1G}
+          cpus: ${OLLAMA_CPU_RESERVATION:-0.5}
+    # GPU configuration (configurable via environment)
+    # Uncomment and configure if GPU available
     # deploy:
     #   resources:
     #     reservations:
     #       devices:
     #         - driver: nvidia
-    #           count: 1
+    #           count: ${GPU_COUNT:-1}
     #           capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/11434' || exit 1"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
+      test: ["CMD-SHELL", "timeout ${HEALTHCHECK_TIMEOUT_SECONDS:-10} bash -c ':> /dev/tcp/127.0.0.1/11434' || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Container 4: Backend API (Main Backend Logic) - Quatrième dans le schéma
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: jarvis_backend
+    container_name: ${BACKEND_CONTAINER_NAME:-jarvis_backend}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.40
+        ipv4_address: ${BACKEND_IP:-172.20.0.40}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:${BACKEND_INTERNAL_PORT:-8000}"
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: '2.0'
+          memory: ${BACKEND_MEMORY_LIMIT:-2G}
+          cpus: ${BACKEND_CPU_LIMIT:-2.0}
         reservations:
-          memory: 512M
-          cpus: '0.5'
+          memory: ${BACKEND_MEMORY_RESERVATION:-512M}
+          cpus: ${BACKEND_CPU_RESERVATION:-0.5}
     environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@172.20.0.100:5432/${POSTGRES_DB:-jarvis_db}
-      - REDIS_URL=redis://172.20.0.110:6379
-      - OLLAMA_BASE_URL=http://172.20.0.30:11434
-      - TTS_API_URL=http://172.20.0.20:8002
-      - STT_API_URL=http://172.20.0.10:8003
-      - INTERFACE_URL=http://172.20.0.50:8001
-      - QDRANT_URL=http://172.20.0.120:6333
-      - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@172.20.0.130:5432/${TIMESCALE_DB:-jarvis_timeseries}
-      - MEMORY_UPDATE_INTERVAL=604800
-      - MEMORY_RETENTION_DAYS=365
-      - BRAIN_MEMORY_ENABLED=true
-      - EMOTIONAL_ANALYSIS_ENABLED=true
-      - AUTO_CONSOLIDATION_ENABLED=true
+      # Database URLs (fully configurable)
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@${POSTGRES_IP:-172.20.0.100}:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-jarvis_db}
+      - REDIS_URL=redis://${REDIS_IP:-172.20.0.110}:${REDIS_INTERNAL_PORT:-6379}
+      - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@${TIMESCALE_IP:-172.20.0.130}:${TIMESCALE_INTERNAL_PORT:-5432}/${TIMESCALE_DB:-jarvis_timeseries}
+      
+      # Service URLs (fully configurable)
+      - OLLAMA_BASE_URL=http://${OLLAMA_IP:-172.20.0.30}:${OLLAMA_INTERNAL_PORT:-11434}
+      - TTS_API_URL=http://${TTS_API_IP:-172.20.0.20}:${TTS_INTERNAL_PORT:-8002}
+      - STT_API_URL=http://${STT_API_IP:-172.20.0.10}:${STT_INTERNAL_PORT:-8003}
+      - INTERFACE_URL=http://${INTERFACE_IP:-172.20.0.50}:${INTERFACE_INTERNAL_PORT:-8000}
+      - QDRANT_URL=http://${QDRANT_IP:-172.20.0.120}:${QDRANT_HTTP_INTERNAL_PORT:-6333}
+      
+      # Memory and Brain Configuration
+      - MEMORY_UPDATE_INTERVAL=${MEMORY_UPDATE_INTERVAL:-604800}
+      - MEMORY_RETENTION_DAYS=${MEMORY_RETENTION_DAYS:-365}
+      - BRAIN_MEMORY_ENABLED=${BRAIN_MEMORY_ENABLED:-true}
+      - EMOTIONAL_ANALYSIS_ENABLED=${EMOTIONAL_ANALYSIS_ENABLED:-true}
+      - AUTO_CONSOLIDATION_ENABLED=${AUTO_CONSOLIDATION_ENABLED:-true}
+      
+      # Security and Configuration
+      - JARVIS_SECRET_KEY=${JARVIS_SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG=${DEBUG:-false}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      
     volumes:
-      - ./models:/app/models
-      - ./logs:/app/logs
-      - ./data:/app/data
-      # ./backend:/app volume supprimé pour éviter d'écraser les fichiers buildés
-      # ./memory:/app/memory volume supprimé pour éviter d'écraser les fichiers buildés
-    restart: unless-stopped
+      - ${MODELS_PATH:-./models}:/app/models
+      - ${LOGS_PATH:-./logs}:/app/logs
+      - ${DATA_PATH:-./data}:/app/data
+    restart: ${RESTART_POLICY:-unless-stopped}
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,158 +175,215 @@ services:
       timescale:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_INTERNAL_PORT:-8000}/health"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Container 5: Interface Container - Cinquième dans le schéma
   interface:
     build:
       context: .
       dockerfile: ./services/interface/Dockerfile
-    container_name: jarvis_interface
+    container_name: ${INTERFACE_CONTAINER_NAME:-jarvis_interface}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.50
+        ipv4_address: ${INTERFACE_IP:-172.20.0.50}
     ports:
-      - "3000:8000"
-      - "8001:8000"
+      - "${INTERFACE_PORT:-3000}:${INTERFACE_INTERNAL_PORT:-8000}"
+      - "${WEBSOCKET_PORT:-8001}:${INTERFACE_INTERNAL_PORT:-8000}"
     deploy:
       resources:
         limits:
-          memory: 1G
-          cpus: '1.0'
+          memory: ${INTERFACE_MEMORY_LIMIT:-1G}
+          cpus: ${INTERFACE_CPU_LIMIT:-1.0}
         reservations:
-          memory: 256M
-          cpus: '0.25'
+          memory: ${INTERFACE_MEMORY_RESERVATION:-256M}
+          cpus: ${INTERFACE_CPU_RESERVATION:-0.25}
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_WS_URL=ws://localhost:8001
-      - BACKEND_API_URL=http://172.20.0.40:8000
-      - TTS_API_URL=http://172.20.0.20:8002
-      - STT_API_URL=http://172.20.0.10:8003
+      # Frontend Environment Variables
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:${BACKEND_PORT:-8000}}
+      - REACT_APP_WS_URL=${REACT_APP_WS_URL:-ws://localhost:${WEBSOCKET_PORT:-8001}}
+      
+      # Backend Service URLs for Interface
+      - BACKEND_API_URL=http://${BACKEND_IP:-172.20.0.40}:${BACKEND_INTERNAL_PORT:-8000}
+      - TTS_API_URL=http://${TTS_API_IP:-172.20.0.20}:${TTS_INTERNAL_PORT:-8002}
+      - STT_API_URL=http://${STT_API_IP:-172.20.0.10}:${STT_INTERNAL_PORT:-8003}
+      
+      # Interface Configuration
+      - INTERFACE_MODE=${INTERFACE_MODE:-hybrid}
+      - INTERFACE_THEME=${INTERFACE_THEME:-cyberpunk}
     volumes:
       - ./services/interface:/app
       - ./frontend:/app/frontend
       - /app/node_modules
-    restart: unless-stopped
+    restart: ${RESTART_POLICY:-unless-stopped}
     depends_on:
       - backend
       - tts-api
       - stt-api
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:${INTERFACE_INTERNAL_PORT:-8000}/health"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Services de support
   postgres:
-    image: postgres:15
-    container_name: jarvis_postgres
+    image: ${POSTGRES_IMAGE:-postgres:15}
+    container_name: ${POSTGRES_CONTAINER_NAME:-jarvis_postgres}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.100
+        ipv4_address: ${POSTGRES_IP:-172.20.0.100}
+    ports:
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_INTERNAL_PORT:-5432}"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
       POSTGRES_USER: ${POSTGRES_USER:-jarvis}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:---encoding=UTF-8 --lc-collate=C --lc-ctype=C}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
+      - ${POSTGRES_VOLUME:-postgres_data}:/var/lib/postgresql/data
+      - ${POSTGRES_INIT_SCRIPT:-./backend/db/init.sql}:/docker-entrypoint-initdb.d/init.sql
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY_LIMIT:-1G}
+          cpus: ${POSTGRES_CPU_LIMIT:-1.0}
+        reservations:
+          memory: ${POSTGRES_MEMORY_RESERVATION:-256M}
+          cpus: ${POSTGRES_CPU_RESERVATION:-0.25}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jarvis"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jarvis} -d ${POSTGRES_DB:-jarvis_db}"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   redis:
-    image: redis:7-alpine
-    container_name: jarvis_redis
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_CONTAINER_NAME:-jarvis_redis}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.110
+        ipv4_address: ${REDIS_IP:-172.20.0.110}
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_INTERNAL_PORT:-6379}"
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
+      - ${REDIS_VOLUME:-redis_data}:/data
+      - ${REDIS_CONFIG:-./config/redis.conf}:/usr/local/etc/redis/redis.conf
+    command: redis-server ${REDIS_CONFIG_ARGS:---appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
+          cpus: ${REDIS_CPU_LIMIT:-0.5}
+        reservations:
+          memory: ${REDIS_MEMORY_RESERVATION:-128M}
+          cpus: ${REDIS_CPU_RESERVATION:-0.1}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # 🧠 Qdrant Vector Database - Mémoire vectorielle neuromorphique
   qdrant:
-    image: qdrant/qdrant:latest
-    container_name: jarvis_qdrant
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:latest}
+    container_name: ${QDRANT_CONTAINER_NAME:-jarvis_qdrant}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.120
+        ipv4_address: ${QDRANT_IP:-172.20.0.120}
     ports:
-      - "6333:6333"  # API REST
-      - "6334:6334"  # gRPC (optionnel)
+      - "${QDRANT_HTTP_PORT:-6333}:${QDRANT_HTTP_INTERNAL_PORT:-6333}"  # API REST
+      - "${QDRANT_GRPC_PORT:-6334}:${QDRANT_GRPC_INTERNAL_PORT:-6334}"  # gRPC (optionnel)
     environment:
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
-      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=4
-      - QDRANT__SERVICE__ENABLE_CORS=true
+      - QDRANT__SERVICE__HTTP_PORT=${QDRANT_HTTP_INTERNAL_PORT:-6333}
+      - QDRANT__SERVICE__GRPC_PORT=${QDRANT_GRPC_INTERNAL_PORT:-6334}
+      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=${QDRANT_MAX_SEARCH_THREADS:-4}
+      - QDRANT__SERVICE__ENABLE_CORS=${QDRANT_ENABLE_CORS:-true}
+      - QDRANT__STORAGE__PERFORMANCE__MAX_INDEXING_THREADS=${QDRANT_MAX_INDEXING_THREADS:-2}
+      - QDRANT__STORAGE__PERFORMANCE__MAX_PAYLOAD_SIZE=${QDRANT_MAX_PAYLOAD_SIZE:-33554432}
     volumes:
-      - qdrant_data:/qdrant/storage
-      - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
-    restart: unless-stopped
+      - ${QDRANT_VOLUME:-qdrant_data}:/qdrant/storage
+      - ${QDRANT_CONFIG:-./config/qdrant_config.yaml}:/qdrant/config/production.yaml
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${QDRANT_MEMORY_LIMIT:-2G}
+          cpus: ${QDRANT_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${QDRANT_MEMORY_RESERVATION:-512M}
+          cpus: ${QDRANT_CPU_RESERVATION:-0.5}
     healthcheck:
-      test: ["CMD-SHELL", "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
+      test: ["CMD-SHELL", "timeout ${HEALTHCHECK_TIMEOUT_SECONDS:-10} bash -c ':> /dev/tcp/127.0.0.1/${QDRANT_HTTP_INTERNAL_PORT:-6333}' || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # 🧠 TimescaleDB - Mémoire temporelle pour logs et métriques
   timescale:
-    image: timescale/timescaledb:latest-pg15
-    container_name: jarvis_timescale
+    image: ${TIMESCALE_IMAGE:-timescale/timescaledb:latest-pg15}
+    container_name: ${TIMESCALE_CONTAINER_NAME:-jarvis_timescale}
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.130
+        ipv4_address: ${TIMESCALE_IP:-172.20.0.130}
+    ports:
+      - "${TIMESCALE_PORT:-5433}:${TIMESCALE_INTERNAL_PORT:-5432}"
     environment:
       POSTGRES_DB: ${TIMESCALE_DB:-jarvis_timeseries}
       POSTGRES_USER: ${TIMESCALE_USER:-jarvis}
       POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
-      TIMESCALEDB_TELEMETRY: off
+      TIMESCALEDB_TELEMETRY: ${TIMESCALEDB_TELEMETRY:-off}
+      POSTGRES_INITDB_ARGS: ${TIMESCALE_INITDB_ARGS:---encoding=UTF-8}
     volumes:
-      - timescale_data:/var/lib/postgresql/data
-      - ./backend/db/timescale_init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
+      - ${TIMESCALE_VOLUME:-timescale_data}:/var/lib/postgresql/data
+      - ${TIMESCALE_INIT_SCRIPT:-./backend/db/timescale_init.sql}:/docker-entrypoint-initdb.d/init.sql
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${TIMESCALE_MEMORY_LIMIT:-1G}
+          cpus: ${TIMESCALE_CPU_LIMIT:-1.0}
+        reservations:
+          memory: ${TIMESCALE_MEMORY_RESERVATION:-256M}
+          cpus: ${TIMESCALE_CPU_RESERVATION:-0.25}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER:-jarvis} -d ${TIMESCALE_DB:-jarvis_timeseries}"]
+      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-15s}
+      retries: ${HEALTHCHECK_RETRIES:-5}
+      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
   # Setup Ollama models (run once)
   ollama-setup:
-    image: ollama/ollama:latest
-    container_name: jarvis_ollama_setup
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    container_name: ${OLLAMA_SETUP_CONTAINER_NAME:-jarvis_ollama_setup}
     networks:
       - jarvis_network
     volumes:
-      - ollama_data:/root/.ollama
+      - ${OLLAMA_VOLUME:-ollama_data}:/root/.ollama
     depends_on:
       ollama:
         condition: service_healthy
     environment:
-      - OLLAMA_HOST=http://172.20.0.30:11434
+      - OLLAMA_HOST=http://${OLLAMA_IP:-172.20.0.30}:${OLLAMA_INTERNAL_PORT:-11434}
     command: >
       sh -c "
         echo '🤖 Téléchargement des modèles Ollama...' &&
-        ollama pull llama3.1:latest &&
-        echo '✅ llama3.1:latest téléchargé' &&
-        ollama pull llama3.2:1b &&
-        echo '✅ llama3.2:1b téléchargé' &&
+        ollama pull ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} &&
+        echo '✅ ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} téléchargé' &&
+        ollama pull ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} &&
+        echo '✅ ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} téléchargé' &&
         echo '🎉 Tous les modèles sont prêts !'
       "
-    restart: "no"
+    restart: ${OLLAMA_SETUP_RESTART_POLICY:-no}
 
 volumes:
   postgres_data:

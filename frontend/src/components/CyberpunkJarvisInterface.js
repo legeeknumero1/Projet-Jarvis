@@ -18,34 +18,87 @@ const CyberpunkJarvisInterface = () => {
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
   const synthRef = useRef(null);
+  const inputRef = useRef(null);
   
   // Configuration API
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  const TTS_API_URL = process.env.REACT_APP_TTS_URL || 'http://localhost:8002';
+  // WebSocket (normalisé pour garantir le suffixe /ws)
+  const WS_BASE_RAW = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+  const WS_URL = (WS_BASE_RAW.endsWith('/ws') ? WS_BASE_RAW : `${WS_BASE_RAW.replace(/\/$/, '')}/ws`);
   
-  // Test de connexion au démarrage
+  // WebSocket
+  const wsRef = useRef(null);
+  const [isWsConnected, setIsWsConnected] = useState(false);
+
+  // Test de connexion au démarrage (REST health) + gestion WebSocket
   useEffect(() => {
     testConnection();
+    connectWebSocket();
     const interval = setInterval(testConnection, 30000); // Test toutes les 30s
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      try { wsRef.current?.close(); } catch {}
+    };
   }, []);
+
+  const connectWebSocket = () => {
+    try {
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setIsWsConnected(true);
+      };
+      ws.onclose = () => {
+        setIsWsConnected(false);
+        // Reconnexion automatique simple
+        setTimeout(() => connectWebSocket(), 3000);
+      };
+      ws.onerror = (e) => {
+        setIsWsConnected(false);
+      };
+      ws.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data);
+          if (data?.response) {
+            const assistantMessage = {
+              id: Date.now(),
+              type: 'assistant',
+              content: data.response,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, assistantMessage]);
+            // Lecture auto si activée
+            if (autoSpeak) {
+              setTimeout(() => speakMessage(data.response), 500);
+            }
+          }
+        } catch (err) {
+          console.error('Erreur parsing WS message:', err);
+        }
+      };
+    } catch (err) {
+      console.error('WS init error:', err);
+    }
+  };
   
   const testConnection = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/health`, { 
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
-        timeout: 5000 
+        signal: controller.signal
       });
+      clearTimeout(id);
       if (response.ok) {
         setIsConnected(true);
-        setConnectionStatus('En ligne');
       } else {
         throw new Error('Backend non accessible');
       }
     } catch (error) {
       console.error('❌ Connexion backend échouée:', error);
       setIsConnected(false);
-      setConnectionStatus('Hors ligne');
     }
   };
   
@@ -55,39 +108,111 @@ const CyberpunkJarvisInterface = () => {
       synthRef.current = window.speechSynthesis;
       
       const loadVoices = () => {
-        const voices = synthRef.current.getVoices();
-        const frenchVoices = voices.filter(voice => 
-          voice.lang.startsWith('fr') && 
-          !voice.name.toLowerCase().includes('compact')
+        const allVoices = synthRef.current.getVoices();
+        console.log('🔍 Toutes les voix détectées:', allVoices.map(v => `${v.name} (${v.lang})`));
+        
+        // Priorité aux voix françaises
+        let frenchVoices = allVoices.filter(voice => 
+          voice.lang.startsWith('fr') || 
+          voice.lang.includes('FR') ||
+          voice.name.toLowerCase().includes('french') ||
+          voice.name.toLowerCase().includes('français')
         );
         
-        // Sélectionner jusqu'à 9 voix françaises différentes
+        // Si pas de voix françaises, chercher alternatives de qualité
+        if (frenchVoices.length === 0) {
+          console.warn('⚠️ Aucune voix française trouvée, recherche alternatives...');
+          
+          // Priorité 1: Voix UK/britanniques (meilleur accent)
+          frenchVoices = allVoices.filter(voice => 
+            (voice.lang.startsWith('en-GB') || voice.lang.startsWith('en-UK')) ||
+            voice.name.toLowerCase().includes('british') ||
+            voice.name.toLowerCase().includes('uk')
+          );
+          
+          // Priorité 2: Voix européennes
+          if (frenchVoices.length === 0) {
+            frenchVoices = allVoices.filter(voice => 
+              voice.name.toLowerCase().includes('european') ||
+              voice.lang.startsWith('de') || // Allemand
+              voice.lang.startsWith('es') || // Espagnol
+              voice.lang.startsWith('it')    // Italien
+            );
+          }
+          
+          // Priorité 3: Voix femmes US (plus agréables)
+          if (frenchVoices.length === 0) {
+            frenchVoices = allVoices.filter(voice => 
+              voice.lang.startsWith('en-US') && (
+                voice.name.toLowerCase().includes('zira') ||
+                voice.name.toLowerCase().includes('eva') ||
+                voice.name.toLowerCase().includes('aria') ||
+                voice.name.toLowerCase().includes('jenny')
+              )
+            );
+          }
+          
+          // Priorité 4: Toutes voix US sans compact/enhanced
+          if (frenchVoices.length === 0) {
+            frenchVoices = allVoices.filter(voice => 
+              voice.lang.startsWith('en-US') &&
+              !voice.name.toLowerCase().includes('compact') &&
+              !voice.name.toLowerCase().includes('enhanced')
+            );
+          }
+          
+          console.log('🔄 Voix alternatives sélectionnées:', frenchVoices.map(v => `${v.name} (${v.lang})`));
+        }
+        
+        // Limiter à 9 voix maximum
         const selectedVoices = frenchVoices.slice(0, 9);
-        setAvailableVoices(selectedVoices.length > 0 ? selectedVoices : voices.slice(0, 9));
-        console.log('🗣️ Voix disponibles:', selectedVoices.length > 0 ? selectedVoices.length : voices.slice(0, 9).length);
+        setAvailableVoices(selectedVoices.length > 0 ? selectedVoices : allVoices.slice(0, 9));
+        
+        console.log('✅ Voix sélectionnées:', selectedVoices.map(v => `${v.name} (${v.lang})`));
+        console.log(`🎤 ${selectedVoices.length} voix configurées`);
       };
       
-      // Charger les voix immédiatement si disponibles
-      loadVoices();
-      
-      // Écouter le chargement des voix (pour certains navigateurs)
-      synthRef.current.onvoiceschanged = loadVoices;
+      // Chargement robuste des voix
+      try {
+        loadVoices();
+        
+        // Écouter le chargement des voix (pour certains navigateurs)
+        if (synthRef.current) {
+          synthRef.current.onvoiceschanged = loadVoices;
+        }
+      } catch (error) {
+        console.error('🔥 Erreur chargement voix:', error);
+        // Fallback: utiliser voix par défaut
+        setAvailableVoices([]);
+      }
     }
   }, []);
   
   // Configuration reconnaissance vocale
   useEffect(() => {
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+    // Vérification robuste du support de la reconnaissance vocale
+    const hasSpeechRecognition = () => {
+      try {
+        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      } catch (error) {
+        console.warn('⚠️ Erreur vérification SpeechRecognition:', error);
+        return false;
+      }
+    };
+    
+    if (hasSpeechRecognition()) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       
-      recognitionRef.current.continuous = true;
+      // Configuration optimisée pour éviter erreurs réseau
+      recognitionRef.current.continuous = false; // Changé en false pour éviter network errors
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'fr-FR';
+      recognitionRef.current.maxAlternatives = 1;
       
       recognitionRef.current.onstart = () => {
+        console.log('✅ Reconnaissance vocale démarrée avec succès');
         setIsListening(true);
-        console.log('🎤 Reconnaissance vocale démarrée');
       };
       
       recognitionRef.current.onresult = (event) => {
@@ -114,7 +239,7 @@ const CyberpunkJarvisInterface = () => {
             // En mode vocal pur, envoyer directement sans afficher le texte
             recognitionRef.current.stop();
             setIsListening(false);
-            setTimeout(() => handleSendMessage(transcript), 300);
+            setTimeout(() => handleSendMessage(transcript), 500);
           } else {
             // En mode hybrid/text, afficher et permettre édition
             setInputMessage(transcript);
@@ -123,26 +248,66 @@ const CyberpunkJarvisInterface = () => {
             
             // En mode hybrid, envoyer automatiquement après un délai
             if (interactionMode === 'hybrid') {
-              setTimeout(() => handleSendMessage(transcript), 300);
+              setTimeout(() => handleSendMessage(transcript), 500);
             }
           }
         }
       };
       
       recognitionRef.current.onend = () => {
+        console.log('🎯 Reconnaissance vocale terminée');
         setIsListening(false);
-        console.log('🎤 Reconnaissance vocale terminée');
+        
+        // En mode vocal pur, redémarrer automatiquement
+        if (interactionMode === 'voice-only' && !isLoading) {
+          setTimeout(() => {
+            console.log('🔄 Redémarrage auto reconnaissance (mode vocal)');
+            try {
+              if (recognitionRef.current && !isListening) {
+                recognitionRef.current.start();
+              }
+            } catch (error) {
+              console.warn('⚠️ Impossible de redémarrer reconnaissance:', error);
+            }
+          }, 3000); // Augmenté à 3s pour éviter conflicts
+        }
       };
       
       recognitionRef.current.onerror = (event) => {
         console.error('🔥 Erreur reconnaissance vocale:', event.error);
         setIsListening(false);
+        
+        // Gestion des erreurs spécifiques
+        if (event.error === 'not-allowed') {
+          alert('❌ Accès au microphone refusé. Autorisez l’accès dans les paramètres du navigateur.');
+        } else if (event.error === 'no-speech') {
+          console.log('🔇 Aucune parole détectée, redémarrage possible');
+        } else if (event.error === 'network') {
+          console.error('🌐 Erreur réseau reconnaissance vocale - Tentative en mode non-continu');
+          // Forcer mode non-continu pour éviter erreurs réseau
+          if (recognitionRef.current) {
+            recognitionRef.current.continuous = false;
+          }
+        } else if (event.error === 'service-not-allowed') {
+          console.error('🚫 Service de reconnaissance vocale bloqué');
+        } else if (event.error === 'bad-grammar') {
+          console.error('📝 Grammaire de reconnaissance invalide');
+        }
       };
     }
     
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
+      // Nettoyage sécurisé
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current.abort();
+          recognitionRef.current.onstart = null;
+          recognitionRef.current.onend = null;
+          recognitionRef.current.onresult = null;
+          recognitionRef.current.onerror = null;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur nettoyage reconnaissance:', error);
       }
     };
   }, []);
@@ -155,6 +320,22 @@ const CyberpunkJarvisInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto‑resize du champ de saisie
+  useEffect(() => {
+    if (inputRef.current) {
+      const el = inputRef.current;
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 150) + 'px'; // max 150px (aligné avec CSS)
+    }
+  }, [inputMessage]);
+
+  // Sécuriser l'index de voix si la liste change
+  useEffect(() => {
+    if (selectedVoiceIndex >= availableVoices.length) {
+      setSelectedVoiceIndex(0);
+    }
+  }, [availableVoices]);
   
   // Synthèse vocale TTS
   const speakMessage = async (text) => {
@@ -189,24 +370,41 @@ const CyberpunkJarvisInterface = () => {
         let selectedVoice = null;
         if (availableVoices.length > 0 && selectedVoiceIndex < availableVoices.length) {
           selectedVoice = availableVoices[selectedVoiceIndex];
+          console.log('🎯 Voix utilisée:', selectedVoice.name, selectedVoice.lang);
         } else {
-          // Fallback: chercher une voix française
-          const frenchVoices = voices.filter(voice => 
-            voice.lang.startsWith('fr') && 
-            !voice.name.toLowerCase().includes('compact')
-          );
-          selectedVoice = frenchVoices[0] || voices[0];
+          // Fallback: première voix disponible
+          selectedVoice = availableVoices[0] || voices[0];
+          console.log('⚠️ Fallback voix:', selectedVoice?.name, selectedVoice?.lang);
         }
         
         const utterance = new SpeechSynthesisUtterance(text.substring(0, 300));
-        utterance.lang = 'fr-FR';
-        utterance.rate = 0.85;
-        utterance.pitch = 1.0;
+        
+        // Configuration dynamique selon la voix sélectionnée
+        if (selectedVoice) {
+          utterance.lang = selectedVoice.lang; // Utiliser la langue de la voix
+        } else {
+          utterance.lang = 'fr-FR'; // Fallback français
+        }
+        
+        // Paramètres optimisés selon le type de voix
+        if (utterance.lang.startsWith('fr')) {
+          utterance.rate = 0.9;
+          utterance.pitch = 1.0;
+        } else if (utterance.lang.startsWith('en-GB')) {
+          utterance.rate = 0.8; // Plus lent pour accent britannique
+          utterance.pitch = 0.9;
+        } else {
+          utterance.rate = 0.85; // Défaut
+          utterance.pitch = 1.0;
+        }
+        
         utterance.volume = 0.9;
         
         if (selectedVoice) {
           utterance.voice = selectedVoice;
-          console.log('🗣️ Voix sélectionnée:', selectedVoice.name, selectedVoice.lang);
+          console.log('🎯 Synthèse avec voix:', selectedVoice.name, selectedVoice.lang);
+        } else {
+          console.warn('⚠️ Aucune voix sélectionnée, utilisation voix par défaut');
         }
         
         utterance.onstart = () => {
@@ -264,85 +462,130 @@ const CyberpunkJarvisInterface = () => {
     setMessages(prev => [...prev, userMessage]);
     
     try {
-      console.log('📤 Envoi message vers backend...');
-      const response = await fetch(`${API_BASE_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (isWsConnected && wsRef.current?.readyState === WebSocket.OPEN) {
+        // Envoi via WebSocket
+        wsRef.current.send(JSON.stringify({
           message: sanitizedMessage,
-          user_id: 'enzo'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          user_id: 'enzo',
+          timestamp: new Date().toISOString()
+        }));
+      } else {
+        // Fallback REST
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 15000);
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: sanitizedMessage, user_id: 'enzo' }),
+          signal: controller.signal
+        });
+        clearTimeout(id);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const assistantMessage = {
+          id: Date.now() + 1,
+          type: 'assistant',
+          content: data.response || 'Pas de réponse du système.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        if (autoSpeak) setTimeout(() => speakMessage(data.response), 500);
       }
-      
-      const data = await response.json();
-      console.log('📥 Réponse backend:', data);
-      
-      // Ajouter réponse assistant
-      const assistantMessage = {
-        id: Date.now() + 1,
-        type: 'assistant',
-        content: data.response || 'Pas de réponse du système.',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Synthèse vocale automatique si activée
-      if (autoSpeak) {
-        setTimeout(() => {
-          speakMessage(data.response);
-        }, 1000);
-      }
-      
     } catch (error) {
-      console.error('❌ Erreur chat:', error);
-      
       const errorMessage = {
         id: Date.now() + 1,
         type: 'assistant',
-        content: `⚠️ Erreur de connexion: ${error.message}. Vérifiez que le backend Jarvis est démarré sur le port 8000.`,
+        content: `⚠️ Erreur de connexion: ${error.message}. Vérifiez le backend/WS.`,
         timestamp: new Date(),
         isError: true
       };
-      
       setMessages(prev => [...prev, errorMessage]);
     }
     
     setIsLoading(false);
+  };
+
+  // Saisie: Entrée pour envoyer, Shift+Entrée pour nouvelle ligne
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
   
   const handleSubmit = (e) => {
     e.preventDefault();
     handleSendMessage();
   };
+
+  const getStatusText = () => {
+    if (isWsConnected) return 'En ligne (WS)';
+    if (isConnected) return 'En ligne (REST)';
+    return 'Hors ligne';
+  };
   
   const toggleVoiceRecognition = () => {
     if (!recognitionRef.current) {
+      console.error('❌ Reconnaissance vocale non supportée');
       alert('❌ Reconnaissance vocale non supportée par ce navigateur');
       return;
     }
     
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
+    try {
+      if (isListening) {
+        console.log('🛑 Arrêt reconnaissance vocale');
+        recognitionRef.current.abort(); // Utiliser abort() au lieu de stop() pour arrêt immédiat
+        setIsListening(false);
+      } else {
+        console.log('🎤 Démarrage reconnaissance vocale');
+        // Vérifier si une reconnaissance n'est pas déjà en cours
+        if (recognitionRef.current && !isListening) {
+          recognitionRef.current.start();
+          // setIsListening sera mis à true dans onstart
+        } else {
+          console.warn('⚠️ Reconnaissance déjà en cours ou ref invalide');
+        }
+      }
+    } catch (error) {
+      console.error('🔥 Erreur toggle reconnaissance:', error);
+      setIsListening(false);
+      
+      // Tentative de récupération
+      if (error.name === 'InvalidStateError') {
+        console.log('🔄 Tentative de récupération InvalidStateError');
+        setTimeout(() => {
+          try {
+            recognitionRef.current?.start();
+          } catch (retryError) {
+            console.error('🚫 Échec récupération:', retryError);
+          }
+        }, 1000);
+      }
     }
   };
   
   const stopSpeaking = () => {
-    if (synthRef.current) {
-      synthRef.current.cancel();
+    try {
+      if (synthRef.current) {
+        console.log('🛑 Arrêt synthèse vocale');
+        synthRef.current.cancel();
+      }
+      setIsSpeaking(false);
+    } catch (error) {
+      console.error('🔥 Erreur arrêt synthèse:', error);
+      setIsSpeaking(false);
     }
-    setIsSpeaking(false);
   };
   
   const toggleAutoSpeak = () => {
-    setAutoSpeak(!autoSpeak);
-    console.log('🔊 Lecture automatique:', !autoSpeak ? 'ON' : 'OFF');
+    const newAutoSpeak = !autoSpeak;
+    setAutoSpeak(newAutoSpeak);
+    console.log('🔊 Lecture automatique:', newAutoSpeak ? 'ACTIVÉE' : 'DÉSACTIVÉE');
+    
+    // Feedback visuel/vocal
+    if (newAutoSpeak) {
+      speakMessage('Lecture automatique activée');
+    }
   };
   
   const speakLastMessage = () => {
@@ -371,7 +614,10 @@ const CyberpunkJarvisInterface = () => {
   };
   
   const changeVoice = (direction) => {
-    if (availableVoices.length === 0) return;
+    if (availableVoices.length === 0) {
+      console.warn('⚠️ Aucune voix disponible pour changement');
+      return;
+    }
     
     let newIndex;
     if (direction === 'next') {
@@ -382,16 +628,14 @@ const CyberpunkJarvisInterface = () => {
     
     setSelectedVoiceIndex(newIndex);
     const selectedVoice = availableVoices[newIndex];
-    console.log('🗣️ Voix changée:', selectedVoice.name, selectedVoice.lang);
+    console.log('🔄 Voix changée:', selectedVoice?.name, selectedVoice?.lang);
+    console.log(`📊 Voix ${newIndex + 1}/${availableVoices.length}`);
     
-    // Test de la nouvelle voix
-    speakMessage('Voix changée');
-  };
-  
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+    // Test de la nouvelle voix avec un message court
+    if (selectedVoice) {
+      setTimeout(() => {
+        speakMessage(`Voix ${newIndex + 1}: ${selectedVoice.name}`);
+      }, 100);
     }
   };
   
@@ -473,7 +717,7 @@ const CyberpunkJarvisInterface = () => {
           </div>
           
           {/* Sélecteur de voix */}
-          {availableVoices.length > 1 && (
+          {availableVoices.length > 0 && (
             <div className="voice-selector">
               <motion.button
                 className="voice-btn"
@@ -481,11 +725,14 @@ const CyberpunkJarvisInterface = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title="Voix précédente"
+                disabled={availableVoices.length <= 1}
               >
                 ◀️
               </motion.button>
-              <span className="voice-info">
-                {availableVoices[selectedVoiceIndex]?.name.substring(0, 15) || 'Voix'}
+              <span className="voice-info" title={availableVoices[selectedVoiceIndex]?.name || 'Aucune voix'}>
+                {availableVoices.length > 0 ? `${selectedVoiceIndex + 1}/${availableVoices.length}` : '0/0'}
+                <br/>
+                <small>{availableVoices[selectedVoiceIndex]?.name?.substring(0, 10) || 'Aucune'}</small>
               </span>
               <motion.button
                 className="voice-btn"
@@ -493,6 +740,7 @@ const CyberpunkJarvisInterface = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title="Voix suivante"
+                disabled={availableVoices.length <= 1}
               >
                 ▶️
               </motion.button>
@@ -500,8 +748,8 @@ const CyberpunkJarvisInterface = () => {
           )}
           
           <div className="status-indicators">
-            <div className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></div>
-            <span className="status-text">{connectionStatus}</span>
+            <div className={`status-dot ${ (isWsConnected || isConnected) ? 'connected' : 'disconnected'}`}></div>
+            <span className="status-text">{getStatusText()}</span>
             
             {isListening && (
               <motion.div 
@@ -525,6 +773,23 @@ const CyberpunkJarvisInterface = () => {
           </div>
         </div>
       </motion.header>
+
+      {/* Bandeau connexion / fallback */}
+      {(!isWsConnected || !isConnected) && (
+        <div className={`connection-banner ${isWsConnected ? 'rest-only' : 'offline'}`}>
+          <span>
+            {isWsConnected && !isConnected ? 'Backend REST indisponible — WebSocket actif' :
+             !isWsConnected && isConnected ? 'WebSocket indisponible — Bascule REST' :
+             'Hors ligne — vérifiez le backend'}
+          </span>
+          <div className="banner-actions">
+            <button onClick={testConnection} className="banner-btn" aria-label="Réessayer">Réessayer</button>
+            {!isWsConnected && (
+              <button onClick={connectWebSocket} className="banner-btn" aria-label="Reconnecter WebSocket">Reconnecter WS</button>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Zone de chat */}
       <main className="chat-area">
@@ -657,29 +922,26 @@ const CyberpunkJarvisInterface = () => {
         transition={{ duration: 1, delay: 0.5 }}
       >
         <form onSubmit={handleSubmit} className="input-form">
-          <div className="input-container">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                !isConnected ? "Connexion au système..." :
-                interactionMode === 'voice-only' ? "Mode vocal actif - Utilisez le micro" :
-                interactionMode === 'text-only' ? "Tapez votre message..." :
-                "Parlez à J.A.R.V.I.S ou tapez..."
-              }
-              className="message-input"
-              disabled={!isConnected || interactionMode === 'voice-only'}
-              rows={1}
-              style={{
-                display: interactionMode === 'voice-only' ? 'none' : 'block'
-              }}
-            />
+          {/* Interface normale (hybride et texte) */}
+          {interactionMode !== 'voice-only' && (
+            <div className="input-container">
+              <textarea
+                ref={inputRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  !isConnected ? "Connexion au système..." :
+                  interactionMode === 'text-only' ? "Tapez votre message..." :
+                  "Parlez à J.A.R.V.I.S ou tapez..."
+                }
+                className="message-input"
+                disabled={!isConnected}
+                rows={1}
+                aria-label="Saisir un message pour Jarvis"
+              />
             
-            <div className="input-controls" style={{
-              right: interactionMode === 'voice-only' ? '50%' : '10px',
-              transform: interactionMode === 'voice-only' ? 'translateX(50%)' : 'translateY(-50%)'
-            }}>
+              <div className="input-controls">
               {isSpeaking && (
                 <motion.button
                   type="button"
@@ -688,6 +950,7 @@ const CyberpunkJarvisInterface = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title="Arrêter la lecture"
+                  aria-label="Arrêter la lecture"
                 >
                   ⏹️
                 </motion.button>
@@ -701,6 +964,7 @@ const CyberpunkJarvisInterface = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title="Lire la dernière réponse"
+                aria-label="Lire la dernière réponse"
               >
                 🔊
               </motion.button>
@@ -713,29 +977,29 @@ const CyberpunkJarvisInterface = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title={`Lecture automatique: ${autoSpeak ? 'ON' : 'OFF'}`}
+                aria-pressed={autoSpeak}
+                aria-label="Activer la lecture automatique"
               >
                 {autoSpeak ? '🔊' : '🔇'}
               </motion.button>
               
-              <motion.button
-                type="button"
-                onClick={toggleVoiceRecognition}
-                className={`control-btn mic-btn ${isListening ? 'listening' : ''} ${
-                  interactionMode === 'voice-only' ? 'voice-only-mic' : ''
-                }`}
-                disabled={!isConnected || interactionMode === 'text-only'}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                title={
-                  interactionMode === 'voice-only' ? 'Appuyer pour parler (mode vocal)' :
-                  interactionMode === 'text-only' ? 'Non disponible en mode texte' :
-                  'Reconnaissance vocale'
-                }
-              >
-                {isListening ? '⏹️' : '🎤'}
-              </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={toggleVoiceRecognition}
+                  className={`control-btn mic-btn ${isListening ? 'listening' : ''}`}
+                  disabled={!isConnected || interactionMode === 'text-only'}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title={
+                    interactionMode === 'text-only' ? 'Non disponible en mode texte' :
+                    'Reconnaissance vocale'
+                  }
+                  aria-pressed={isListening}
+                  aria-label="Basculer le micro"
+                >
+                  {isListening ? '⏹️' : '🎤'}
+                </motion.button>
               
-              {interactionMode !== 'voice-only' && (
                 <motion.button
                   type="submit"
                   disabled={!isConnected || !inputMessage.trim()}
@@ -743,12 +1007,69 @@ const CyberpunkJarvisInterface = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title="Envoyer le message"
+                  aria-label="Envoyer le message"
                 >
                   ⚡
                 </motion.button>
-              )}
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Interface mode vocal uniquement */}
+          {interactionMode === 'voice-only' && (
+            <div className="voice-only-interface">
+              <div className="voice-only-controls">
+                {isSpeaking && (
+                  <motion.button
+                    type="button"
+                    onClick={stopSpeaking}
+                    className="control-btn stop-btn voice-only-btn"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    title="Arrêter la lecture"
+                  >
+                    ⏹️
+                  </motion.button>
+                )}
+                
+                <motion.button
+                  type="button"
+                  onClick={speakLastMessage}
+                  className="control-btn speak-btn voice-only-btn"
+                  disabled={!isConnected || messages.filter(msg => msg.type === 'assistant').length === 0}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Lire la dernière réponse"
+                >
+                  🔊
+                </motion.button>
+                
+                <motion.button
+                  type="button"
+                  onClick={toggleAutoSpeak}
+                  className={`control-btn auto-speak-btn voice-only-btn ${autoSpeak ? 'active' : ''}`}
+                  disabled={!isConnected}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title={`Lecture automatique: ${autoSpeak ? 'ON' : 'OFF'}`}
+                >
+                  {autoSpeak ? '🔊' : '🔇'}
+                </motion.button>
+                
+                <motion.button
+                  type="button"
+                  onClick={toggleVoiceRecognition}
+                  className={`control-btn mic-btn voice-only-mic ${isListening ? 'listening' : ''}`}
+                  disabled={!isConnected}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  title="Cliquer pour parler (mode vocal)"
+                >
+                  {isListening ? '⏹️' : '🎤'}
+                </motion.button>
+              </div>
+            </div>
+          )}
           
           {/* Affichage spécial mode vocal uniquement */}
           {interactionMode === 'voice-only' && !isListening && !isLoading && (
@@ -833,7 +1154,7 @@ const CyberpunkJarvisInterface = () => {
             >
               <small>
                 🎤 Mode vocal: Conversation entièrement orale | 
-                Voix: {availableVoices[selectedVoiceIndex]?.name || 'Défaut'}
+                Voix {selectedVoiceIndex + 1}/{availableVoices.length}: {availableVoices[selectedVoiceIndex]?.name || 'Défaut'}
               </small>
             </motion.div>
           )}

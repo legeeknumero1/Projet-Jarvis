@@ -1,5 +1,4 @@
 import os
-import secrets
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict, Field
@@ -9,60 +8,60 @@ class Config(BaseSettings):
     
     # Base configuration
     app_name: str = "Jarvis AI Assistant"
-    debug: bool = False
-    environment: str = "development"
+    debug: bool = Field(default=False, alias="DEBUG")
+    environment: str = Field(default="production", alias="ENVIRONMENT")
     
-    # Database - utilise variables d'environnement pour sécurité
-    database_url: str = Field(alias="DATABASE_URL", default="postgresql+asyncpg://jarvis:jarvis@172.20.0.100:5432/jarvis_db")
-    postgres_db: str = Field(alias="POSTGRES_DB", default="jarvis_db")
-    postgres_user: str = Field(alias="POSTGRES_USER", default="jarvis")
-    postgres_password: str = Field(alias="POSTGRES_PASSWORD", default="jarvis")
+    # Database - TOUT via variables d'environnement
+    database_url: str = Field(alias="DATABASE_URL")
+    postgres_db: str = Field(alias="POSTGRES_DB")
+    postgres_user: str = Field(alias="POSTGRES_USER")
+    postgres_password: str = Field(alias="POSTGRES_PASSWORD")
     
     # Redis
-    redis_url: str = "redis://172.20.0.110:6379"
+    redis_url: str = Field(alias="REDIS_URL")
     
     # Ollama
-    ollama_base_url: str = Field(alias="OLLAMA_BASE_URL", default="http://172.20.0.30:11434")
-    ollama_model: str = Field(alias="OLLAMA_MODEL", default="llama3.2:1b")
+    ollama_base_url: str = Field(alias="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="llama3.2:1b", alias="OLLAMA_MODEL")
     
-    # Services API
-    tts_api_url: str = "http://172.20.0.20:8002"
-    stt_api_url: str = "http://172.20.0.10:8003"
-    brain_api_url: str = "http://172.20.0.40:8000"
-    interface_url: str = "http://172.20.0.50:3000"
+    # Services API - TOUT via variables d'environnement
+    tts_api_url: str = Field(alias="TTS_API_URL")
+    stt_api_url: str = Field(alias="STT_API_URL")
+    backend_api_url: str = Field(alias="BACKEND_API_URL")
+    interface_url: str = Field(alias="INTERFACE_URL")
     
     # WebSocket
-    websocket_url: str = "ws://172.20.0.50:8001/ws"
+    websocket_url: str = Field(alias="WEBSOCKET_URL")
     
     # Speech
-    whisper_model: str = "base"
-    piper_model: str = "fr_FR-upmc-medium"
+    whisper_model: str = Field(default="base", alias="WHISPER_MODEL")
+    piper_model: str = Field(default="fr_FR-upmc-medium", alias="PIPER_MODEL")
     
     # Home Assistant
-    home_assistant_url: str = "http://localhost:8123"
-    home_assistant_token: Optional[str] = None
+    home_assistant_url: str = Field(alias="HOME_ASSISTANT_URL")
+    home_assistant_token: Optional[str] = Field(default=None, alias="HOME_ASSISTANT_TOKEN")
     
     # MQTT
-    mqtt_broker: str = "localhost"
-    mqtt_port: int = 1883
-    mqtt_username: Optional[str] = None
-    mqtt_password: Optional[str] = None
+    mqtt_broker: str = Field(alias="MQTT_BROKER")
+    mqtt_port: int = Field(default=1883, alias="MQTT_PORT")
+    mqtt_username: Optional[str] = Field(default=None, alias="MQTT_USERNAME")
+    mqtt_password: Optional[str] = Field(default=None, alias="MQTT_PASSWORD")
     
     # Logging
-    log_level: str = "INFO"
-    log_file: str = "logs/jarvis.log"
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_file: str = Field(default="logs/jarvis.log")
     
     # Memory
-    memory_update_interval: str = "604800"
-    memory_retention_days: str = "365"
+    memory_update_interval: str = Field(alias="MEMORY_UPDATE_INTERVAL")
+    memory_retention_days: str = Field(alias="MEMORY_RETENTION_DAYS")
     
     # Security
-    secret_key: str = Field(default_factory=lambda: os.getenv("SECRET_KEY") or secrets.token_urlsafe(32))
-    cors_origins: str = "http://localhost:3000,http://localhost:8000"
+    secret_key: str = Field(alias="JARVIS_SECRET_KEY")
+    cors_origins: str = Field(alias="CORS_ORIGINS")
     
-    # Paths
-    models_path: str = "./models"
-    tts_model_path: str = "./models/tts"
-    stt_model_path: str = "./models/stt"
-    logs_path: str = "./logs"
-    data_path: str = "./data"
+    # Paths - via variables d'environnement
+    models_path: str = Field(default="./models")
+    tts_model_path: str = Field(alias="TTS_MODEL_PATH")
+    stt_model_path: str = Field(alias="STT_MODEL_PATH")
+    logs_path: str = Field(alias="LOGS_PATH")
+    data_path: str = Field(alias="DATA_PATH")

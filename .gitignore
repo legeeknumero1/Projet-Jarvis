@@ -175,4 +175,4 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-.pyre/
+.pyre/MCP/servers/browserbase_web_automation/

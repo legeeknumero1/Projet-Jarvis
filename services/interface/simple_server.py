@@ -69,7 +69,7 @@ class SimpleJarvisServer:
             elif "comment" in user_message.lower() and "ça va" in user_message.lower():
                 response = "Tous mes systèmes sont opérationnels. Merci de demander !"
             elif "météo" in user_message.lower():
-                response = "La météo est ensoleillée aujourd'hui à Perpignan. Température: 24°C."
+                response = "La météo est ensoleillée aujourd'hui. Température: 24°C."
             elif "heure" in user_message.lower():
                 response = f"Il est actuellement {datetime.now().strftime('%H:%M:%S')}."
             elif "date" in user_message.lower():

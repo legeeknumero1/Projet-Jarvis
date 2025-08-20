@@ -10,7 +10,7 @@ class WeatherService:
         self.api_key = None  # Clé API gratuite à configurer
         self.logger = logging.getLogger(__name__)
         
-    async def get_weather(self, city: str = "Perpignan", country: str = "FR") -> Dict[str, Any]:
+    async def get_weather(self, city: str = "Paris", country: str = "FR") -> Dict[str, Any]:
         """Récupère la météo pour une ville via internet"""
         try:
             # Essayer d'abord avec API gratuite wttr.in

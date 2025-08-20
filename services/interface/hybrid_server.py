@@ -22,7 +22,10 @@ logger = logging.getLogger(__name__)
 class HybridJarvisServer:
     def __init__(self):
         self.active_connections = set()
-        self.ollama_url = "http://localhost:11434"
+        import os
+        ollama_ip = os.getenv('OLLAMA_IP', '172.20.0.30')
+        ollama_port = os.getenv('OLLAMA_INTERNAL_PORT', '11434')
+        self.ollama_url = f"http://{ollama_ip}:{ollama_port}"
         self.model_name = "llama3.2:1b"  # Model par défaut
         self.session = None
         self.jarvis_ai = JarvisAI()  # IA locale intelligente
@@ -98,7 +101,7 @@ class HybridJarvisServer:
                 self.conversation_memory[connection_id] = self.conversation_memory[connection_id][-40:]
             
             # Déterminer s'il faut faire une recherche internet
-            search_keywords = ["actualité", "news", "aujourd'hui", "récent", "dernière", "météo", "prix", "cours", "bourse", "nimes", "montpellier", "perpignan"]
+            search_keywords = ["actualité", "news", "aujourd'hui", "récent", "dernière", "météo", "prix", "cours", "bourse"]
             needs_internet = any(keyword in prompt.lower() for keyword in search_keywords)
             
             internet_info = ""
