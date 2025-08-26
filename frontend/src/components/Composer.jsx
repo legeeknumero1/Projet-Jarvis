@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Send, Paperclip, Command } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Paperclip, Command, Zap, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import MicButton from './MicButton';
@@ -41,8 +41,8 @@ const Composer = () => {
 
     if (!currentThreadId) {
       toast({
-        title: "Erreur",
-        description: "Aucune conversation active. Créez une nouvelle conversation.",
+        title: "❌ Erreur",
+        description: "Interface Jarvis non initialisée. Créez une nouvelle conversation.",
         variant: "destructive",
       });
       return;
@@ -62,8 +62,8 @@ const Composer = () => {
       await sendMessage(messageToSend);
     } catch (error) {
       toast({
-        title: "Erreur",
-        description: "Impossible d'envoyer le message. Veuillez réessayer.",
+        title: "⚠️ Erreur de transmission",
+        description: "Impossible d'envoyer le message. Interface en cours de récupération.",
         variant: "destructive",
       });
     }
@@ -76,40 +76,38 @@ const Composer = () => {
       const modelName = cmd.replace('/model ', '');
       updateSettings({ model: modelName });
       toast({
-        title: "Modèle changé",
-        description: `Modèle mis à jour vers ${modelName}`,
+        title: "🤖 Modèle changé",
+        description: `Interface basculée vers ${modelName}`,
       });
     } else if (cmd.startsWith('/temp ')) {
       const temp = parseFloat(cmd.replace('/temp ', ''));
       if (temp >= 0 && temp <= 1) {
         updateSettings({ temperature: temp });
         toast({
-          title: "Température ajustée",
-          description: `Température mise à jour vers ${temp}`,
+          title: "🎛️ Température ajustée",
+          description: `Créativité configurée à ${temp}`,
         });
       } else {
         toast({
-          title: "Erreur",
+          title: "❌ Erreur paramètre",
           description: "La température doit être entre 0 et 1",
           variant: "destructive",
         });
       }
     } else if (cmd === '/clear') {
-      // This would clear current conversation
       toast({
-        title: "Commande reçue",
-        description: "Conversation effacée (fonctionnalité à implémenter)",
+        title: "🔄 Commande reçue",
+        description: "Fonction de nettoyage disponible via interface",
       });
     } else if (cmd === '/export') {
-      // Trigger export
       toast({
-        title: "Export en cours",
-        description: "Téléchargement des données...",
+        title: "💾 Export en cours",
+        description: "Sauvegarde des données Jarvis...",
       });
     } else {
       toast({
-        title: "Commande inconnue",
-        description: "Tapez /help pour voir les commandes disponibles",
+        title: "❓ Commande inconnue",
+        description: "Tapez /help pour afficher l'aide système",
         variant: "destructive",
       });
     }
@@ -129,111 +127,177 @@ const Composer = () => {
   };
 
   const commands = [
-    { cmd: '/model [nom]', desc: 'Changer de modèle IA' },
-    { cmd: '/temp [0.1-1.0]', desc: 'Ajuster la créativité' },
-    { cmd: '/clear', desc: 'Effacer la conversation' },
-    { cmd: '/export', desc: 'Exporter les données' },
-    { cmd: '/help', desc: 'Afficher l\'aide' }
+    { cmd: '/model [nom]', desc: 'Basculer interface IA' },
+    { cmd: '/temp [0.1-1.0]', desc: 'Ajuster créativité système' },
+    { cmd: '/clear', desc: 'Réinitialiser session' },
+    { cmd: '/export', desc: 'Sauvegarder archives' },
+    { cmd: '/help', desc: 'Afficher manuel système' }
   ];
 
   return (
     <div className="relative">
       {/* Commands Popup */}
-      {showCommands && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          className="absolute bottom-full left-4 right-4 mb-2 glass border border-jarvis-border rounded-lg p-3 z-50"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Command className="h-4 w-4 text-jarvis-primary" />
-            <span className="text-sm font-medium text-jarvis-text">Commandes disponibles</span>
-          </div>
-          <div className="space-y-1">
-            {commands.map((command, index) => (
-              <div key={index} className="flex items-center gap-3 text-sm">
-                <code className="bg-jarvis-surface/50 text-jarvis-primary px-2 py-1 rounded text-xs font-mono">
-                  {command.cmd}
-                </code>
-                <span className="text-jarvis-text-muted">{command.desc}</span>
+      <AnimatePresence>
+        {showCommands && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute bottom-full left-4 right-4 mb-4 glass-cyber border-jarvis-neon-cyan/30 rounded-xl p-4 z-50 shadow-neon-cyan"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-6 h-6 bg-gradient-to-br from-jarvis-neon-cyan to-jarvis-neon-purple rounded-lg flex items-center justify-center">
+                <Command className="h-3 w-3 text-jarvis-text-primary" />
               </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+              <span className="text-sm font-semibold text-jarvis-neon-cyan">Commandes Système Jarvis</span>
+            </div>
+            <div className="space-y-2">
+              {commands.map((command, index) => (
+                <motion.div 
+                  key={index} 
+                  className="flex items-center gap-4 text-sm py-1"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <code className="bg-jarvis-neon-purple/20 text-jarvis-neon-purple px-2 py-1 rounded-md text-xs font-mono border border-jarvis-neon-purple/30 min-w-fit">
+                    {command.cmd}
+                  </code>
+                  <span className="text-jarvis-text-muted">{command.desc}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Composer */}
-      <div className="p-4">
-        <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="p-6 relative">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Model Selector */}
-          <div className="flex items-center justify-between">
+          <motion.div 
+            className="flex items-center justify-between"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             <ModelSelector />
-            <div className="flex items-center gap-2 text-xs text-jarvis-text-muted">
-              <span>Temp: {settings.temperature}</span>
-              <span>•</span>
-              <span>Top-P: {settings.topP}</span>
+            <div className="flex items-center gap-4 text-xs text-jarvis-text-muted">
+              <div className="flex items-center gap-2 bg-jarvis-bg-surface/50 px-3 py-1 rounded-full border border-jarvis-neon-cyan/20">
+                <Zap className="h-3 w-3 text-jarvis-neon-cyan" />
+                <span>Temp: <span className="text-jarvis-neon-cyan font-mono">{settings.temperature}</span></span>
+              </div>
+              <span className="text-jarvis-neon-purple">•</span>
+              <div className="flex items-center gap-2 bg-jarvis-bg-surface/50 px-3 py-1 rounded-full border border-jarvis-neon-purple/20">
+                <Sparkles className="h-3 w-3 text-jarvis-neon-purple" />
+                <span>Top-P: <span className="text-jarvis-neon-purple font-mono">{settings.topP}</span></span>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Input Area */}
-          <div className="relative">
-            <div className="glass border border-jarvis-border rounded-xl overflow-hidden">
+          <motion.div 
+            className="relative"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="glass-cyber rounded-2xl border-2 border-jarvis-neon-cyan/30 relative overflow-hidden group hover:border-jarvis-neon-cyan/50 hover:shadow-neon-cyan transition-all duration-300">
+              {/* Cyber scanning line effect */}
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-jarvis-neon-cyan to-transparent opacity-50 group-focus-within:animate-cyber-scan" />
+              
               <Textarea
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Tapez votre message ou utilisez /commandes..."
-                className="min-h-[60px] max-h-[200px] resize-none border-0 bg-transparent text-jarvis-text placeholder:text-jarvis-text-muted focus-visible:ring-0 focus-visible:ring-offset-0 px-4 py-3 pr-32"
+                placeholder="Interface Jarvis activée • Tapez votre message ou utilisez /commandes..."
+                className="min-h-[80px] max-h-[200px] resize-none border-0 bg-transparent text-jarvis-text-primary placeholder:text-jarvis-text-muted focus-visible:ring-0 focus-visible:ring-offset-0 px-6 py-4 pr-40 text-base"
                 disabled={isStreaming}
               />
 
+              {/* Gradient overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-br from-jarvis-neon-cyan/5 via-transparent to-jarvis-neon-purple/5 pointer-events-none" />
+
               {/* Action Buttons */}
-              <div className="absolute right-3 bottom-3 flex items-center gap-2">
+              <div className="absolute right-4 bottom-4 flex items-center gap-3">
                 {/* File Upload (Mock) */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-jarvis-text-muted hover:text-jarvis-primary"
-                  disabled={isStreaming}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 p-0 cyber-button-ghost border border-jarvis-neon-purple/30 text-jarvis-neon-purple hover:text-jarvis-neon-cyan hover:border-jarvis-neon-cyan/30 hover:shadow-glow-subtle-cyan rounded-xl"
+                    disabled={isStreaming}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                </motion.div>
 
                 {/* Voice Input */}
                 <MicButton onTranscription={handleTranscriptionResult} />
 
                 {/* Send Button */}
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!message.trim() || isStreaming}
-                  className="h-8 w-8 p-0 bg-jarvis-primary text-jarvis-bg hover:bg-jarvis-info disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!message.trim() || isStreaming}
+                    className="h-10 w-10 p-0 cyber-button-primary rounded-xl shadow-neon-cyan disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                  >
+                    <motion.div
+                      animate={{ rotate: isStreaming ? 360 : 0 }}
+                      transition={{ duration: isStreaming ? 1 : 0, repeat: isStreaming ? Infinity : 0, ease: "linear" }}
+                    >
+                      <Send className="h-4 w-4" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Status Bar */}
-          <div className="flex items-center justify-between text-xs text-jarvis-text-muted">
-            <div className="flex items-center gap-2">
+          <motion.div 
+            className="flex items-center justify-between text-xs text-jarvis-text-muted"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="flex items-center gap-4">
               {isStreaming && (
-                <>
-                  <div className="w-2 h-2 bg-jarvis-success rounded-full animate-pulse" />
-                  <span>Génération en cours...</span>
-                </>
+                <div className="flex items-center gap-2 bg-jarvis-neon-green/20 px-3 py-1 rounded-full border border-jarvis-neon-green/30">
+                  <motion.div 
+                    className="w-2 h-2 bg-jarvis-neon-green rounded-full"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                  <span className="text-jarvis-neon-green font-medium">Génération en cours...</span>
+                </div>
+              )}
+              
+              {!isStreaming && (
+                <div className="flex items-center gap-2 bg-jarvis-bg-surface/50 px-3 py-1 rounded-full border border-jarvis-border-subtle">
+                  <div className="w-2 h-2 bg-jarvis-neon-cyan rounded-full animate-neon-pulse-cyan" />
+                  <span>Interface opérationnelle</span>
+                </div>
               )}
             </div>
             
-            <div className="flex items-center gap-4">
-              <span>Shift+Enter pour nouvelle ligne</span>
-              <span>{message.length}/4000</span>
+            <div className="flex items-center gap-6">
+              <span className="bg-jarvis-bg-surface/50 px-3 py-1 rounded-full border border-jarvis-border-subtle">
+                Shift+Enter → nouvelle ligne
+              </span>
+              <span className={`px-3 py-1 rounded-full border font-mono ${
+                message.length > 3500 
+                  ? 'bg-jarvis-neon-orange/20 text-jarvis-neon-orange border-jarvis-neon-orange/30' 
+                  : 'bg-jarvis-bg-surface/50 border-jarvis-border-subtle'
+              }`}>
+                {message.length}/4000
+              </span>
             </div>
-          </div>
+          </motion.div>
         </form>
       </div>
     </div>
