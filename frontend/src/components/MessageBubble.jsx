@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, User, Copy, Check } from 'lucide-react';
+import { Bot, User, Copy, Check, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '../hooks/use-toast';
 
@@ -46,21 +46,24 @@ const MessageBubble = ({ message }) => {
         
         return (
           <div key={index} className="my-4 relative group">
-            <div className="bg-jarvis-bg border border-jarvis-border rounded-lg overflow-hidden">
+            <div className="message-bubble-code overflow-hidden rounded-xl border border-jarvis-neon-purple/40">
               {language && (
-                <div className="px-4 py-2 bg-jarvis-surface/50 border-b border-jarvis-border text-xs text-jarvis-text-muted font-mono">
-                  {language}
+                <div className="px-4 py-2 bg-jarvis-neon-purple/20 border-b border-jarvis-neon-purple/30 text-xs text-jarvis-neon-purple font-mono font-semibold">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-3 w-3" />
+                    {language}
+                  </div>
                 </div>
               )}
               <div className="relative">
-                <pre className="p-4 overflow-x-auto text-sm font-mono text-jarvis-text">
+                <pre className="p-4 overflow-x-auto text-sm font-mono text-jarvis-text-primary bg-gradient-to-br from-jarvis-neon-purple/10 to-transparent">
                   <code>{codeContent}</code>
                 </pre>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigator.clipboard.writeText(codeContent)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 text-jarvis-text-muted hover:text-jarvis-primary"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 h-8 w-8 p-0 text-jarvis-neon-purple hover:text-jarvis-neon-cyan hover:bg-jarvis-neon-purple/20 border border-jarvis-neon-purple/30 rounded-lg"
                 >
                   <Copy className="h-3 w-3" />
                 </Button>
@@ -74,7 +77,7 @@ const MessageBubble = ({ message }) => {
         return (
           <code 
             key={index} 
-            className="bg-jarvis-surface/50 text-jarvis-primary px-1.5 py-0.5 rounded text-sm font-mono border border-jarvis-border/50"
+            className="bg-jarvis-neon-purple/20 text-jarvis-neon-purple px-2 py-1 rounded-md text-sm font-mono border border-jarvis-neon-purple/30 shadow-glow-subtle-purple"
           >
             {code}
           </code>
@@ -85,9 +88,23 @@ const MessageBubble = ({ message }) => {
           <span key={index}>
             {part.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/).map((subPart, subIndex) => {
               if (subPart.startsWith('**') && subPart.endsWith('**')) {
-                return <strong key={subIndex} className="text-jarvis-text font-semibold">{subPart.slice(2, -2)}</strong>;
+                return (
+                  <strong 
+                    key={subIndex} 
+                    className="text-jarvis-neon-cyan font-semibold drop-shadow-sm"
+                  >
+                    {subPart.slice(2, -2)}
+                  </strong>
+                );
               } else if (subPart.startsWith('*') && subPart.endsWith('*')) {
-                return <em key={subIndex} className="text-jarvis-info italic">{subPart.slice(1, -1)}</em>;
+                return (
+                  <em 
+                    key={subIndex} 
+                    className="text-jarvis-neon-green italic"
+                  >
+                    {subPart.slice(1, -1)}
+                  </em>
+                );
               }
               return subPart;
             })}
@@ -100,47 +117,64 @@ const MessageBubble = ({ message }) => {
   return (
     <motion.div
       layout
-      className={`flex gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      className={`flex gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} group`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
       {/* Avatar */}
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-        isUser 
-          ? 'bg-jarvis-accent/20 text-jarvis-accent' 
-          : 'bg-jarvis-primary/20 text-jarvis-primary'
-      }`}>
+      <motion.div 
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+          isUser 
+            ? 'bg-gradient-to-br from-jarvis-neon-pink/20 to-jarvis-neon-pink/10 border-jarvis-neon-pink/50 text-jarvis-neon-pink shadow-neon-pink' 
+            : 'bg-gradient-to-br from-jarvis-neon-cyan/20 to-jarvis-neon-cyan/10 border-jarvis-neon-cyan/50 text-jarvis-neon-cyan shadow-neon-cyan'
+        } backdrop-blur-sm`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
         {isUser ? (
-          <User className="w-4 h-4" />
+          <User className="w-5 h-5" />
         ) : (
-          <Bot className="w-4 h-4" />
+          <Bot className="w-5 h-5" />
         )}
-      </div>
+      </motion.div>
 
       {/* Message Content */}
       <div className={`flex-1 max-w-[80%] ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {/* Message Bubble */}
         <motion.div
-          className={`group relative p-4 rounded-2xl ${
+          className={`group/bubble relative p-5 rounded-2xl transition-all duration-300 ${
             isUser 
-              ? 'bg-jarvis-accent/10 border border-jarvis-accent/30 text-jarvis-text ml-8' 
-              : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text mr-8 glass-surface'
-          } ${message.streaming ? 'animate-pulse-slow' : ''}`}
-          whileHover={{ scale: 1.01 }}
+              ? 'message-bubble-user ml-8 hover:shadow-neon-pink' 
+              : 'message-bubble-assistant mr-8 hover:shadow-neon-cyan'
+          } ${message.streaming ? 'animate-neon-pulse-cyan' : ''}`}
+          whileHover={{ scale: 1.01, y: -2 }}
           transition={{ duration: 0.2 }}
         >
-          {/* Content */}
-          <div className="space-y-2">
-            {message.streaming && message.content === '' ? (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-jarvis-primary rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-jarvis-primary rounded-full animate-bounce delay-100" />
-                <div className="w-2 h-2 bg-jarvis-primary rounded-full animate-bounce delay-200" />
-              </div>
-            ) : (
-              <div className="prose prose-invert max-w-none">
-                {parseContent(message.content)}
-              </div>
-            )}
-          </div>
+          {/* Streaming indicator dots */}
+          {message.streaming && message.content === '' ? (
+            <div className="flex items-center gap-2">
+              <motion.div 
+                className="w-3 h-3 bg-jarvis-neon-cyan rounded-full"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+              />
+              <motion.div 
+                className="w-3 h-3 bg-jarvis-neon-cyan rounded-full"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+              />
+              <motion.div 
+                className="w-3 h-3 bg-jarvis-neon-cyan rounded-full"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+              />
+            </div>
+          ) : (
+            <div className="prose prose-invert max-w-none text-jarvis-text-primary leading-relaxed">
+              {parseContent(message.content)}
+            </div>
+          )}
 
           {/* Copy button */}
           {!isUser && message.content && (
@@ -148,36 +182,53 @@ const MessageBubble = ({ message }) => {
               variant="ghost"
               size="sm"
               onClick={handleCopy}
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-jarvis-text-muted hover:text-jarvis-primary"
+              className="absolute top-3 right-3 opacity-0 group-hover/bubble:opacity-100 transition-all duration-200 h-8 w-8 p-0 text-jarvis-text-muted hover:text-jarvis-neon-cyan hover:bg-jarvis-neon-cyan/10 border border-jarvis-neon-cyan/20 rounded-lg backdrop-blur-sm"
             >
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+              <motion.div
+                animate={{ rotate: copied ? 360 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {copied ? <Check className="h-4 w-4 text-jarvis-neon-green" /> : <Copy className="h-4 w-4" />}
+              </motion.div>
             </Button>
           )}
 
           {/* Error indicator */}
           {message.error && (
-            <div className="mt-2 text-xs text-red-400 flex items-center gap-1">
-              <span className="w-1 h-1 bg-red-400 rounded-full" />
+            <div className="mt-3 text-xs text-jarvis-neon-orange flex items-center gap-2">
+              <div className="w-2 h-2 bg-jarvis-neon-orange rounded-full animate-neon-pulse-cyan" />
               Erreur lors de la génération
             </div>
+          )}
+
+          {/* Cyber glow effect for active messages */}
+          {message.streaming && (
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-jarvis-neon-cyan/5 to-jarvis-neon-purple/5 animate-neon-pulse-cyan pointer-events-none" />
           )}
         </motion.div>
 
         {/* Metadata */}
-        <div className={`mt-1 flex items-center gap-2 text-xs text-jarvis-text-muted ${
+        <div className={`mt-2 flex items-center gap-3 text-xs text-jarvis-text-muted ${
           isUser ? 'flex-row-reverse' : 'flex-row'
         }`}>
-          <span>{timestamp}</span>
+          <span className="bg-jarvis-bg-surface/50 px-2 py-1 rounded-full border border-jarvis-border-subtle">
+            {timestamp}
+          </span>
           {message.model && (
             <>
-              <span>•</span>
-              <span className="text-jarvis-info">{message.model}</span>
+              <span className="text-jarvis-neon-cyan">•</span>
+              <span className="text-jarvis-neon-cyan font-medium bg-jarvis-neon-cyan/10 px-2 py-1 rounded-full border border-jarvis-neon-cyan/30">
+                {message.model}
+              </span>
             </>
           )}
           {message.streaming && (
             <>
-              <span>•</span>
-              <span className="text-jarvis-success animate-pulse">Streaming...</span>
+              <span className="text-jarvis-neon-green">•</span>
+              <span className="text-jarvis-neon-green animate-neon-pulse-cyan flex items-center gap-1">
+                <div className="w-2 h-2 bg-jarvis-neon-green rounded-full animate-pulse" />
+                Streaming...
+              </span>
             </>
           )}
         </div>

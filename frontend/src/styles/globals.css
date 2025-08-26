@@ -4,19 +4,26 @@
 @tailwind utilities;
 
 :root {
-  /* Cyberpunk Colors */
-  --jarvis-bg: #06080c;
-  --jarvis-surface: #0b0f17;
-  --jarvis-primary: #00e5ff;
-  --jarvis-accent: #ff3bd4;
-  --jarvis-info: #6df6ff;
-  --jarvis-success: #4cff7a;
-  --jarvis-warning: #ffb300;
-  --jarvis-text: #e8eaed;
+  /* Cyberpunk Neon Colors */
+  --jarvis-bg-deep: #06080c;
+  --jarvis-bg-surface: #0b0f17;
+  --jarvis-neon-cyan: #00e5ff;
+  --jarvis-neon-pink: #ff3bd4;
+  --jarvis-neon-purple: #8a2be2;
+  --jarvis-neon-green: #4cff7a;
+  --jarvis-neon-orange: #ffb300;
+  --jarvis-text-primary: #ffffff;
+  --jarvis-text-secondary: #e8eaed;
   --jarvis-text-muted: #9aa0a6;
-  --jarvis-border: rgba(0, 229, 255, 0.2);
-  --jarvis-glow: 0 0 20px rgba(0, 229, 255, 0.3);
-  --jarvis-glow-accent: 0 0 20px rgba(255, 59, 212, 0.3);
+  --jarvis-border-subtle: rgba(0, 229, 255, 0.2);
+  --jarvis-border-bright: rgba(0, 229, 255, 0.6);
+  --jarvis-overlay: rgba(11, 15, 23, 0.8);
+  
+  /* Neon glow effects */
+  --neon-glow-cyan: 0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(0, 229, 255, 0.2);
+  --neon-glow-pink: 0 0 20px rgba(255, 59, 212, 0.5), 0 0 40px rgba(255, 59, 212, 0.2);
+  --neon-glow-purple: 0 0 20px rgba(138, 43, 226, 0.5), 0 0 40px rgba(138, 43, 226, 0.2);
+  --neon-glow-green: 0 0 20px rgba(76, 255, 122, 0.5), 0 0 40px rgba(76, 255, 122, 0.2);
 }
 
 * {
@@ -28,116 +35,308 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--jarvis-bg);
-  color: var(--jarvis-text);
+  background: var(--jarvis-bg-deep);
+  color: var(--jarvis-text-primary);
   overflow-x: hidden;
+  
+  /* Cyber grid background */
+  background-image: 
+    linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-attachment: fixed;
 }
 
 code {
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
-/* Glassmorphism utilities */
-.glass {
-  background: rgba(11, 15, 23, 0.8);
-  backdrop-filter: blur(16px);
+/* ============================================================================
+   CYBERPUNK GLASSMORPHISM UTILITIES
+   ============================================================================ */
+
+.glass-cyber {
+  background: rgba(11, 15, 23, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(0, 229, 255, 0.1);
+}
+
+.glass-cyber-surface {
+  background: rgba(11, 15, 23, 0.5);
+  backdrop-filter: blur(16px) saturate(150%);
   border: 1px solid rgba(0, 229, 255, 0.1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(0, 229, 255, 0.05);
 }
 
-.glass-surface {
-  background: rgba(11, 15, 23, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 229, 255, 0.05);
+/* ============================================================================
+   NEON GLOW EFFECTS
+   ============================================================================ */
+
+.neon-glow-cyan {
+  box-shadow: var(--neon-glow-cyan);
 }
 
-/* Glow effects */
-.glow-primary {
-  box-shadow: var(--jarvis-glow);
+.neon-glow-pink {
+  box-shadow: var(--neon-glow-pink);
 }
 
-.glow-accent {
-  box-shadow: var(--jarvis-glow-accent);
+.neon-glow-purple {
+  box-shadow: var(--neon-glow-purple);
 }
 
-/* Animation utilities */
-.animate-glow {
-  animation: glow 2s ease-in-out infinite alternate;
+.neon-glow-green {
+  box-shadow: var(--neon-glow-green);
 }
 
-.animate-pulse-slow {
-  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Intense neon effects for special elements */
+.ultra-neon-cyan {
+  box-shadow: 
+    0 0 5px #00e5ff,
+    0 0 20px #00e5ff,
+    0 0 40px #00e5ff,
+    0 0 80px #00e5ff;
+  text-shadow: 0 0 10px #00e5ff;
 }
 
-@keyframes glow {
-  from {
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
-  }
-  to {
-    box-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
-  }
+.ultra-neon-pink {
+  box-shadow: 
+    0 0 5px #ff3bd4,
+    0 0 20px #ff3bd4,
+    0 0 40px #ff3bd4,
+    0 0 80px #ff3bd4;
+  text-shadow: 0 0 10px #ff3bd4;
 }
 
-/* Scanline effect */
-.scanlines::before {
+.ultra-neon-purple {
+  box-shadow: 
+    0 0 5px #8a2be2,
+    0 0 20px #8a2be2,
+    0 0 40px #8a2be2,
+    0 0 80px #8a2be2;
+  text-shadow: 0 0 10px #8a2be2;
+}
+
+/* ============================================================================
+   CYBER BUTTON STYLES
+   ============================================================================ */
+
+.cyber-button-primary {
+  @apply bg-jarvis-neon-cyan text-jarvis-bg-deep font-semibold px-4 py-2 rounded-lg;
+  @apply transition-all duration-300 ease-out;
+  @apply shadow-neon-cyan hover:shadow-ultra-neon-cyan;
+  @apply hover:scale-105 active:scale-95;
+  border: 1px solid var(--jarvis-neon-cyan);
+}
+
+.cyber-button-secondary {
+  @apply bg-transparent text-jarvis-neon-cyan font-medium px-4 py-2 rounded-lg;
+  @apply border border-jarvis-neon-cyan transition-all duration-300 ease-out;
+  @apply hover:bg-jarvis-neon-cyan hover:text-jarvis-bg-deep;
+  @apply hover:shadow-neon-cyan hover:scale-105 active:scale-95;
+}
+
+.cyber-button-pink {
+  @apply bg-jarvis-neon-pink text-jarvis-text-primary font-semibold px-4 py-2 rounded-lg;
+  @apply transition-all duration-300 ease-out;
+  @apply shadow-neon-pink hover:shadow-ultra-neon-pink;
+  @apply hover:scale-105 active:scale-95;
+  border: 1px solid var(--jarvis-neon-pink);
+}
+
+.cyber-button-ghost {
+  @apply bg-transparent text-jarvis-text-secondary font-medium px-3 py-2 rounded-lg;
+  @apply border border-transparent transition-all duration-300 ease-out;
+  @apply hover:border-jarvis-neon-cyan hover:text-jarvis-neon-cyan;
+  @apply hover:shadow-glow-subtle-cyan hover:bg-jarvis-overlay;
+}
+
+/* ============================================================================
+   MESSAGE BUBBLE STYLES
+   ============================================================================ */
+
+.message-bubble-user {
+  @apply bg-jarvis-neon-pink bg-opacity-20 backdrop-blur-sm;
+  @apply border border-jarvis-neon-pink border-opacity-50;
+  @apply shadow-neon-pink text-jarvis-text-primary rounded-2xl p-4;
+  background: linear-gradient(135deg, rgba(255, 59, 212, 0.15) 0%, rgba(255, 138, 128, 0.1) 100%);
+}
+
+.message-bubble-assistant {
+  @apply bg-jarvis-neon-cyan bg-opacity-10 backdrop-blur-sm;
+  @apply border border-jarvis-neon-cyan border-opacity-30;
+  @apply shadow-glow-subtle-cyan text-jarvis-text-primary rounded-2xl p-4;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.12) 0%, rgba(109, 246, 255, 0.08) 100%);
+}
+
+.message-bubble-code {
+  @apply bg-jarvis-neon-purple bg-opacity-15 backdrop-blur-sm;
+  @apply border border-jarvis-neon-purple border-opacity-40;
+  @apply shadow-glow-subtle-purple rounded-lg;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.15) 0%, rgba(182, 73, 214, 0.1) 100%);
+}
+
+/* ============================================================================
+   CYBER INPUT STYLES
+   ============================================================================ */
+
+.cyber-input {
+  @apply bg-jarvis-bg-surface bg-opacity-80 backdrop-blur-sm;
+  @apply border border-jarvis-border-subtle rounded-lg px-4 py-3;
+  @apply text-jarvis-text-primary placeholder-jarvis-text-muted;
+  @apply transition-all duration-300 ease-out;
+  @apply focus:outline-none focus:border-jarvis-neon-cyan focus:shadow-glow-subtle-cyan;
+  @apply hover:border-jarvis-border-bright;
+}
+
+.cyber-input:focus {
+  background: rgba(11, 15, 23, 0.9);
+  box-shadow: 
+    0 0 0 1px var(--jarvis-neon-cyan),
+    0 0 20px rgba(0, 229, 255, 0.2),
+    inset 0 1px 0 rgba(0, 229, 255, 0.1);
+}
+
+/* ============================================================================
+   CYBER ANIMATIONS
+   ============================================================================ */
+
+.cyber-pulse {
+  animation: neonPulseCyan 2s ease-in-out infinite alternate;
+}
+
+.cyber-flicker {
+  animation: neonFlicker 3s linear infinite;
+}
+
+.cyber-float {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+/* Scanning line effect */
+.cyber-scanline {
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-scanline::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 229, 255, 0.02) 2px,
-    rgba(0, 229, 255, 0.02) 4px
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--jarvis-neon-cyan) 50%, 
+    transparent 100%
   );
-  pointer-events: none;
-  z-index: 1;
+  animation: cyberScan 4s linear infinite;
+  z-index: 10;
 }
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .animate-glow,
-  .animate-pulse-slow {
-    animation: none;
-  }
-  
-  .glass {
-    backdrop-filter: none;
-  }
-}
+/* ============================================================================
+   SCROLLBAR CUSTOMIZATION
+   ============================================================================ */
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .glass {
-    backdrop-filter: blur(8px);
-  }
-  
-  .glass-surface {
-    backdrop-filter: blur(6px);
-  }
-}
-
-/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(11, 15, 23, 0.5);
+  background: var(--jarvis-bg-surface);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 229, 255, 0.3);
-  border-radius: 3px;
+  background: linear-gradient(45deg, var(--jarvis-neon-cyan), var(--jarvis-neon-purple));
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.5);
+  background: linear-gradient(45deg, var(--jarvis-neon-pink), var(--jarvis-neon-cyan));
+  box-shadow: 0 0 20px rgba(255, 59, 212, 0.5);
 }
 
-/* Focus styles */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-jarvis-primary focus:ring-opacity-50;
+/* ============================================================================
+   SELECTION STYLES
+   ============================================================================ */
+
+::selection {
+  background: var(--jarvis-neon-cyan);
+  color: var(--jarvis-bg-deep);
+  text-shadow: none;
+}
+
+::-moz-selection {
+  background: var(--jarvis-neon-cyan);
+  color: var(--jarvis-bg-deep);
+  text-shadow: none;
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-pulse,
+  .cyber-flicker,
+  .cyber-float,
+  .cyber-scanline::before {
+    animation: none !important;
+  }
+  
+  .glass-cyber,
+  .glass-cyber-surface {
+    backdrop-filter: none;
+  }
+  
+  .neon-glow-cyan,
+  .neon-glow-pink,
+  .neon-glow-purple,
+  .neon-glow-green,
+  .ultra-neon-cyan,
+  .ultra-neon-pink,
+  .ultra-neon-purple {
+    box-shadow: none !important;
+  }
+}
+
+/* ============================================================================
+   MOBILE OPTIMIZATIONS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .glass-cyber {
+    backdrop-filter: blur(12px) saturate(150%);
+  }
+  
+  .glass-cyber-surface {
+    backdrop-filter: blur(8px) saturate(120%);
+  }
+  
+  /* Reduce neon intensity on mobile for battery */
+  .neon-glow-cyan,
+  .neon-glow-pink,
+  .neon-glow-purple,
+  .neon-glow-green {
+    box-shadow: 
+      0 0 10px rgba(0, 229, 255, 0.3),
+      0 0 20px rgba(0, 229, 255, 0.1);
+  }
+}
+
+/* ============================================================================
+   FOCUS RING STYLES
+   ============================================================================ */
+
+.cyber-focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-jarvis-neon-cyan focus:ring-opacity-50;
+  @apply focus:border-jarvis-neon-cyan transition-all duration-200;
 }
