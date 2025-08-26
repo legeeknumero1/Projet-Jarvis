@@ -1,0 +1,75 @@
+{
+  "name": "Jarvis AI - Assistant Cyberpunk",
+  "short_name": "Jarvis AI",
+  "description": "Interface de chat IA cyberpunk avec streaming temps réel et fonctionnalités vocales",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06080c",
+  "theme_color": "#00e5ff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMzIiIGZpbGw9IiMwNjA4MGMiLz4KPHBhdGggZD0iTTk2IDQ4QzEyMC4zMDEgNDggMTQ0IDcxLjY5OSAxNDQgOTZTMTIwLjMwMSAxNDQgOTYgMTQ0UzcyIDEyMC4zMDEgNzIgOTZTOTUuNjk5IDQ4IDk2IDQ4WiIgZmlsbD0idXJsKCNncmFkaWVudDApIi8+CjxwYXRoIGQ9Ik05NiA3MkMxMDkuMjU1IDcyIDEyMCA4Mi43NDUgMTIwIDk2UzEwOS4yNTUgMTIwIDk2IDEyMFM3MiAxMDkuMjU1IDcyIDk2UzgyLjc0NSA3MiA5NiA3MloiIGZpbGw9IiNmZjNiZDQiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwIiB4MT0iOTYiIHkxPSI0OCIgeDI9Ijk2IiB5Mj0iMTQ0IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIHN0b3AtY29sb3I9IiMwMGU1ZmYiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNmRmNmZmIi8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iODQiIGZpbGw9IiMwNjA4MGMiLz4KPHBhdGggZD0iTTI1NiAxMjhDMzIxLjYwNiAxMjggMzg0IDIwMy4zOTQgMzg0IDI1NlMzMjEuNjA2IDM4NCAyNTYgMzg0UzEyOCAzMjEuNjA2IDEyOCAyNTZTMTkwLjM5NCAxMjggMjU2IDEyOFoiIGZpbGw9InVybCgjZ3JhZGllbnQwKSIvPgo8cGF0aCBkPSJNMjU2IDE5MkMyOTIuMDY2IDE5MiAzMjAgMjE5LjkzNCAzMjAgMjU2UzI5Mi4wNjYgMzIwIDI1NiAzMjBTMTkyIDI5Mi4wNjYgMTkyIDI1NlMyMTkuOTM0IDE5MiAyNTYgMTkyWiIgZmlsbD0iI2ZmM2JkNCIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudDAiIHgxPSIyNTYiIHkxPSIxMjgiIHgyPSIyNTYiIHkyPSIzODQiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzAwZTVmZiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM2ZGY2ZmYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "ai"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI4MDAiIHZpZXdCb3g9IjAgMCAxMjgwIDgwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyODAiIGhlaWdodD0iODAwIiBmaWxsPSIjMDYwODBjIi8+Cjx0ZXh0IHg9IjY0MCIgeT0iNDAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDBlNWZmIiBmb250LXNpemU9IjQ4IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiPkphcnZpcyBBSSAtIERlc2t0b3A8L3RleHQ+CjwvdHN2Zz4=",
+      "sizes": "1280x800",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzUwIiBoZWlnaHQ9IjEzMzQiIHZpZXdCb3g9IjAgMCA3NTAgMTMzNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijc1MCIgaGVpZ2h0PSIxMzM0IiBmaWxsPSIjMDYwODBjIi8+Cjx0ZXh0IHg9IjM3NSIgeT0iNjY3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDBlNWZmIiBmb250LXNpemU9IjM2IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiPkphcnZpcyBBSTwvdGV4dD4KPHRleHQgeD0iMzc1IiB5PSI3MzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNmZjNiZDQiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiI+TW9iaWxlPC90ZXh0Pgo8L3N2Zz4=",
+      "sizes": "750x1334",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "features": [
+    "Cross Platform",
+    "AI Chat Interface",
+    "Voice Recognition",
+    "Real-time Streaming",
+    "Offline Storage"
+  ],
+  "shortcuts": [
+    {
+      "name": "Nouvelle conversation",
+      "short_name": "Nouveau chat",
+      "description": "Démarrer une nouvelle conversation avec Jarvis",
+      "url": "/?action=new-chat",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMwNjA4MGMiLz4KPHBhdGggZD0iTTQ4IDI0VjcyTTI0IDQ4SDcyIiBzdHJva2U9IiMwMGU1ZmYiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Paramètres",
+      "short_name": "Config",
+      "description": "Accéder aux paramètres de Jarvis",
+      "url": "/?action=settings",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMwNjA4MGMiLz4KPGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iOCIgc3Ryb2tlPSIjMDBlNWZmIiBzdHJva2Utd2lkdGg9IjQiLz4KPC9zdmc+",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
