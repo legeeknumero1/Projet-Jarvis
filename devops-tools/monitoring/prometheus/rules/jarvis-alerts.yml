@@ -1,0 +1,111 @@
+groups:
+  - name: jarvis.rules
+    rules:
+    # Service Down Alerts
+    - alert: JarvisBackendDown
+      expr: up{job="jarvis-backend"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: backend
+      annotations:
+        summary: "Jarvis Backend is down"
+        description: "Jarvis Backend service has been down for more than 1 minute."
+
+    - alert: JarvisAPIDown
+      expr: up{job="jarvis-apis"} == 0
+      for: 2m
+      labels:
+        severity: warning
+        service: apis
+      annotations:
+        summary: "Jarvis API service is down"
+        description: "One or more Jarvis API services (STT/TTS/Interface) are down."
+
+    - alert: OllamaDown
+      expr: up{job="ollama"} == 0
+      for: 3m
+      labels:
+        severity: warning
+        service: ollama
+      annotations:
+        summary: "Ollama LLM service is down"
+        description: "Ollama service has been down for more than 3 minutes."
+
+    # Performance Alerts
+    - alert: HighCPUUsage
+      expr: 100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage detected"
+        description: "CPU usage is above 80% for more than 5 minutes."
+
+    - alert: HighMemoryUsage
+      expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High memory usage detected"
+        description: "Memory usage is above 90% for more than 5 minutes."
+
+    - alert: DiskSpaceLow
+      expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Low disk space"
+        description: "Disk space is below 10% on root filesystem."
+
+    # Database Alerts
+    - alert: PostgreSQLDown
+      expr: up{job="postgres"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        service: database
+      annotations:
+        summary: "PostgreSQL is down"
+        description: "PostgreSQL database has been down for more than 2 minutes."
+
+    - alert: RedisDown
+      expr: up{job="redis"} == 0
+      for: 1m
+      labels:
+        severity: warning
+        service: cache
+      annotations:
+        summary: "Redis is down"
+        description: "Redis cache service has been down for more than 1 minute."
+
+    # Response Time Alerts
+    - alert: SlowResponseTime
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+      for: 3m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Slow response times"
+        description: "95th percentile response time is above 2 seconds."
+
+    # Container Alerts
+    - alert: ContainerCPUHigh
+      expr: rate(container_cpu_usage_seconds_total{name=~"jarvis_.*"}[5m]) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container {{ $labels.name }} high CPU usage"
+        description: "Container {{ $labels.name }} CPU usage is above 80%."
+
+    - alert: ContainerMemoryHigh
+      expr: container_memory_usage_bytes{name=~"jarvis_.*"} / container_spec_memory_limit_bytes * 100 > 90
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container {{ $labels.name }} high memory usage"
+        description: "Container {{ $labels.name }} memory usage is above 90%."

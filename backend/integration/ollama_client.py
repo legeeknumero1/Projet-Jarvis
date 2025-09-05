@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Dict, Any, Optional, List, AsyncGenerator
 import httpx
+from contextlib import asynccontextmanager
 
 class OllamaClient:
     def __init__(self, base_url: str = None):
@@ -16,39 +17,106 @@ class OllamaClient:
         self.base_url = base_url
         self.client = None
         self.logger = logging.getLogger(__name__)
+        self._client_lock = asyncio.Lock()
+        self.max_retries = 3
+        self.retry_delay = 1.0
     
     async def _ensure_client(self):
-        if self.client is None:
-            self.client = httpx.AsyncClient(timeout=120.0)
+        """Assurer la présence du client HTTP avec protection contre les accès concurrents"""
+        async with self._client_lock:
+            if self.client is None or self.client.is_closed:
+                # Configuration sécurisée du client HTTP
+                timeout = httpx.Timeout(
+                    timeout=120.0,
+                    connect=10.0,
+                    read=110.0,
+                    write=10.0,
+                    pool=5.0
+                )
+                
+                limits = httpx.Limits(
+                    max_keepalive_connections=5,
+                    max_connections=10,
+                    keepalive_expiry=30.0
+                )
+                
+                self.client = httpx.AsyncClient(
+                    timeout=timeout,
+                    limits=limits,
+                    follow_redirects=True,
+                    verify=False  # Pour environnements internes
+                )
     
     async def __aenter__(self):
+        await self._ensure_client()
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.client:
-            await self.client.aclose()
+        await self.close()
+    
+    async def close(self):
+        """Fermer proprement le client HTTP"""
+        async with self._client_lock:
+            if self.client and not self.client.is_closed:
+                try:
+                    await self.client.aclose()
+                    self.logger.debug("Ollama client closed")
+                except Exception as e:
+                    self.logger.error(f"Error closing Ollama client: {e}")
+                finally:
+                    self.client = None
+    
+    async def _execute_with_retry(self, operation_name: str, operation_func, *args, **kwargs):
+        """Exécuter une opération avec retry automatique"""
+        last_error = None
+        
+        for attempt in range(self.max_retries):
+            try:
+                await self._ensure_client()
+                return await operation_func(*args, **kwargs)
+                
+            except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError) as e:
+                last_error = e
+                if attempt < self.max_retries - 1:
+                    wait_time = self.retry_delay * (2 ** attempt)
+                    self.logger.warning(f"Ollama {operation_name} failed (attempt {attempt + 1}), retrying in {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                else:
+                    self.logger.error(f"Ollama {operation_name} failed after {self.max_retries} attempts")
+                    
+            except Exception as e:
+                self.logger.error(f"Ollama {operation_name} error: {e}")
+                last_error = e
+                break
+        
+        raise last_error if last_error else Exception(f"Ollama {operation_name} failed")
     
     async def is_available(self) -> bool:
-        """Vérifie si Ollama est disponible"""
+        """Vérifie si Ollama est disponible avec retry"""
         try:
-            await self._ensure_client()
-            response = await self.client.get(f"{self.base_url}/api/version")
-            return response.status_code == 200
+            async def check_version():
+                response = await self.client.get(f"{self.base_url}/api/version")
+                return response.status_code == 200
+            
+            return await self._execute_with_retry("health_check", check_version)
+            
         except Exception as e:
             self.logger.error(f"Ollama not available: {e}")
             return False
     
     async def list_models(self) -> List[Dict[str, Any]]:
-        """Liste les modèles disponibles"""
+        """Liste les modèles disponibles avec gestion d'erreurs améliorée"""
         try:
-            await self._ensure_client()
-            response = await self.client.get(f"{self.base_url}/api/tags")
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("models", [])
-            else:
-                self.logger.error(f"Failed to list models: {response.status_code}")
-                return []
+            async def get_models():
+                response = await self.client.get(f"{self.base_url}/api/tags")
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("models", [])
+                else:
+                    raise httpx.HTTPStatusError(f"HTTP {response.status_code}", request=response.request, response=response)
+            
+            return await self._execute_with_retry("list_models", get_models)
+            
         except Exception as e:
             self.logger.error(f"Error listing models: {e}")
             return []
@@ -227,9 +295,20 @@ class OllamaClient:
         
         return True
     
+    async def test_connection(self) -> bool:
+        """Teste la connexion à Ollama"""
+        try:
+            await self._ensure_client()
+            response = await self.client.get(f"{self.base_url}/api/tags")
+            return response.status_code == 200
+        except Exception as e:
+            self.logger.error(f"Error testing Ollama connection: {e}")
+            return False
+    
     async def get_model_info(self, model_name: str) -> Optional[Dict[str, Any]]:
         """Récupère les informations d'un modèle"""
         try:
+            await self._ensure_client()
             response = await self.client.post(
                 f"{self.base_url}/api/show",
                 json={"name": model_name}

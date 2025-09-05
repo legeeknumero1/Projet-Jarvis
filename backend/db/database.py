@@ -9,6 +9,8 @@ import logging
 import os
 from cryptography.fernet import Fernet
 import base64
+from contextlib import asynccontextmanager
+from typing import Optional, AsyncGenerator
 
 Base = declarative_base()
 
@@ -115,20 +117,33 @@ class Database:
         self.engine = None
         self.session_maker = None
         self.logger = logging.getLogger(__name__)
+        self._connection_pool = None
     
     async def connect(self):
         try:
+            # Configuration optimisée du pool de connexions
             self.engine = create_async_engine(
-                self.config.database_url,
+                self.config.secure_database_url,  # Utiliser l'URL sécurisée
                 echo=self.config.debug,
                 pool_pre_ping=True,
-                pool_recycle=3600
+                pool_recycle=3600,  # Recycler les connexions après 1h
+                pool_size=10,       # Taille du pool
+                max_overflow=20,    # Connexions supplémentaires
+                pool_timeout=30,    # Timeout pour obtenir une connexion
+                connect_args={
+                    "command_timeout": 60,  # Timeout des commandes
+                    "server_settings": {
+                        "jit": "off"  # Optimisation PostgreSQL
+                    }
+                }
             )
             
             self.session_maker = sessionmaker(
                 self.engine, 
                 class_=AsyncSession,
-                expire_on_commit=False
+                expire_on_commit=False,
+                autoflush=True,  # Auto-flush pour éviter les problèmes de sync
+                autocommit=False
             )
             
             # Créer les tables
@@ -141,21 +156,66 @@ class Database:
             raise
     
     async def disconnect(self):
-        if self.engine:
-            await self.engine.dispose()
-            self.logger.info("Database disconnected")
+        """Fermer proprement toutes les connexions"""
+        try:
+            if self.engine:
+                # Fermer toutes les connexions du pool
+                await self.engine.dispose()
+                self.logger.info("Database disconnected and all connections closed")
+                
+            self.engine = None
+            self.session_maker = None
+            
+        except Exception as e:
+            self.logger.error(f"Error during database disconnection: {e}")
     
     def get_session(self) -> AsyncSession:
+        """Récupérer une session avec vérification"""
         if not self.session_maker:
             raise RuntimeError("Database not connected")
-        return self.session_maker()
+        
+        # Créer session normale
+        session = self.session_maker()
+        
+        # Wrapper avec monitoring si disponible
+        try:
+            from middleware.database_middleware import MonitoredAsyncSession
+            return MonitoredAsyncSession(session)
+        except Exception:
+            # Fallback à session normale si monitoring indisponible
+            return session
+    
+    @asynccontextmanager
+    async def get_session_context(self) -> AsyncGenerator[AsyncSession, None]:
+        """Context manager pour gestion automatique des sessions"""
+        session = self.get_session()
+        try:
+            yield session
+            await session.commit()
+        except Exception as e:
+            await session.rollback()
+            self.logger.error(f"Session error, rolling back: {e}")
+            raise
+        finally:
+            await session.close()
     
     async def execute_query(self, query: str, params: dict = None):
-        async with self.get_session() as session:
+        """Exécuter une requête avec gestion d'erreurs améliorée"""
+        async with self.get_session_context() as session:
             try:
                 result = await session.execute(query, params or {})
-                await session.commit()
                 return result
             except Exception as e:
-                await session.rollback()
+                self.logger.error(f"Query execution failed: {e}")
                 raise
+    
+    async def health_check(self) -> bool:
+        """Vérifier la santé de la connexion DB"""
+        try:
+            async with self.get_session_context() as session:
+                # Simple query pour tester la connexion
+                result = await session.execute("SELECT 1")
+                return result.scalar() == 1
+        except Exception as e:
+            self.logger.error(f"Database health check failed: {e}")
+            return False

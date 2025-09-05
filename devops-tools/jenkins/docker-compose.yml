@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jarvis_jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./plugins.txt:/usr/share/jenkins/ref/plugins.txt
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jarvis_devops
+
+  jenkins-agent:
+    image: jenkins/inbound-agent:latest
+    container_name: jarvis_jenkins_agent
+    restart: unless-stopped
+    depends_on:
+      - jenkins
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jarvis_devops
+
+volumes:
+  jenkins_data:
+    driver: local
+
+networks:
+  jarvis_devops:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

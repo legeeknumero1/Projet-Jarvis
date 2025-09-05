@@ -54,7 +54,8 @@ Instance #23: ACTIVE - Initialisation automatique (2025-08-18 14:07) ✅
 Instance #24: ACTIVE - Initialisation automatique (2025-08-18 18:21) ✅
 Instance #25: ACTIVE - Initialisation automatique (2025-08-18 19:10) ✅
 Instance #26: ACTIVE - Initialisation automatique (2025-08-19 18:26) ✅
-Instance #27: ACTIVE - Initialisation automatique (2025-08-20 15:45) ✅
+Instance #27: FERMÉE - Mission terminée (2025-08-20 15:45) ✅
+Instance #28: ACTIVE - Initialisation automatique (2025-08-21 18:08) ✅
 ```
 
 ### 🆔 Attribution automatique

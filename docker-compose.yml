@@ -85,9 +85,24 @@ services:
       - ${OLLAMA_VOLUME:-ollama_data}:/root/.ollama
     restart: ${RESTART_POLICY:-unless-stopped}
     environment:
+      # Configuration réseau optimisée selon meilleures pratiques 2025
       - OLLAMA_ORIGINS=${OLLAMA_ORIGINS:-*}
       - OLLAMA_HOST=${OLLAMA_HOST:-0.0.0.0}
+      - OLLAMA_PORT=${OLLAMA_INTERNAL_PORT:-11434}
       - OLLAMA_MODELS=${OLLAMA_MODELS:-/root/.ollama/models}
+      
+      # Configuration timeout robuste selon recherche internet 2025
+      - OLLAMA_REQUEST_TIMEOUT=${OLLAMA_REQUEST_TIMEOUT:-300s}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-24h}
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-2}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-2}
+      - OLLAMA_MAX_QUEUE=${OLLAMA_MAX_QUEUE:-512}
+      
+      # Configuration performance et stabilité 2025
+      - OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION:-1}
+      - OLLAMA_NOPRUNE=${OLLAMA_NOPRUNE:-0}
+      - OLLAMA_TMPDIR=${OLLAMA_TMPDIR:-/tmp}
+      - OLLAMA_DEBUG=${OLLAMA_DEBUG:-0}
     deploy:
       resources:
         limits:
@@ -106,11 +121,12 @@ services:
     #           count: ${GPU_COUNT:-1}
     #           capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "timeout ${HEALTHCHECK_TIMEOUT_SECONDS:-10} bash -c ':> /dev/tcp/127.0.0.1/11434' || exit 1"]
-      interval: ${HEALTHCHECK_INTERVAL:-60s}
+      # Health check optimisé selon meilleures pratiques internet 2025
+      test: ["CMD", "ollama", "list"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
       timeout: ${HEALTHCHECK_TIMEOUT:-15s}
       retries: ${HEALTHCHECK_RETRIES:-5}
-      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-120s}
 
   # Container 4: Backend API (Main Backend Logic) - Quatrième dans le schéma
   backend:
@@ -157,6 +173,19 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DEBUG=${DEBUG:-false}
       - ENVIRONMENT=${ENVIRONMENT:-production}
+      
+      # Variables manquantes pour config Pydantic
+      - POSTGRES_DB=${POSTGRES_DB:-jarvis_db}
+      - POSTGRES_USER=${POSTGRES_USER:-jarvis}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BACKEND_API_URL=${BACKEND_API_URL}
+      - WEBSOCKET_URL=${WEBSOCKET_URL}
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL:-http://localhost:8123}
+      - MQTT_BROKER=${MQTT_BROKER:-localhost}
+      - TTS_MODEL_PATH=${TTS_MODEL_PATH:-/app/models/tts}
+      - STT_MODEL_PATH=${STT_MODEL_PATH:-/app/models/stt}
+      - LOGS_PATH=${LOGS_PATH:-/app/logs}
+      - DATA_PATH=${DATA_PATH:-/app/data}
       
     volumes:
       - ${MODELS_PATH:-./models}:/app/models
@@ -361,7 +390,7 @@ services:
       retries: ${HEALTHCHECK_RETRIES:-5}
       start_period: ${HEALTHCHECK_START_PERIOD:-30s}
 
-  # Setup Ollama models (run once)
+  # Setup Ollama models avec meilleures pratiques 2025 (selon recherche internet)
   ollama-setup:
     image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
     container_name: ${OLLAMA_SETUP_CONTAINER_NAME:-jarvis_ollama_setup}
@@ -374,14 +403,43 @@ services:
         condition: service_healthy
     environment:
       - OLLAMA_HOST=http://${OLLAMA_IP:-172.20.0.30}:${OLLAMA_INTERNAL_PORT:-11434}
+      - OLLAMA_ORIGINS=*
     command: >
       sh -c "
-        echo '🤖 Téléchargement des modèles Ollama...' &&
-        ollama pull ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} &&
-        echo '✅ ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} téléchargé' &&
-        ollama pull ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} &&
-        echo '✅ ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} téléchargé' &&
-        echo '🎉 Tous les modèles sont prêts !'
+        echo '🤖 [SETUP] Initialisation modèles Ollama selon meilleures pratiques 2025...' &&
+        
+        # Vérification connexion selon standards internet 2025
+        echo '🔍 [SETUP] Vérification connexion Ollama...' &&
+        until ollama list > /dev/null 2>&1; do
+          echo '⏳ [SETUP] Attente disponibilité Ollama API...'
+          sleep 5
+        done &&
+        echo '✅ [SETUP] Ollama API disponible' &&
+        
+        # Vérification et téléchargement modèle principal optimisé 2025
+        echo '📦 [SETUP] Vérification modèle principal ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest}...' &&
+        if ! ollama list | grep -q '${OLLAMA_PRIMARY_MODEL:-llama3.1:latest}'; then
+          echo '⬇️ [SETUP] Téléchargement ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest}...' &&
+          ollama pull ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} &&
+          echo '✅ [SETUP] ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} téléchargé avec succès'
+        else
+          echo '✅ [SETUP] ${OLLAMA_PRIMARY_MODEL:-llama3.1:latest} déjà disponible'
+        fi &&
+        
+        # Vérification et téléchargement modèle secondaire optimisé 2025
+        echo '📦 [SETUP] Vérification modèle secondaire ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b}...' &&
+        if ! ollama list | grep -q '${OLLAMA_SECONDARY_MODEL:-llama3.2:1b}'; then
+          echo '⬇️ [SETUP] Téléchargement ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b}...' &&
+          ollama pull ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} &&
+          echo '✅ [SETUP] ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} téléchargé avec succès'
+        else
+          echo '✅ [SETUP] ${OLLAMA_SECONDARY_MODEL:-llama3.2:1b} déjà disponible'
+        fi &&
+        
+        # Validation finale selon meilleures pratiques 2025
+        echo '🔍 [SETUP] Validation finale des modèles...' &&
+        ollama list &&
+        echo '🎉 [SETUP] Tous les modèles Ollama prêts pour production !'
       "
     restart: ${OLLAMA_SETUP_RESTART_POLICY:-no}
 

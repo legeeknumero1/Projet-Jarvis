@@ -10,10 +10,29 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Jarvis - Assistant IA</title>
     
-    <!-- Polices futuristes -->
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      connect-src 'self' ws://localhost:8000 wss://localhost:8000 http://localhost:8000 https://localhost:8000;
+      img-src 'self' data: blob:;
+      media-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      upgrade-insecure-requests;
+    ">
+    
+    <!-- Polices futuristes avec SRI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@100;300;400;500;700;900&family=Roboto+Mono:wght@100;200;300;400;500;600;700&family=Exo+2:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@100;300;400;500;700;900&family=Roboto+Mono:wght@100;200;300;400;500;600;700&family=Exo+2:wght@100;200;300;400;500;600;700;800;900&display=swap" 
+          rel="stylesheet"
+          integrity="sha384-BNSF2+NJrr7IyXwBQP+eBc5r8nUC5lkHaR9wnZqYkzEFKz0/2bYbCLYi1n4kO2Oi"
+          crossorigin="anonymous">
     <style>
       body {
         margin: 0;

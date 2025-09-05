@@ -1,0 +1,614 @@
+# Docker Compose - Architecture Microservices Scalable - Jarvis v1.3.2
+# Optimisée pour haute disponibilité et performance selon standards 2025
+
+version: "3.8"
+
+networks:
+  jarvis_frontend:
+    name: ${DOCKER_FRONTEND_NETWORK:-jarvis_frontend}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${DOCKER_FRONTEND_SUBNET:-172.21.0.0/16}
+  
+  jarvis_backend:
+    name: ${DOCKER_BACKEND_NETWORK:-jarvis_backend}
+    driver: bridge 
+    ipam:
+      config:
+        - subnet: ${DOCKER_BACKEND_SUBNET:-172.22.0.0/16}
+  
+  jarvis_data:
+    name: ${DOCKER_DATA_NETWORK:-jarvis_data}
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${DOCKER_DATA_SUBNET:-172.23.0.0/16}
+
+x-common: &common
+  restart: ${RESTART_POLICY:-unless-stopped}
+  logging:
+    driver: ${LOGGING_DRIVER:-json-file}
+    options:
+      max-size: ${LOG_MAX_SIZE:-10m}
+      max-file: ${LOG_MAX_FILE:-3}
+
+x-healthcheck: &healthcheck
+  interval: ${HEALTHCHECK_INTERVAL:-30s}
+  timeout: ${HEALTHCHECK_TIMEOUT:-10s}
+  retries: ${HEALTHCHECK_RETRIES:-3}
+  start_period: ${HEALTHCHECK_START_PERIOD:-30s}
+
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # 🔄 LOAD BALANCER & REVERSE PROXY
+  # ═══════════════════════════════════════════════════════════════
+  
+  nginx-lb:
+    image: ${NGINX_IMAGE:-nginx:alpine}
+    container_name: ${NGINX_LB_CONTAINER:-jarvis_nginx_lb}
+    <<: *common
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+      - "${NGINX_ADMIN_PORT:-8080}:8080"
+    networks:
+      - jarvis_frontend
+      - jarvis_backend
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/ssl/certs:ro
+      - ./logs/nginx:/var/log/nginx
+    environment:
+      - BACKEND_UPSTREAM=${BACKEND_UPSTREAM:-backend:8000}
+      - FRONTEND_UPSTREAM=${FRONTEND_UPSTREAM:-interface:3000}
+      - API_RATE_LIMIT=${API_RATE_LIMIT:-10r/s}
+    depends_on:
+      - backend-1
+      - backend-2
+      - interface-1
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🚀 SCALABLE BACKEND SERVICES (Multiple instances)
+  # ═══════════════════════════════════════════════════════════════
+
+  backend-1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scalable
+      args:
+        - INSTANCE_ID=1
+    container_name: ${BACKEND_1_CONTAINER:-jarvis_backend_1}
+    <<: *common
+    networks:
+      jarvis_backend:
+        aliases:
+          - backend
+    environment: &backend-env
+      - INSTANCE_ID=1
+      - SERVICE_NAME=backend-1
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@postgres-master:5432/${POSTGRES_DB:-jarvis_db}
+      - DATABASE_REPLICA_URL=postgresql+asyncpg://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@postgres-replica:5432/${POSTGRES_DB:-jarvis_db}
+      - REDIS_CLUSTER_NODES=${REDIS_CLUSTER_NODES:-redis-1:6379,redis-2:6380,redis-3:6381}
+      - OLLAMA_BASE_URL=${OLLAMA_LB_URL:-http://ollama-lb:11434}
+      - QDRANT_URL=http://qdrant-cluster:6333
+      - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@timescale-cluster:5432/${TIMESCALE_DB:-jarvis_timeseries}
+      - JAEGER_ENDPOINT=${JAEGER_ENDPOINT:-http://jaeger:14268/api/traces}
+      - PROMETHEUS_PUSHGATEWAY=${PROMETHEUS_PUSHGATEWAY:-http://pushgateway:9091}
+    volumes:
+      - ./config/backend:/app/config:ro
+      - ./logs/backend-1:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: ${BACKEND_MEMORY_LIMIT:-2G}
+          cpus: ${BACKEND_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${BACKEND_MEMORY_RESERVATION:-512M}
+          cpus: ${BACKEND_CPU_RESERVATION:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    depends_on:
+      - postgres-master
+      - redis-1
+      - ollama-1
+
+  backend-2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.scalable
+      args:
+        - INSTANCE_ID=2
+    container_name: ${BACKEND_2_CONTAINER:-jarvis_backend_2}
+    <<: *common
+    networks:
+      jarvis_backend:
+        aliases:
+          - backend
+    environment:
+      <<: *backend-env
+      - INSTANCE_ID=2
+      - SERVICE_NAME=backend-2
+    volumes:
+      - ./config/backend:/app/config:ro
+      - ./logs/backend-2:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: ${BACKEND_MEMORY_LIMIT:-2G}
+          cpus: ${BACKEND_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${BACKEND_MEMORY_RESERVATION:-512M}
+          cpus: ${BACKEND_CPU_RESERVATION:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    depends_on:
+      - postgres-master
+      - redis-1
+      - ollama-1
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🎯 SCALABLE AI SERVICES
+  # ═══════════════════════════════════════════════════════════════
+
+  ollama-1:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    container_name: ${OLLAMA_1_CONTAINER:-jarvis_ollama_1}
+    <<: *common
+    networks:
+      jarvis_backend:
+        aliases:
+          - ollama
+    environment: &ollama-env
+      - INSTANCE_ID=1
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS:-2}
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL:-4}
+      - OLLAMA_MAX_QUEUE=${OLLAMA_MAX_QUEUE:-512}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-10m}
+    volumes:
+      - ollama_1_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-6G}
+          cpus: ${OLLAMA_CPU_LIMIT:-4.0}
+        reservations:
+          memory: ${OLLAMA_MEMORY_RESERVATION:-2G}
+          cpus: ${OLLAMA_CPU_RESERVATION:-1.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "ollama", "list"]
+
+  ollama-2:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
+    container_name: ${OLLAMA_2_CONTAINER:-jarvis_ollama_2}
+    <<: *common
+    networks:
+      jarvis_backend:
+        aliases:
+          - ollama
+    environment:
+      <<: *ollama-env
+      - INSTANCE_ID=2
+    volumes:
+      - ollama_2_data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-6G}
+          cpus: ${OLLAMA_CPU_LIMIT:-4.0}
+        reservations:
+          memory: ${OLLAMA_MEMORY_RESERVATION:-2G}
+          cpus: ${OLLAMA_CPU_RESERVATION:-1.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "ollama", "list"]
+
+  ollama-lb:
+    build:
+      context: ./services/ollama-lb
+      dockerfile: Dockerfile
+    container_name: ${OLLAMA_LB_CONTAINER:-jarvis_ollama_lb}
+    <<: *common
+    networks:
+      - jarvis_backend
+    ports:
+      - "${OLLAMA_LB_PORT:-11434}:11434"
+    environment:
+      - OLLAMA_UPSTREAM_1=ollama-1:11434
+      - OLLAMA_UPSTREAM_2=ollama-2:11434
+      - LOAD_BALANCING_STRATEGY=${OLLAMA_LB_STRATEGY:-round_robin}
+      - HEALTH_CHECK_INTERVAL=${OLLAMA_HC_INTERVAL:-10s}
+    depends_on:
+      - ollama-1
+      - ollama-2
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # 📱 SCALABLE FRONTEND SERVICES
+  # ═══════════════════════════════════════════════════════════════
+
+  interface-1:
+    build:
+      context: ./services/interface
+      dockerfile: Dockerfile.scalable
+    container_name: ${INTERFACE_1_CONTAINER:-jarvis_interface_1}
+    <<: *common
+    networks:
+      jarvis_frontend:
+        aliases:
+          - interface
+    environment: &interface-env
+      - INSTANCE_ID=1
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:80/api}
+      - REACT_APP_WS_URL=${REACT_APP_WS_URL:-ws://localhost:80/ws}
+      - NODE_ENV=${NODE_ENV:-production}
+      - INTERFACE_MODE=${INTERFACE_MODE:-optimized}
+    volumes:
+      - ./logs/interface-1:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: ${INTERFACE_MEMORY_LIMIT:-1G}
+          cpus: ${INTERFACE_CPU_LIMIT:-1.0}
+        reservations:
+          memory: ${INTERFACE_MEMORY_RESERVATION:-256M}
+          cpus: ${INTERFACE_CPU_RESERVATION:-0.25}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+
+  interface-2:
+    build:
+      context: ./services/interface
+      dockerfile: Dockerfile.scalable
+    container_name: ${INTERFACE_2_CONTAINER:-jarvis_interface_2}
+    <<: *common
+    networks:
+      jarvis_frontend:
+        aliases:
+          - interface
+    environment:
+      <<: *interface-env
+      - INSTANCE_ID=2
+    volumes:
+      - ./logs/interface-2:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: ${INTERFACE_MEMORY_LIMIT:-1G}
+          cpus: ${INTERFACE_CPU_LIMIT:-1.0}
+        reservations:
+          memory: ${INTERFACE_MEMORY_RESERVATION:-256M}
+          cpus: ${INTERFACE_CPU_RESERVATION:-0.25}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🗄️ SCALABLE DATABASE CLUSTER
+  # ═══════════════════════════════════════════════════════════════
+
+  postgres-master:
+    image: ${POSTGRES_IMAGE:-postgres:15}
+    container_name: ${POSTGRES_MASTER_CONTAINER:-jarvis_postgres_master}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${POSTGRES_MASTER_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-jarvis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_REPLICATION_MODE: master
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./config/postgres/master.conf:/etc/postgresql/postgresql.conf:ro
+      - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./config/postgres/replication.sql:/docker-entrypoint-initdb.d/02-replication.sql:ro
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY_LIMIT:-2G}
+          cpus: ${POSTGRES_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${POSTGRES_MEMORY_RESERVATION:-512M}
+          cpus: ${POSTGRES_CPU_RESERVATION:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jarvis} -d ${POSTGRES_DB:-jarvis_db}"]
+
+  postgres-replica:
+    image: ${POSTGRES_IMAGE:-postgres:15}
+    container_name: ${POSTGRES_REPLICA_CONTAINER:-jarvis_postgres_replica}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${POSTGRES_REPLICA_PORT:-5433}:5432"
+    environment:
+      POSTGRES_MASTER_SERVICE: postgres-master
+      POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
+      POSTGRES_USER: ${POSTGRES_USER:-jarvis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_REPLICATION_MODE: slave
+      POSTGRES_REPLICATION_USER: ${POSTGRES_REPLICATION_USER:-replicator}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      POSTGRES_MASTER_PORT_NUMBER: 5432
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - ./config/postgres/replica.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      bash -c "
+        until PGPASSWORD=${POSTGRES_REPLICATION_PASSWORD} pg_basebackup -h postgres-master -D /var/lib/postgresql/data -U ${POSTGRES_REPLICATION_USER:-replicator} -v -P -W; do
+          echo 'Waiting for master to be available...'
+          sleep 5
+        done &&
+        echo 'standby_mode = \"on\"' >> /var/lib/postgresql/data/recovery.conf &&
+        echo 'primary_conninfo = \"host=postgres-master port=5432 user=${POSTGRES_REPLICATION_USER:-replicator}\"' >> /var/lib/postgresql/data/recovery.conf &&
+        postgres -c config_file=/etc/postgresql/postgresql.conf
+      "
+    depends_on:
+      - postgres-master
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY_LIMIT:-2G}
+          cpus: ${POSTGRES_CPU_LIMIT:-2.0}
+        reservations:
+          memory: ${POSTGRES_MEMORY_RESERVATION:-512M}
+          cpus: ${POSTGRES_CPU_RESERVATION:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jarvis} -d ${POSTGRES_DB:-jarvis_db}"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🚄 REDIS CLUSTER
+  # ═══════════════════════════════════════════════════════════════
+
+  redis-1:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_1_CONTAINER:-jarvis_redis_1}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${REDIS_1_PORT:-6379}:6379"
+    volumes:
+      - redis_1_data:/data
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-enabled yes
+      --cluster-config-file nodes-6379.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --port 6379
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
+          cpus: ${REDIS_CPU_LIMIT:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "redis-cli", "ping"]
+
+  redis-2:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_2_CONTAINER:-jarvis_redis_2}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${REDIS_2_PORT:-6380}:6380"
+    volumes:
+      - redis_2_data:/data
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-enabled yes
+      --cluster-config-file nodes-6380.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --port 6380
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
+          cpus: ${REDIS_CPU_LIMIT:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+
+  redis-3:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_3_CONTAINER:-jarvis_redis_3}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${REDIS_3_PORT:-6381}:6381"
+    volumes:
+      - redis_3_data:/data
+      - ./config/redis/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --cluster-enabled yes
+      --cluster-config-file nodes-6381.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --port 6381
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-512M}
+          cpus: ${REDIS_CPU_LIMIT:-0.5}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "redis-cli", "-p", "6381", "ping"]
+
+  redis-cluster-init:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    container_name: ${REDIS_CLUSTER_INIT:-jarvis_redis_cluster_init}
+    networks:
+      - jarvis_data
+    depends_on:
+      - redis-1
+      - redis-2
+      - redis-3
+    command: >
+      sh -c "
+        sleep 10 &&
+        redis-cli --cluster create 
+        redis-1:6379 redis-2:6380 redis-3:6381
+        --cluster-replicas 0 --cluster-yes
+      "
+    restart: "no"
+
+  # ═══════════════════════════════════════════════════════════════
+  # 🧠 QDRANT VECTOR DATABASE CLUSTER
+  # ═══════════════════════════════════════════════════════════════
+
+  qdrant-cluster:
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:latest}
+    container_name: ${QDRANT_CLUSTER_CONTAINER:-jarvis_qdrant_cluster}
+    <<: *common
+    networks:
+      - jarvis_data
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__CLUSTER__ENABLED=true
+      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=8
+      - QDRANT__STORAGE__PERFORMANCE__MAX_INDEXING_THREADS=4
+    volumes:
+      - qdrant_cluster_data:/qdrant/storage
+      - ./config/qdrant/cluster_config.yaml:/qdrant/config/production.yaml:ro
+    deploy:
+      resources:
+        limits:
+          memory: ${QDRANT_MEMORY_LIMIT:-4G}
+          cpus: ${QDRANT_CPU_LIMIT:-4.0}
+        reservations:
+          memory: ${QDRANT_MEMORY_RESERVATION:-1G}
+          cpus: ${QDRANT_CPU_RESERVATION:-1.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/health || exit 1"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # 📊 MONITORING & OBSERVABILITY
+  # ═══════════════════════════════════════════════════════════════
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:latest}
+    container_name: ${PROMETHEUS_CONTAINER:-jarvis_prometheus}
+    <<: *common
+    networks:
+      - jarvis_backend
+      - jarvis_data
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    deploy:
+      resources:
+        limits:
+          memory: ${PROMETHEUS_MEMORY_LIMIT:-2G}
+          cpus: ${PROMETHEUS_CPU_LIMIT:-2.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:latest}
+    container_name: ${GRAFANA_CONTAINER:-jarvis_grafana}
+    <<: *common
+    networks:
+      - jarvis_backend
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3001}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: ${GRAFANA_MEMORY_LIMIT:-1G}
+          cpus: ${GRAFANA_CPU_LIMIT:-1.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+
+  jaeger:
+    image: ${JAEGER_IMAGE:-jaegertracing/all-in-one:latest}
+    container_name: ${JAEGER_CONTAINER:-jarvis_jaeger}
+    <<: *common
+    networks:
+      - jarvis_backend
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_COLLECTOR_PORT:-14268}:14268"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - jaeger_data:/tmp
+    deploy:
+      resources:
+        limits:
+          memory: ${JAEGER_MEMORY_LIMIT:-1G}
+          cpus: ${JAEGER_CPU_LIMIT:-1.0}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/"]
+
+volumes:
+  postgres_master_data:
+  postgres_replica_data:
+  redis_1_data:
+  redis_2_data:
+  redis_3_data:
+  ollama_1_data:
+  ollama_2_data:
+  qdrant_cluster_data:
+  prometheus_data:
+  grafana_data:
+  jaeger_data:

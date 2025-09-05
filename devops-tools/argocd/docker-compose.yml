@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  argocd-server:
+    image: quay.io/argoproj/argocd:latest
+    container_name: jarvis_argocd_server
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+      - "8082:8443"
+    environment:
+      - ARGOCD_SERVER_INSECURE=true
+    volumes:
+      - argocd_data:/home/argocd
+      - ./config:/app/config
+    command: ["argocd-server", "--insecure"]
+    networks:
+      - jarvis_devops
+
+  argocd-dex:
+    image: quay.io/argoproj/argocd:latest
+    container_name: jarvis_argocd_dex
+    restart: unless-stopped
+    command: ["argocd-dex-server"]
+    networks:
+      - jarvis_devops
+
+  argocd-repo-server:
+    image: quay.io/argoproj/argocd:latest
+    container_name: jarvis_argocd_repo
+    restart: unless-stopped
+    volumes:
+      - argocd_repos:/app/config/ssh
+      - argocd_plugins:/app/config/plugins
+    command: ["argocd-repo-server"]
+    networks:
+      - jarvis_devops
+
+  argocd-application-controller:
+    image: quay.io/argoproj/argocd:latest
+    container_name: jarvis_argocd_controller
+    restart: unless-stopped
+    volumes:
+      - argocd_data:/home/argocd
+    command: ["argocd-application-controller"]
+    environment:
+      - ARGOCD_CONTROLLER_REPLICAS=1
+    networks:
+      - jarvis_devops
+
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis_argocd_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - argocd_redis:/data
+    networks:
+      - jarvis_devops
+
+volumes:
+  argocd_data:
+    driver: local
+  argocd_repos:
+    driver: local
+  argocd_plugins:
+    driver: local
+  argocd_redis:
+    driver: local
+
+networks:
+  jarvis_devops:
+    external: true

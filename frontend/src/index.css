@@ -1,0 +1,316 @@
+/* Styles optimisés pour les performances selon standards 2025 */
+
+/* Reset moderne et optimisé */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Optimisations de performance pour le rendering */
+html {
+  /* Améliorer la fluidité du scroll */
+  scroll-behavior: smooth;
+  
+  /* Optimiser le rendu des polices */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Accélération hardware */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+body {
+  /* Police optimisée pour la performance */
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+  
+  /* Améliorer les performances de rendu */
+  font-display: swap;
+  
+  /* Couleurs de base */
+  background: #0a0a0a;
+  color: #ffffff;
+  
+  /* Optimisations de performance */
+  will-change: transform;
+  backface-visibility: hidden;
+  
+  /* Responsive */
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.6;
+  
+  /* Éliminer les flickering */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Optimisations pour le composant racine */
+#root {
+  min-height: 100vh;
+  overflow-x: hidden;
+  
+  /* Optimisations de performance */
+  contain: layout style paint;
+  isolation: isolate;
+}
+
+/* Styles pour l'interface Jarvis optimisés */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
+  /* Optimiser les transitions */
+  transition: all 0.3s ease-out;
+  
+  /* Optimisations de performance */
+  transform: translateZ(0);
+  will-change: auto;
+}
+
+/* Loading optimisé */
+.loading-container {
+  /* Optimiser les animations de loading */
+  contain: strict;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Conteneur de messages optimisé pour la virtualisation */
+.messages-container {
+  /* Optimiser le scroll */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Optimisations de performance */
+  contain: strict;
+  will-change: scroll-position;
+  
+  /* Améliorer la performance du scroll */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 255, 0.5) transparent;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.5);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.8);
+}
+
+/* Optimisations pour les bulles de message */
+.message-bubble {
+  /* Optimiser les animations */
+  contain: layout style paint;
+  transform: translateZ(0);
+  
+  /* Améliorer la performance des transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Zone de saisie optimisée */
+.input-area {
+  /* Optimiser les performances */
+  contain: layout style;
+  
+  /* Améliorer la responsivité */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.message-input,
+.optimized-textarea {
+  /* Optimiser le resize */
+  resize: none;
+  
+  /* Améliorer les performances de saisie */
+  contain: layout style;
+  
+  /* Optimiser les animations */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Optimisations pour les animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimisations pour les appareils à faible performance */
+@media (max-width: 768px) {
+  /* Réduire la complexité visuelle sur mobile */
+  .particle,
+  .grid-overlay {
+    display: none;
+  }
+  
+  /* Optimiser les transitions */
+  * {
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Optimisations GPU pour les éléments animés */
+.logo-sphere,
+.welcome-orb,
+.ai-avatar,
+.loading-spinner {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Performance monitoring overlay (development only) */
+.performance-monitor {
+  pointer-events: none;
+  z-index: 10000;
+  font-family: 'JetBrains Mono', monospace;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Optimisations pour les images lazy */
+.lazy-image-container {
+  position: relative;
+  overflow: hidden;
+  
+  /* Optimiser les performances */
+  contain: layout style paint;
+}
+
+/* Optimisations pour les listes virtualisées */
+.message-item {
+  /* Optimiser les performances de la liste */
+  contain: layout style paint;
+  
+  /* Améliorer la fluidité */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimisations pour les indicateurs de statut */
+.status-indicator {
+  /* Optimiser les animations d'état */
+  contain: layout style;
+  
+  /* Améliorer la performance des transitions */
+  transition: all 0.2s ease-out;
+}
+
+/* Optimisations pour les boutons */
+button,
+.control-btn {
+  /* Optimiser les interactions tactiles */
+  touch-action: manipulation;
+  
+  /* Améliorer la performance des hovers */
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Optimisations de performance */
+  contain: layout style;
+}
+
+/* Optimisations pour les forms */
+form {
+  /* Optimiser les validations */
+  contain: layout style;
+}
+
+/* Optimisations pour les overlays */
+.error-boundary-container,
+.loading-overlay {
+  /* Optimiser les modals */
+  contain: layout style paint;
+  
+  /* Améliorer les performances */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Print styles optimisés */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  .particles,
+  .grid-overlay,
+  .loading-container,
+  .performance-monitor {
+    display: none !important;
+  }
+}
+
+/* Focus styles pour l'accessibilité */
+*:focus {
+  outline: 2px solid #00d4ff;
+  outline-offset: 2px;
+}
+
+/* Styles pour les connexions instables */
+.connection-banner {
+  /* Optimiser les notifications */
+  contain: layout style;
+  
+  /* Améliorer la visibilité */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Optimisations pour les particules (si activées) */
+.particles {
+  /* Optimiser les animations de particules */
+  pointer-events: none;
+  contain: layout style paint;
+  
+  /* Améliorer les performances */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.particle {
+  /* Optimiser chaque particule */
+  will-change: transform, opacity;
+  contain: layout style paint;
+}
+
+/* Variables CSS pour la cohérence */
+:root {
+  --primary-color: #00d4ff;
+  --secondary-color: #ff006e;
+  --accent-color: #8338ec;
+  --background-dark: #0a0a0a;
+  --text-light: #ffffff;
+  --text-muted: #b3b3b3;
+  
+  /* Variables de performance */
+  --transition-fast: 0.15s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+  
+  /* Variables d'animation */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}

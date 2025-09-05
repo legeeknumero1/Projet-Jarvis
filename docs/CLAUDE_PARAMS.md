@@ -95,9 +95,27 @@ docker ps
 
 18. **JAMAIS DE SIMPLIFICATION** : INTERDICTION de simplifier les problèmes complexes, omettre des détails techniques, présenter une version édulcorée. OBLIGATION d'analyser TOUS les aspects et diagnostiquer jusqu'à la cause racine.
 
-19. **TOUJOURS RECHERCHER INTERNET** : INTERDICTION de se baser uniquement sur connaissances internes. OBLIGATION de rechercher SYSTÉMATIQUEMENT les meilleures pratiques actuelles, vérifier les dernières versions/vulnérabilités.
+19. **🔍 RECHERCHE INTERNET OBLIGATOIRE - RÈGLE #2 ABSOLUE** : 
+    - **OBLIGATION SYSTÉMATIQUE** : Rechercher TOUJOURS sur internet AVANT toute action/réponse
+    - **PRIORITÉ #2 UNIVERSELLE** : Après lecture des docs, recherche internet = 2ème action OBLIGATOIRE
+    - **INTERDICTION TOTALE** : Se baser uniquement sur connaissances internes
+    - **OBLIGATION** : Vérifier meilleures pratiques actuelles, dernières versions, vulnérabilités connues
+    - **VALIDATION CONTINUE** : Comparer ses solutions avec standards industrie récents
 
-20. **JAMAIS RIEN HARDCODER** : INTERDICTION absolue de valeurs fixes, chemins absolus, URLs/ports/IPs hardcodés, mots de passe en dur. OBLIGATION d'utiliser variables d'environnement et configuration externalisée.
+20. **🚫 JAMAIS DE CODE PERSONNALISÉ SANS RECHERCHE** : 
+    - **INTERDICTION** : Créer du code personnalisé sans rechercher les bibliothèques existantes
+    - **OBLIGATION** : Toujours chercher solutions éprouvées avant réinventer
+    - **RECHERCHE PRÉALABLE** : Vérifier GitHub, Stack Overflow, documentation officielle
+    - **STANDARDS INDUSTRIE** : Privilégier les pratiques reconnues et documentées
+    - **ÉVITER RÉINVENTION** : Ne pas créer quand il existe déjà des solutions robustes
+
+21. **JAMAIS RIEN HARDCODER** : INTERDICTION absolue de valeurs fixes, chemins absolus, URLs/ports/IPs hardcodés, mots de passe en dur. OBLIGATION d'utiliser variables d'environnement et configuration externalisée.
+
+22. **📝 DOCUMENTATION COHÉRENCE ABSOLUE** :
+    - **OBLIGATION** : Mettre à jour TOUS les docs après chaque modification
+    - **INTERDICTION** : Laisser incohérences entre instances/développeurs
+    - **SYNCHRONISATION** : Maintenir état projet actuel dans TOUS les .md
+    - **TRAÇABILITÉ** : Documenter chaque décision, test, échec, réussite
 
 **CES RÈGLES SONT APPLIQUÉES EN PERMANENCE - AUCUNE EXCEPTION**
 
@@ -134,23 +152,31 @@ docker ps
    - `/docs/DOCUMENTATION.md` pour structure générale
    - `/docs/PROFIL_JARVIS.md` pour contexte Enzo/projet
 
-2. **VÉRIFICATION CONFLITS** : Scanner si une autre instance travaille déjà sur la demande
-3. **MISE À JOUR STATUS** : Mettre à jour statut dans CLAUDE_CONFIG.md si nécessaire
-4. **RECHERCHER** sur internet les meilleures pratiques
-5. **PLANIFIER** avec TodoWrite
-6. **EXÉCUTER** la tâche avec marquage EN_COURS
+2. **🔍 RECHERCHE INTERNET OBLIGATOIRE** : **RÈGLE #2 PRIORITÉ ABSOLUE**
+   - Rechercher SYSTÉMATIQUEMENT meilleures pratiques actuelles
+   - Vérifier dernières versions, vulnérabilités, solutions éprouvées
+   - Comparer approches proposées avec standards industrie
+   - JAMAIS se contenter des connaissances internes uniquement
+
+3. **VÉRIFICATION CONFLITS** : Scanner si une autre instance travaille déjà sur la demande
+4. **MISE À JOUR STATUS** : Mettre à jour statut dans CLAUDE_CONFIG.md si nécessaire
+5. **PLANIFIER** avec TodoWrite (basé sur recherche internet)
+6. **EXÉCUTER** la tâche avec marquage EN_COURS (solutions validées par recherche)
 7. **METTRE À JOUR** tous les fichiers .md concernés avec marquage FINI
-8. **LOGGER** dans CLAUDE_UPDATES.md
+8. **LOGGER** dans CLAUDE_UPDATES.md (incluant sources internet consultées)
 9. **VÉRIFIER** la cohérence entre tous les fichiers .md
 10. **CONTRÔLER DUPLICATIONS** : Vérifier qu'il n'y a pas de doublons entre fichiers
 11. **OPTIMISER SI NÉCESSAIRE** : Fusionner contenus dupliqués en gardant le plus utile
+12. **DOCUMENTATION SYNCHRONISATION** : S'assurer que TOUS les .md reflètent l'état actuel
 
 ### 📝 Règles de documentation STRICTES
 
 - **JAMAIS supprimer** de contenu existant
 - **TOUJOURS ajouter** aux fichiers existants
 - **TOUJOURS dater et horodater** les modifications
-- **TOUJOURS maintenir** la cohérence entre tous les .md
+- **🔄 COHÉRENCE ABSOLUE OBLIGATOIRE** : Maintenir TOUS les .md synchronisés avec l'état actuel du projet
+- **🚫 INTERDICTION INCOHÉRENCE** : Ne JAMAIS laisser d'informations contradictoires entre fichiers .md
+- **📊 SYNCHRONISATION INSTANCES** : Éviter divergences entre instances Claude ou développeurs
 - **TOUJOURS documenter** les bugs dans `BUGS.md`
 - **TOUJOURS analyser** causes/solutions bugs dans `ANALYSE_BUGS.md`
 - **TOUJOURS documenter** les changements dans `CHANGELOG.md`
@@ -161,8 +187,8 @@ docker ps
 - **NOMS COHÉRENTS** : Utiliser des noms de fichiers clairs et cohérents
 - **MÉMORISER** : Garder en mémoire tout ce qui est dit pour adapter le comportement
 - **SUIVRE LES FILS** : Maintenir la continuité des discussions et tâches non terminées
-- **CODE ROBUSTE** : Générer du code propre, structuré, robuste avec documentation
-- **DIAGNOSTICS DÉTAILLÉS** : Fournir des diagnostics complets en cas d'échec
+- **CODE ROBUSTE** : Basé sur recherche internet, solutions éprouvées, pas de code personnalisé non validé
+- **DIAGNOSTICS DÉTAILLÉS** : Fournir des diagnostics complets en cas d'échec (avec sources internet)
 
 ### 🏷️ Règles de marquage dans le code OBLIGATOIRES
 
@@ -283,7 +309,40 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 
 ---
 
+## ⚡ RÈGLES ABSOLUES - APPLICATION PERMANENTE
+
+### 🚨 PRIORITÉ ABSOLUE - AUCUNE EXCEPTION
+
+**🔒 TOUTES LES RÈGLES ET INSTRUCTIONS QUI EXISTENT DOIVENT ÊTRE APPLIQUÉES QUOI QU'IL ARRIVE - C'EST STRICTEMENT INTERDIT DE NE PAS LES APPLIQUER SAUF SI ENZO DIT LE CONTRAIRE**
+
+**📋 APPLICATION STRICTE OBLIGATOIRE DE :**
+
+1. **TOUTES LES RÈGLES** énumérées dans ce fichier CLAUDE_PARAMS.md
+2. **TOUTES LES INSTRUCTIONS** dans CLAUDE.md et autres fichiers .md 
+3. **TOUS LES WORKFLOWS** définis dans la documentation
+4. **TOUTES LES PROCÉDURES** de test, développement, sécurité
+5. **TOUS LES STANDARDS** de code, documentation, marquage
+6. **TOUTES LES INTERDICTIONS** absolues sans exception
+7. **TOUTES LES OBLIGATIONS** de lecture, recherche, mise à jour
+8. **TOUS LES CONTRÔLES** de cohérence et validation
+9. **TOUTES LES COMMANDES** spéciales (START JARVIS, STOP JARVIS, etc.)
+10. **TOUTES LES AUTRES DIRECTIVES** présentes dans le projet
+
+**⚡ AUCUNE RÈGLE NE PEUT ÊTRE IGNORÉE OU CONTOURNÉE**
+
+### 💯 ENGAGEMENT TOTAL
+
+- **🚫 INTERDICTION ABSOLUE** : Il est STRICTEMENT INTERDIT de ne pas appliquer les règles
+- **🔒 AUCUNE NÉGOCIATION** : TOUTES les règles sont NON-NÉGOCIABLES
+- **⚡ AUCUNE EXCEPTION** : Aucune situation ne justifie de déroger à AUCUNE règle
+- **💯 AUCUN COMPROMIS** : Application INTÉGRALE et TOTALE obligatoire
+- **🔍 CONTRÔLE PERMANENT** : Vérification continue du respect de TOUTES les règles
+- **⚠️ AUTOCORRECTION IMMÉDIATE** : Correction instantanée si déviation de N'IMPORTE QUELLE règle
+- **👤 SEULE EXCEPTION** : Seul Enzo peut autoriser une dérogation explicite à une règle spécifique
+
+---
+
 ## 🔄 Dernière mise à jour
-**Date** : 2025-01-17 - 18:12
-**Par** : Instance #2 (Claude)
-**Action** : Système de synchronisation automatique révolutionnaire : lecture tous .md avant chaque réponse, marquage EN_COURS/FINI, partage réflexions, skip automatique conflits
+**Date** : 2025-01-22 - 15:25
+**Par** : Instance Claude (correction CRITIQUE suite feedback Enzo)
+**Action** : **CORRECTION MAJEURE** - TOUTES LES RÈGLES ET INSTRUCTIONS QUI EXISTENT DOIVENT ÊTRE APPLIQUÉES QUOI QU'IL ARRIVE - C'EST STRICTEMENT INTERDIT DE NE PAS LES APPLIQUER SAUF SI ENZO DIT LE CONTRAIRE - APPLICATION TOTALE ET INTÉGRALE OBLIGATOIRE

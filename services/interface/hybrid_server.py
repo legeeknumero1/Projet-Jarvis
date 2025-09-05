@@ -7,21 +7,65 @@ Serveur hybride pour gérer les requêtes HTTP et WebSocket
 import asyncio
 import json
 import logging
+import time
 import websockets
 from websockets.server import WebSocketServerProtocol
 from datetime import datetime
 import random
 from aiohttp import web, WSMsgType, ClientSession
+import aiohttp
 import aiohttp_cors
 from jarvis_ai import JarvisAI
+from typing import Dict, Set, Any
+from collections import defaultdict
+import threading
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Métriques Prometheus pour Interface
+class InterfaceMetrics:
+    def __init__(self):
+        self.websocket_connections = 0
+        self.total_connections = 0
+        self.messages_received = 0
+        self.messages_sent = 0
+        self.http_requests = 0
+        self.response_time_sum = 0.0
+        self.start_time = time.time()
+    
+    def record_connection(self):
+        self.total_connections += 1
+        self.websocket_connections += 1
+    
+    def record_disconnection(self):
+        self.websocket_connections -= 1
+    
+    def record_message_received(self):
+        self.messages_received += 1
+    
+    def record_message_sent(self, response_time: float = 0):
+        self.messages_sent += 1
+        self.response_time_sum += response_time
+    
+    def record_http_request(self):
+        self.http_requests += 1
+    
+    def get_avg_response_time(self):
+        if self.messages_sent == 0:
+            return 0.0
+        return self.response_time_sum / self.messages_sent
+
+# Instance globale des métriques
+interface_metrics = InterfaceMetrics()
+
 class HybridJarvisServer:
     def __init__(self):
-        self.active_connections = set()
+        self.active_connections: Set[web.WebSocketResponse] = set()
+        self._connection_lock = threading.RLock()  # Protection race conditions
+        self._connection_handlers: Dict[int, asyncio.Task] = {}  # Suivi des tâches
+        
         import os
         ollama_ip = os.getenv('OLLAMA_IP', '172.20.0.30')
         ollama_port = os.getenv('OLLAMA_INTERNAL_PORT', '11434')
@@ -29,14 +73,28 @@ class HybridJarvisServer:
         self.model_name = "llama3.2:1b"  # Model par défaut
         self.session = None
         self.jarvis_ai = JarvisAI()  # IA locale intelligente
-        self.conversation_memory = {}  # Mémoire par connexion
-        import os
+        
+        # Mémoire par connexion avec nettoyage automatique
+        self.conversation_memory: Dict[int, list] = defaultdict(list)
+        self._memory_cleanup_interval = 3600  # 1 heure
+        
         self.conversations_log_path = os.path.join(os.getcwd(), "docs", "CONVERSATIONS.md")
     
     async def init_session(self):
-        """Initialize HTTP session for Ollama requests"""
-        if self.session is None:
-            self.session = ClientSession()
+        """Initialize HTTP session for Ollama requests with proper cleanup"""
+        if self.session is None or self.session.closed:
+            # Configuration sécurisée avec timeout
+            timeout = aiohttp.ClientTimeout(total=30, connect=10)
+            connector = aiohttp.TCPConnector(
+                limit=100,
+                limit_per_host=10,
+                keepalive_timeout=30,
+                enable_cleanup_closed=True
+            )
+            self.session = ClientSession(
+                timeout=timeout,
+                connector=connector
+            )
         return self.session
     
     async def check_ollama_availability(self):
@@ -300,35 +358,100 @@ Journal des conversations avec l'assistant J.A.R.V.I.S.
         else:
             return "Je n'ai pas bien compris votre message. Pouvez-vous le reformuler s'il vous plaît ?"
     
-    async def register_connection(self, websocket):
-        """Register a new WebSocket connection"""
-        self.active_connections.add(websocket)
-        logger.info(f"New connection registered. Total: {len(self.active_connections)}")
+    async def register_connection(self, websocket: web.WebSocketResponse) -> None:
+        """Register a new WebSocket connection avec protection race conditions"""
+        connection_id = id(websocket)
         
-        # Send welcome message
-        await websocket.send_str(json.dumps({
-            "type": "connection_established",
-            "message": "Connexion établie avec J.A.R.V.I.S",
-            "timestamp": datetime.now().isoformat()
-        }))
-    
-    async def unregister_connection(self, websocket):
-        """Unregister a WebSocket connection"""
-        self.active_connections.discard(websocket)
-        logger.info(f"Connection unregistered. Total: {len(self.active_connections)}")
-    
-    async def handle_message(self, websocket, message: str):
-        """Handle incoming messages"""
+        with self._connection_lock:
+            if websocket not in self.active_connections:
+                self.active_connections.add(websocket)
+                interface_metrics.record_connection()
+                
+                # Créer task handler pour cette connexion
+                self._connection_handlers[connection_id] = asyncio.current_task()
+                
+                logger.info(f"New connection registered ({connection_id}). Total: {len(self.active_connections)}")
+        
         try:
-            data = json.loads(message)
+            # Send welcome message
+            welcome_msg = {
+                "type": "connection_established",
+                "message": "Connexion établie avec J.A.R.V.I.S",
+                "timestamp": datetime.now().isoformat(),
+                "connection_id": connection_id
+            }
+            await websocket.send_str(json.dumps(welcome_msg))
+            interface_metrics.record_message_sent()
+        except Exception as e:
+            logger.error(f"Error sending welcome message: {e}")
+            await self.unregister_connection(websocket)
+    
+    async def unregister_connection(self, websocket: web.WebSocketResponse) -> None:
+        """Unregister a WebSocket connection avec nettoyage complet"""
+        connection_id = id(websocket)
+        
+        with self._connection_lock:
+            if websocket in self.active_connections:
+                self.active_connections.discard(websocket)
+                interface_metrics.record_disconnection()
+                
+                # Nettoyer les handlers et mémoire
+                if connection_id in self._connection_handlers:
+                    task = self._connection_handlers.pop(connection_id)
+                    if task and not task.done():
+                        task.cancel()
+                
+                # Nettoyer la mémoire de conversation
+                if connection_id in self.conversation_memory:
+                    del self.conversation_memory[connection_id]
+                
+                logger.info(f"Connection unregistered ({connection_id}). Total: {len(self.active_connections)}")
+        
+        # Fermer proprement la connexion si pas déjà fermée
+        if not websocket.closed:
+            try:
+                await websocket.close()
+            except Exception as e:
+                logger.warning(f"Error closing WebSocket: {e}")
+    
+    async def handle_message(self, websocket: web.WebSocketResponse, message: str) -> None:
+        """Handle incoming messages avec gestion d'erreurs améliorée"""
+        start_time = time.time()
+        connection_id = id(websocket)
+        
+        try:
+            # Validation JSON
+            if not message or not message.strip():
+                raise ValueError("Empty message")
+            
+            try:
+                data = json.loads(message)
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid JSON from connection {connection_id}: {e}")
+                await self._send_error(websocket, "Format de message invalide")
+                return
+            
+            # Validation données
             user_message = data.get("message", "")
+            if not user_message or not isinstance(user_message, str):
+                await self._send_error(websocket, "Message manquant ou invalide")
+                return
             
-            logger.info(f"Received message: {user_message}")
+            # Limitation longueur message
+            if len(user_message) > 10000:
+                await self._send_error(websocket, "Message trop long (max 10000 caractères)")
+                return
             
-            # Simulate processing time
-            await asyncio.sleep(random.uniform(0.5, 1.5))
+            interface_metrics.record_message_received()
+            logger.info(f"Received message from {connection_id}: {user_message[:100]}...")
+            
+            # Vérifier que la connexion est toujours active
+            if websocket.closed:
+                logger.warning(f"Connection {connection_id} is closed, skipping message")
+                return
             
             # Generate AI response using ONLY Ollama (règle 13 CLAUDE_PARAMS.md)
+            response = ""
             if await self.check_ollama_availability():
                 # Utiliser Ollama avec mémoire et recherche internet
                 response = await self.query_ollama_with_memory(user_message, websocket)
@@ -337,57 +460,146 @@ Journal des conversations avec l'assistant J.A.R.V.I.S.
                 response = "Désolé, mon système IA principal (Ollama) n'est pas disponible. Veuillez redémarrer Ollama pour des réponses intelligentes."
                 logger.error("Ollama unavailable - no fallback allowed per CLAUDE_PARAMS.md rule 13")
             
-            # Save conversation to MD file
-            await self.save_conversation_to_md(user_message, response, websocket)
+            # Save conversation to MD file (async avec gestion d'erreur)
+            try:
+                await self.save_conversation_to_md(user_message, response, websocket)
+            except Exception as e:
+                logger.warning(f"Failed to save conversation: {e}")
             
-            # Send response
-            await websocket.send_str(json.dumps({
-                "type": "ai_response",
-                "response": response,
-                "timestamp": datetime.now().isoformat(),
-                "processing_time": random.uniform(200, 800)
-            }))
+            # Send response avec vérification connexion
+            processing_time = time.time() - start_time
             
-        except json.JSONDecodeError:
-            logger.error("Invalid JSON received")
-            await websocket.send_str(json.dumps({
-                "type": "error",
-                "message": "Format de message invalide"
-            }))
+            if not websocket.closed:
+                response_data = {
+                    "type": "ai_response",
+                    "response": response,
+                    "timestamp": datetime.now().isoformat(),
+                    "processing_time": round(processing_time * 1000, 2),  # ms avec 2 décimales
+                    "connection_id": connection_id
+                }
+                
+                try:
+                    await websocket.send_str(json.dumps(response_data))
+                    interface_metrics.record_message_sent(processing_time)
+                except Exception as e:
+                    logger.error(f"Failed to send response to {connection_id}: {e}")
+                    await self.unregister_connection(websocket)
+            else:
+                logger.warning(f"Connection {connection_id} closed before sending response")
+            
+        except asyncio.CancelledError:
+            logger.info(f"Message handling cancelled for connection {connection_id}")
+            raise  # Re-raise pour proper cleanup
         except Exception as e:
-            logger.error(f"Error handling message: {e}")
-            await websocket.send_str(json.dumps({
+            logger.error(f"Error handling message from {connection_id}: {e}")
+            await self._send_error(websocket, "Erreur de traitement du message")
+    
+    async def _send_error(self, websocket: web.WebSocketResponse, error_msg: str) -> None:
+        """Envoie un message d'erreur de manière sécurisée"""
+        if websocket.closed:
+            return
+        
+        try:
+            error_data = {
                 "type": "error",
-                "message": "Erreur de traitement"
-            }))
+                "message": error_msg,
+                "timestamp": datetime.now().isoformat()
+            }
+            await websocket.send_str(json.dumps(error_data))
+        except Exception as e:
+            logger.error(f"Failed to send error message: {e}")
 
 # Global server instance
 jarvis_server = HybridJarvisServer()
 
 async def websocket_handler(request):
-    """WebSocket endpoint handler"""
-    ws = web.WebSocketResponse()
+    """WebSocket endpoint handler avec gestion race conditions améliorée"""
+    ws = web.WebSocketResponse(
+        heartbeat=30,  # Heartbeat toutes les 30s
+        timeout=60     # Timeout après 60s sans message
+    )
     await ws.prepare(request)
     
-    await jarvis_server.register_connection(ws)
+    connection_id = id(ws)
+    logger.info(f"New WebSocket connection attempt: {connection_id}")
     
     try:
+        await jarvis_server.register_connection(ws)
+        
         async for msg in ws:
             if msg.type == WSMsgType.TEXT:
-                await jarvis_server.handle_message(ws, msg.data)
+                # Créer une tâche pour gérer le message de manière asynchrone
+                task = asyncio.create_task(
+                    jarvis_server.handle_message(ws, msg.data)
+                )
+                
+                # Optionnel: attendre la completion ou continuer
+                # await task  # Attendre si on veut un traitement synchrone
+                
             elif msg.type == WSMsgType.ERROR:
-                logger.error(f'WebSocket error: {ws.exception()}')
+                logger.error(f'WebSocket error {connection_id}: {ws.exception()}')
                 break
+            elif msg.type == WSMsgType.CLOSE:
+                logger.info(f'WebSocket {connection_id} closed normally')
+                break
+                
+    except asyncio.CancelledError:
+        logger.info(f"WebSocket handler {connection_id} cancelled")
+        raise
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error {connection_id}: {e}")
     finally:
-        await jarvis_server.unregister_connection(ws)
+        # Cleanup garanti même en cas d'exception
+        try:
+            await jarvis_server.unregister_connection(ws)
+        except Exception as e:
+            logger.error(f"Error during connection cleanup {connection_id}: {e}")
     
     return ws
 
 async def health_check(request):
     """Health check endpoint"""
+    interface_metrics.record_http_request()
     return web.json_response({"status": "healthy", "timestamp": datetime.now().isoformat()})
+
+async def metrics_handler(request):
+    """Métriques Prometheus pour le service Interface"""
+    interface_metrics.record_http_request()
+    uptime = time.time() - interface_metrics.start_time
+    
+    metrics_output = f"""# HELP interface_websocket_connections Current WebSocket connections
+# TYPE interface_websocket_connections gauge
+interface_websocket_connections {interface_metrics.websocket_connections}
+
+# HELP interface_total_connections_total Total connections established
+# TYPE interface_total_connections_total counter
+interface_total_connections_total {interface_metrics.total_connections}
+
+# HELP interface_messages_received_total Total messages received
+# TYPE interface_messages_received_total counter
+interface_messages_received_total {interface_metrics.messages_received}
+
+# HELP interface_messages_sent_total Total messages sent
+# TYPE interface_messages_sent_total counter
+interface_messages_sent_total {interface_metrics.messages_sent}
+
+# HELP interface_http_requests_total Total HTTP requests
+# TYPE interface_http_requests_total counter
+interface_http_requests_total {interface_metrics.http_requests}
+
+# HELP interface_response_time_seconds Average response time
+# TYPE interface_response_time_seconds gauge
+interface_response_time_seconds {interface_metrics.get_avg_response_time():.3f}
+
+# HELP interface_uptime_seconds Uptime in seconds
+# TYPE interface_uptime_seconds gauge
+interface_uptime_seconds {uptime:.1f}
+
+# HELP interface_service_status Service status (1=up, 0=down)
+# TYPE interface_service_status gauge
+interface_service_status 1
+"""
+    return web.Response(text=metrics_output, content_type='text/plain')
 
 async def manifest_handler(request):
     """Handle manifest.json requests"""
@@ -533,6 +745,7 @@ def create_app():
     app.router.add_get('/', home_handler)
     app.router.add_get('/ws', websocket_handler)
     app.router.add_get('/health', health_check)
+    app.router.add_get('/metrics', metrics_handler)
     app.router.add_get('/manifest.json', manifest_handler)
     
     # Add static file routes for React assets

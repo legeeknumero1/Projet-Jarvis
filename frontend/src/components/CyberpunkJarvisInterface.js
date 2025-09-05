@@ -102,14 +102,20 @@ const CyberpunkJarvisInterface = () => {
     }
   };
   
-  // Configuration synthèse vocale et chargement des voix
+  // Configuration synthèse vocale et chargement des voix avec nettoyage mémoire
   useEffect(() => {
+    let voiceLoadTimeout = null;
+    let isComponentMounted = true;
+    
     if ('speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
       
       const loadVoices = () => {
-        const allVoices = synthRef.current.getVoices();
-        console.log('🔍 Toutes les voix détectées:', allVoices.map(v => `${v.name} (${v.lang})`));
+        if (!isComponentMounted) return;  // Éviter leak mémoire
+        
+        try {
+          const allVoices = synthRef.current.getVoices();
+          console.log('🔍 Toutes les voix détectées:', allVoices.map(v => `${v.name} (${v.lang})`));
         
         // Priorité aux voix françaises
         let frenchVoices = allVoices.filter(voice => 
@@ -164,15 +170,21 @@ const CyberpunkJarvisInterface = () => {
           console.log('🔄 Voix alternatives sélectionnées:', frenchVoices.map(v => `${v.name} (${v.lang})`));
         }
         
-        // Limiter à 9 voix maximum
+        // Limiter à 9 voix maximum pour éviter surcharge mémoire
         const selectedVoices = frenchVoices.slice(0, 9);
-        setAvailableVoices(selectedVoices.length > 0 ? selectedVoices : allVoices.slice(0, 9));
+        
+        if (isComponentMounted) {
+          setAvailableVoices(selectedVoices.length > 0 ? selectedVoices : allVoices.slice(0, 9));
+        }
         
         console.log('✅ Voix sélectionnées:', selectedVoices.map(v => `${v.name} (${v.lang})`));
         console.log(`🎤 ${selectedVoices.length} voix configurées`);
+        } catch (error) {
+          console.error('Erreur lors du chargement des voix:', error);
+        }
       };
       
-      // Chargement robuste des voix
+      // Chargement robuste des voix avec timeout
       try {
         loadVoices();
         
@@ -180,12 +192,34 @@ const CyberpunkJarvisInterface = () => {
         if (synthRef.current) {
           synthRef.current.onvoiceschanged = loadVoices;
         }
+        
+        // Timeout de sécurité pour éviter attente infinie
+        voiceLoadTimeout = setTimeout(() => {
+          if (isComponentMounted && availableVoices.length === 0) {
+            console.warn('⚠️ Timeout chargement voix, utilisation voix par défaut');
+            setAvailableVoices([]);
+          }
+        }, 5000);
+        
       } catch (error) {
         console.error('🔥 Erreur chargement voix:', error);
         // Fallback: utiliser voix par défaut
-        setAvailableVoices([]);
+        if (isComponentMounted) {
+          setAvailableVoices([]);
+        }
       }
     }
+    
+    // Cleanup pour éviter memory leaks
+    return () => {
+      isComponentMounted = false;
+      if (voiceLoadTimeout) {
+        clearTimeout(voiceLoadTimeout);
+      }
+      if (synthRef.current && synthRef.current.onvoiceschanged) {
+        synthRef.current.onvoiceschanged = null;
+      }
+    };
   }, []);
   
   // Configuration reconnaissance vocale
@@ -255,59 +289,85 @@ const CyberpunkJarvisInterface = () => {
       };
       
       recognitionRef.current.onend = () => {
-        console.log('🎯 Reconnaissance vocale terminée');
-        setIsListening(false);
-        
-        // En mode vocal pur, redémarrer automatiquement
-        if (interactionMode === 'voice-only' && !isLoading) {
-          setTimeout(() => {
-            console.log('🔄 Redémarrage auto reconnaissance (mode vocal)');
-            try {
-              if (recognitionRef.current && !isListening) {
-                recognitionRef.current.start();
+        if (isComponentMounted) {
+          console.log('🎯 Reconnaissance vocale terminée');
+          setIsListening(false);
+          
+          // Nettoyer le timer si nécessaire
+          if (recognitionCleanupTimer) {
+            clearTimeout(recognitionCleanupTimer);
+            recognitionCleanupTimer = null;
+          }
+          
+          // En mode vocal pur, redémarrer automatiquement avec protection memory leak
+          if (interactionMode === 'voice-only' && !isLoading && isComponentMounted) {
+            setTimeout(() => {
+              if (isComponentMounted) {
+                console.log('🔄 Redémarrage auto reconnaissance (mode vocal)');
+                try {
+                  if (recognitionRef.current && !isListening) {
+                    recognitionRef.current.start();
+                  }
+                } catch (error) {
+                  console.warn('⚠️ Impossible de redémarrer reconnaissance:', error);
+                }
               }
-            } catch (error) {
-              console.warn('⚠️ Impossible de redémarrer reconnaissance:', error);
-            }
-          }, 3000); // Augmenté à 3s pour éviter conflicts
+            }, 3000); // Augmenté à 3s pour éviter conflicts
+          }
         }
       };
       
       recognitionRef.current.onerror = (event) => {
-        console.error('🔥 Erreur reconnaissance vocale:', event.error);
-        setIsListening(false);
-        
-        // Gestion des erreurs spécifiques
-        if (event.error === 'not-allowed') {
-          alert('❌ Accès au microphone refusé. Autorisez l’accès dans les paramètres du navigateur.');
-        } else if (event.error === 'no-speech') {
-          console.log('🔇 Aucune parole détectée, redémarrage possible');
-        } else if (event.error === 'network') {
-          console.error('🌐 Erreur réseau reconnaissance vocale - Tentative en mode non-continu');
-          // Forcer mode non-continu pour éviter erreurs réseau
-          if (recognitionRef.current) {
-            recognitionRef.current.continuous = false;
+        if (isComponentMounted) {
+          console.error('🔥 Erreur reconnaissance vocale:', event.error);
+          setIsListening(false);
+          
+          // Nettoyer le timer
+          if (recognitionCleanupTimer) {
+            clearTimeout(recognitionCleanupTimer);
+            recognitionCleanupTimer = null;
           }
-        } else if (event.error === 'service-not-allowed') {
-          console.error('🚫 Service de reconnaissance vocale bloqué');
-        } else if (event.error === 'bad-grammar') {
-          console.error('📝 Grammaire de reconnaissance invalide');
+          
+          // Gestion des erreurs spécifiques
+          if (event.error === 'not-allowed') {
+            alert('❌ Accès au microphone refusé. Autorisez l\'accès dans les paramètres du navigateur.');
+          } else if (event.error === 'no-speech') {
+            console.log('🔇 Aucune parole détectée, redémarrage possible');
+          } else if (event.error === 'network') {
+            console.error('🌐 Erreur réseau reconnaissance vocale - Tentative en mode non-continu');
+            // Forcer mode non-continu pour éviter erreurs réseau
+            if (recognitionRef.current) {
+              recognitionRef.current.continuous = false;
+            }
+          } else if (event.error === 'service-not-allowed') {
+            console.error('🚫 Service de reconnaissance vocale bloqué');
+          } else if (event.error === 'bad-grammar') {
+            console.error('📝 Grammaire de reconnaissance invalide');
+          }
         }
       };
     }
     
+    // Cleanup pour éviter memory leaks
     return () => {
+      isComponentMounted = false;
+      
+      if (recognitionCleanupTimer) {
+        clearTimeout(recognitionCleanupTimer);
+      }
+      
       // Nettoyage sécurisé
-      try {
-        if (recognitionRef.current) {
-          recognitionRef.current.abort();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
           recognitionRef.current.onstart = null;
+          recognitionRef.current.onresult = null;
           recognitionRef.current.onend = null;
           recognitionRef.current.onresult = null;
           recognitionRef.current.onerror = null;
+        } catch (error) {
+          console.warn('⚠️ Erreur nettoyage reconnaissance:', error);
         }
-      } catch (error) {
-        console.warn('⚠️ Erreur nettoyage reconnaissance:', error);
       }
     };
   }, []);
