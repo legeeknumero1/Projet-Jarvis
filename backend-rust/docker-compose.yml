@@ -1,0 +1,74 @@
+# Docker Compose pour backend Rust Jarvis
+# S'intègre dans l'infrastructure Docker existante
+# Utilise le .env de la racine du projet
+
+version: '3.8'
+
+services:
+  # Backend Rust - Coexiste avec Python sur port 8100
+  jarvis-rust-backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis_rust_backend
+    ports:
+      - "8100:8000"  # Port externe 8100 pour éviter conflit avec Python
+    environment:
+      # Variables Rust spécifiques
+      - RUST_ENV=development
+      - RUST_LOG=jarvis_core=info,tower_http=warn
+      - RUST_BACKTRACE=1
+      
+      # Configuration serveur
+      - HOST=0.0.0.0
+      - PORT=8000  # Port interne container
+      
+      # Base de données (utilise l'existante)
+      - DATABASE_URL=postgresql://jarvis:${POSTGRES_PASSWORD}@jarvis_postgres:5432/jarvis_db
+      
+      # Services existants
+      - REDIS_URL=${REDIS_URL}
+      - OLLAMA_URL=${OLLAMA_BASE_URL}
+      - STT_URL=${STT_API_URL}
+      - TTS_URL=${TTS_API_URL}
+      - QDRANT_URL=${QDRANT_URL}
+      
+      # Sécurité (même config que Python)
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JARVIS_API_KEY=${JARVIS_API_KEY}
+      - ENCRYPTION_KEY=${JARVIS_ENCRYPTION_KEY}
+      
+      # Home Assistant
+      - HOME_ASSISTANT_URL=${HOME_ASSISTANT_URL}
+      - HOME_ASSISTANT_TOKEN=${HOME_ASSISTANT_TOKEN}
+      
+      # APIs externes
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      
+      # CORS
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8001,http://172.20.0.50:3000
+      
+    depends_on:
+      - jarvis_postgres
+      - jarvis_redis
+      - jarvis_ollama
+      - jarvis_qdrant
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  jarvis_network:
+    external: true  # Utilise le réseau existant
+
+volumes:
+  rust_logs:
+    driver: local

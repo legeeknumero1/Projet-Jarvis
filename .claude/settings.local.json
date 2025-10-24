@@ -28,7 +28,10 @@
       "Bash(docker system prune:*)",
       "Bash(curl:*)",
       "Bash(docker stats:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git push:*)",
+      "Bash(docker network inspect:*)",
+      "Bash(docker volume:*)"
     ],
     "deny": []
   }
