@@ -1,9 +1,9 @@
 """Router Voice - endpoints vocaux STT/TTS"""
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Request
 from fastapi.responses import StreamingResponse
-from ..schemas.voice import TTSRequest, TranscriptionResponse
-from ..security.deps import api_key_required
-from ..utils.logging import get_logger
+from schemas.voice import TTSRequest, TranscriptionResponse
+from security.deps import api_key_required
+from utils.logging import get_logger
 import io
 
 router = APIRouter()

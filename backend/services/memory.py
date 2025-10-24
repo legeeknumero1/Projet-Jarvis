@@ -1,7 +1,7 @@
 """Service Memory neuromorphique - wrapper pour brain_memory_system"""
 import logging
 from typing import Dict, List, Any, Optional
-from ..schemas.memory import MemoryItem, MemoryQuery, ConversationSaveRequest
+from schemas.memory import MemoryItem, MemoryQuery, ConversationSaveRequest
 
 logger = logging.getLogger(__name__)
 

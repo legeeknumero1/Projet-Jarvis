@@ -1,15 +1,41 @@
 """Router Chat - endpoints de conversation"""
 from fastapi import APIRouter, HTTPException, Depends, Request
-from ..schemas.chat import MessageRequest, MessageResponse
-from ..security.deps import api_key_required
-from ..security.rate_limit import check_chat_rate_limit
-from ..utils.logging import get_logger
+from schemas.chat import MessageRequest, MessageResponse
+from security.deps import api_key_required
+from security.rate_limit import check_chat_rate_limit
+from utils.logging import get_logger
 import re
 import json
 from datetime import datetime
 
 router = APIRouter()
 logger = get_logger(__name__)
+
+@router.get("/models")
+async def get_available_models(request: Request):
+    """
+    Endpoint pour récupérer la liste des modèles Ollama disponibles
+    Compatible avec l'interface frontend
+    """
+    try:
+        llm_service = request.app.state.llm
+        
+        if not llm_service.is_available():
+            raise HTTPException(status_code=503, detail="Service LLM non disponible")
+        
+        # Appel direct à Ollama pour lister les modèles
+        import httpx
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{llm_service.settings.ollama_base_url}/api/tags")
+            if response.status_code == 200:
+                data = response.json()
+                return {"models": data.get("models", [])}
+            else:
+                raise HTTPException(status_code=502, detail="Erreur accès Ollama")
+                
+    except Exception as e:
+        logger.error(f"❌ [MODELS] Erreur récupération modèles: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/", response_model=MessageResponse)
 async def chat(

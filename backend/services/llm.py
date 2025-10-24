@@ -9,7 +9,7 @@ import random
 
 # Import métriques Prometheus
 try:
-    from ..observability.metrics import llm_latency, update_service_health, service_response_time
+    from observability.metrics import llm_latency, update_service_health, service_response_time
 except ImportError:
     # Fallback si prometheus_client pas installé
     def llm_latency_observe(*args, **kwargs):
@@ -17,7 +17,14 @@ except ImportError:
     llm_latency = type('MockHistogram', (), {'observe': llm_latency_observe})()
     def update_service_health(*args, **kwargs):
         pass
-    service_response_time = type('MockHistogram', (), {'labels': lambda **kw: type('', (), {'observe': lambda x: None})()})()
+    class _MockServiceTimer:
+        def labels(self, **kwargs):
+            class _Observer:
+                def observe(self, value):
+                    return None
+            return _Observer()
+
+    service_response_time = _MockServiceTimer()
 
 logger = logging.getLogger(__name__)
 

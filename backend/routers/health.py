@@ -1,8 +1,8 @@
 """Router Health - endpoints de base et monitoring"""
 from fastapi import APIRouter, Request, HTTPException
 from datetime import datetime
-from ..schemas.common import HealthResponse, MetricsResponse
-from ..utils.logging import get_logger
+from schemas.common import HealthResponse, MetricsResponse
+from utils.logging import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)

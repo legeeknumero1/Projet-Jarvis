@@ -1,0 +1,79 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Logs système
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+
+  # Logs Docker containers Jarvis
+  - job_name: docker-jarvis
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["com.docker.compose.project=projet-jarvis"]
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/jarvis_(.*)'
+        target_label: 'service'
+        replacement: '${1}'
+      - source_labels: ['__meta_docker_container_id']
+        target_label: 'container_id'
+        replacement: '${1:12}'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'stream'
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: time
+            level: level
+            message: msg
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+          stream:
+
+  # Logs spécifiques services Jarvis
+  - job_name: jarvis-backend
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: jarvis-backend
+          service: backend
+          __path__: /home/enzo/Projet-Jarvis/logs/backend*.log
+
+  - job_name: jarvis-interface
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: jarvis-interface
+          service: interface
+          __path__: /home/enzo/Projet-Jarvis/logs/interface*.log
+
+  # Logs Jenkins
+  - job_name: jenkins
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: jenkins
+          service: ci-cd
+          __path__: /var/jenkins_home/logs/*.log

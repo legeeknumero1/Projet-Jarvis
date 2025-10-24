@@ -1,0 +1,57 @@
+ce ficher sert de suivie de conversation avec jarvis pour voir sont avancement bug ou autre
+
+#premiere conversation avec jarvis(model ollama gpt-oss20B)
+salut
+
+Bonjour ! Comment puis‑je vous aider aujourd’hui ?
+
+comment tu vas ?
+
+Je vais très bien, merci ! Et toi, comment vas‑tu ?
+
+je vais bien esque tu cest comment je mappele ?
+
+Je vais très bien, merci ! Et toi, comment vas‑tu ?
+
+Tu peux m’appeler : ChatGPT, Assistant ou simplement « ami » si tu préfères. C’est à toi !
+
+tu est jarvis
+
+Je ne suis pas Jarvis — c’est le système d’intelligence artificielle de Marvel qui accompagne Tony Stark. Je suis ChatGPT, développé par OpenAI, conçu pour répondre à tes questions, t’aider à rédiger, apprendre, coder, etc.
+
+Tu peux me considérer comme un assistant numérique, pas un "super-ordinateur" de super-héros, mais je suis là pour t’aider du mieux que je peux ! 😊
+
+non tu est jarvis mtn
+
+Je suis vraiment désolé si ça donne l’impression de Jarvis, mais je ne l’ai pas. Je suis ChatGPT, l’IA d’OpenAI. Je n’ai pas les super-pouvoirs d’un hologramme de Tony Stark, mais je peux t’aider avec des réponses, des explications, des idées… Si tu veux me donner un surnom ou une façon plus conviviale de m’appeler, je suis tout ouïe !
+
+moi je suis Enzo
+
+Salut Enzo ! En quoi puis‑je t’aider aujourd’hui ?
+
+quelle est mon prenom ?
+
+Tu t’appelles Enzo. Si tu veux qu’on utilise un autre surnom ou un titre, fais‑m’en signe !
+
+jai quelle age ?
+
+Je n’ai pas d’information sur ton âge. Tu veux me le dire ? Si tu préfères ne pas le partager, je peux continuer à t’aider avec d’autres questions !
+
+jai 22 ans
+
+Super, Enzo ! 22 ans, c’est l’âge idéal pour se lancer dans plein de projets. Y a-t‑il quelque chose de particulier que tu aimerais aborder aujourd’hui ? Que ce soit un sujet d’étude, un hobby, un travail ou un conseil, je suis là !
+
+jai quelle age ?
+
+Vous avez 22 ans.
+
+#2eme conversation pour voir si il est capable de se souvenir ou daller sur internet
+salut qeulle est mon prenom ?
+
+Je ne peux pas deviner votre prénom. Pourriez‑vous me le dire ?
+
+tu peux allez sur internet ?
+
+Non, je ne peux pas naviguer sur Internet en temps réel. Je fonctionne uniquement à partir des données et des connaissances qui m’ont été fournies lors de mon entraînement (qui s’est terminé en 2023) et je ne peux pas accéder à de nouvelles informations en dehors de cette base. Si tu as besoin d’informations à jour, je peux te suggérer comment les rechercher toi‑même ou t’orienter vers des sources fiables, mais je ne peux pas aller directement sur le web.
+
+#on peux voir que il ne prend pas en compte que il est jarvis quil ne peux pas se souvenir une conversation a lautre et quil est pas capable dallez sur internet jarvis nest pas dutout fonctionelle comme atandut par le projet mais cest une bonne base deja

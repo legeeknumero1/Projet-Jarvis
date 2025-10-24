@@ -17,7 +17,18 @@
       "Bash(chmod:*)",
       "Bash(jq:*)",
       "Bash(python:*)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git fetch:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(PORT=3001 npm start)",
+      "Bash(docker-compose:*)",
+      "Bash(docker system prune:*)",
+      "Bash(curl:*)",
+      "Bash(docker stats:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

@@ -1,6 +1,2 @@
-# Référence vers requirements unifiés
--r ../../requirements-unified.txt
-
-# Dépendances spécifiques STT
-setuptools>=65.0.0
-wheel
+# Reference vers requirements unifies
+-r requirements-unified.txt

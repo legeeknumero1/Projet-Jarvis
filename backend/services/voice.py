@@ -3,8 +3,8 @@ import logging
 import httpx
 import asyncio
 import random
-from typing import Optional, bytes
-from ..schemas.voice import TTSRequest, TranscriptionResponse
+from typing import Optional
+from schemas.voice import TTSRequest, TranscriptionResponse
 
 logger = logging.getLogger(__name__)
 

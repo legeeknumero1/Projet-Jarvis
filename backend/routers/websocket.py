@@ -3,7 +3,7 @@ import uuid
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request
 from starlette.websockets import WebSocketState
-from ..utils.logging import get_logger, set_context, reset_context
+from utils.logging import get_logger, set_context, reset_context
 import json
 import asyncio
 from datetime import datetime

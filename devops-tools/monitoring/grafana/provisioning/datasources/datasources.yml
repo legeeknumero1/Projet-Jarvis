@@ -1,0 +1,47 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+
+  # Loki
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+
+  # Postgres Jarvis
+  - name: Jarvis PostgreSQL
+    type: postgres
+    access: proxy
+    url: 172.20.0.100:5432
+    database: jarvis_db
+    user: jarvis
+    secureJsonData:
+      password: "d4b4f6f730802dd0e11d8cc10b54b63edd9670f9b4157a1c58cfdc612c11c3ca"
+    jsonData:
+      sslmode: "disable"
+      maxOpenConns: 0
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    editable: true
+
+  # TimescaleDB
+  - name: Jarvis TimescaleDB
+    type: postgres
+    access: proxy
+    url: 172.20.0.130:5432
+    database: jarvis_timeseries
+    user: jarvis
+    secureJsonData:
+      password: "cfe0627da2dc2d1f865d9f78bdf84a67"
+    jsonData:
+      sslmode: "disable"
+      timescaledb: true
+    editable: true

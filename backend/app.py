@@ -5,13 +5,15 @@ import logging.config
 from pathlib import Path
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from .config import Settings
-from .utils.logging import configure_logging, get_logger
-from .utils.ws_manager import WSManager
-from .security.deps import setup_cors
+from config import Settings
+from utils.logging import configure_logging, get_logger
+from utils.ws_manager import WSManager
+from security.deps import setup_cors
 
 # Import des services
-from .services import LLMService, MemoryService, VoiceService, WeatherService, HomeAssistantService
+from services import LLMService, MemoryService, VoiceService, WeatherService, HomeAssistantService
+
+logger = logging.getLogger(__name__)
 
 def _configure_logging_from_env():
     """Configuration logging depuis fichier JSON (production)"""
@@ -113,7 +115,7 @@ def create_app(settings: Settings = None) -> FastAPI:
     setup_cors(app, settings.allowed_origins)
     
     # Request-ID middleware production avec contextvars
-    from .middleware.request_context import RequestIdMiddleware
+    from middleware.request_context import RequestIdMiddleware
     app.add_middleware(RequestIdMiddleware)
     
     # === MÉTRIQUES PROMETHEUS ===
@@ -123,11 +125,14 @@ def create_app(settings: Settings = None) -> FastAPI:
         logger.info("📊 [METRICS] Prometheus metrics activées sur /metrics")
     
     # === ROUTERS ===
-    from .routers import health, chat, voice, websocket
-    app.include_router(health.router, prefix="", tags=["health"])
-    app.include_router(chat.router, prefix="/chat", tags=["chat"])
-    app.include_router(voice.router, prefix="/voice", tags=["voice"])
-    app.include_router(websocket.router, prefix="", tags=["websocket"])
+    from routers.health import router as health_router
+    from routers.chat import router as chat_router
+    from routers.voice import router as voice_router
+    from routers.websocket import router as websocket_router
+    app.include_router(health_router, prefix="", tags=["health"])
+    app.include_router(chat_router, prefix="/chat", tags=["chat"])
+    app.include_router(voice_router, prefix="/voice", tags=["voice"])
+    app.include_router(websocket_router, prefix="", tags=["websocket"])
     
     
     logger.info("🎯 [FACTORY] Application créée avec succès")

@@ -5,7 +5,11 @@ from pydantic_settings import BaseSettings
 from pydantic import ConfigDict, Field
 
 class Config(BaseSettings):
-    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
     
     # Base configuration
     app_name: str = "Jarvis AI Assistant"
@@ -59,6 +63,7 @@ class Config(BaseSettings):
     # Security
     secret_key: str = Field(default_factory=lambda: os.getenv("SECRET_KEY") or secrets.token_urlsafe(32))
     cors_origins: str = "http://localhost:3000,http://localhost:8000"
+    allowed_origins: list = ["http://localhost:3000", "http://localhost:8000", "http://172.20.0.50:3000"]
     
     # Paths
     models_path: str = "./models"

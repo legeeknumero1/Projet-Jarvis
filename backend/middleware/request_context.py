@@ -3,7 +3,7 @@ import time
 import uuid
 import logging
 from starlette.middleware.base import BaseHTTPMiddleware
-from ..utils.logging import set_context, reset_context
+from utils.logging import set_context, reset_context
 
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """

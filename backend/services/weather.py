@@ -17,8 +17,12 @@ class WeatherService:
             # Import dynamique pour éviter dépendance au démarrage
             from services.weather_service import WeatherService as WeatherServiceCore
             
-            self.weather_service = WeatherServiceCore()
-            logger.info("🌤️ [WEATHER] Service météo initialisé")
+            self.weather_service = WeatherServiceCore(api_key=self.settings.openweather_api_key)
+            
+            if self.settings.openweather_api_key:
+                logger.info("🌤️ [WEATHER] Service météo initialisé avec OpenWeatherMap")
+            else:
+                logger.info("🌤️ [WEATHER] Service météo initialisé (fallback public)")
             
         except Exception as e:
             logger.error(f"❌ [WEATHER] Erreur initialisation: {e}")
