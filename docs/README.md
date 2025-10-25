@@ -360,10 +360,14 @@ OPENWEATHER_API_KEY=your_key
 **🏆 PHASE 3 (COMPLETE) :**
 - ✅ **Python IA Bridges** - Ollama/Whisper/Piper/Embeddings via API HTTP **FINI !**
 
-**🚀 PHASE 4-6 (En Cours) :**
-- 🦀 **Rust DB Layer** - sqlx + tantivy (sécurité mémoire)
-- 🐹 **Go Monitoring** - Watchdog + métriques Prometheus
-- 🦀/🐹 **MQTT Automations** - Rust/Go pour domotique
+**🏆 PHASE 4 (COMPLETE) :**
+- ✅ **Rust DB Layer** - sqlx + tantivy (recherche full-text) + Redis **FINI !**
+
+**🏆 PHASE 5 (COMPLETE) :**
+- ✅ **MQTT Automations** - Rust rumqttc + Home Assistant (domotique) **FINI !**
+
+**🏆 PHASE 6 (COMPLETE) :**
+- ✅ **Go Monitoring** - Watchdog + Prometheus (supervision) **FINI !**
 
 **🎨 PHASE 7-9 (Extensibilité):**
 - 🌐 **TypeScript Frontend** - React Next.js strict

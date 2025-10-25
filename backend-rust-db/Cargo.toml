@@ -1,0 +1,55 @@
+[package]
+name = "jarvis-db-layer"
+version = "1.4.0"
+edition = "2021"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Database - Type-safe SQL at compile time
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "json"] }
+
+# Full-text search
+tantivy = "0.21"
+
+# Cache
+redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
+
+# JSON/serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# DateTime
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Config
+dotenvy = "0.15"
+
+# HTTP client (pour appels externes)
+reqwest = { version = "0.11", features = ["json"] }
+
+# Vector operations (pour embeddings)
+ndarray = "0.15"
+
+# Async traits
+async-trait = "0.1"
+
+# Rate limiting
+governor = "0.10"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
