@@ -63,6 +63,32 @@ backend-audio/
 | **Jitter** | ±20ms | ±0.1ms | **Stable RT** |
 | **Throughput** | 8K samples/s | 1M samples/s | **125x plus** |
 
+### 🐍 Backend Python Bridges (v1.3.0) [PHASE 3 COMPLETE]
+
+🧠 **SERVICES IA DECOUPLÉS** - Ollama, Whisper, Piper, Embeddings !
+
+```
+backend-python-bridges/
+├── app.py                   # 🚀 Application Flask principale
+├── ollama_client.py         # 🤖 Client Ollama LLM
+├── whisper_client.py        # 🎤 Client Whisper STT
+├── piper_client.py          # 🔊 Client Piper TTS
+├── embeddings_service.py    # 🧠 Service Embeddings
+├── requirements.txt         # 📦 Dépendances Python
+├── Dockerfile               # 🐳 Build Docker Python
+├── docker-compose.yml       # 🐳 Intégration
+└── README.md                # 📖 Documentation
+```
+
+**🏆 Avantages Architecture Bridges Python :**
+
+| Aspect | Bénéfice |
+|--------|----------|
+| **Découplage** | Services IA indépendants via HTTP |
+| **Flexibilité** | Swap modèles sans recompilation |
+| **Scalabilité** | Replicas indépendants par service |
+| **Mémoire** | Modèles chargés une seule fois |
+
 ```
 backend-rust/
 ├── src/
@@ -303,6 +329,7 @@ OPENWEATHER_API_KEY=your_key
 | Service | Statut | URL | Description |
 |---------|--------|-----|-------------|
 | 🦀 Backend Rust | ✅ | :8100 | Axum + Services (30x plus rapide) |
+| 🐍 Bridges Python IA | ✅ | :8005 | Ollama, Whisper, Piper, Embeddings |
 | ⚙️ Audio Engine C++ | ✅ | :8004 | DSP temps réel <1ms latence |
 | 🔒 Backend Python | 🔴 | :8000 | FastAPI + Services (legacy) |
 | 🌐 Frontend | ✅ | :3000 | React TypeScript |
@@ -330,11 +357,11 @@ OPENWEATHER_API_KEY=your_key
 **🏆 PHASE 2 (COMPLETE) :**
 - ✅ **C++ Audio Engine** - DSP temps réel (<1ms latence) **FINI !**
 
-**🚀 PHASE 3-4 (En Cours) :**
-- 🐍 **Python IA Bridges** - Conservation écosystème ML + Ollama/Whisper/Piper clients
-- 🦀 **Rust DB Layer** - sqlx + tantivy (sécurité mémoire)
+**🏆 PHASE 3 (COMPLETE) :**
+- ✅ **Python IA Bridges** - Ollama/Whisper/Piper/Embeddings via API HTTP **FINI !**
 
-**🔧 PHASE 5-6 (Performance):**
+**🚀 PHASE 4-6 (En Cours) :**
+- 🦀 **Rust DB Layer** - sqlx + tantivy (sécurité mémoire)
 - 🐹 **Go Monitoring** - Watchdog + métriques Prometheus
 - 🦀/🐹 **MQTT Automations** - Rust/Go pour domotique
 

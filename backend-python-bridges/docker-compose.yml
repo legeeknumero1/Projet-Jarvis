@@ -1,0 +1,67 @@
+# Docker Compose pour Python Bridges IA - Phase 3
+# Intégration avec architecture polyglotte
+# Port 8005 pour API Python Bridges
+
+version: '3.8'
+
+services:
+  # Python Bridges IA - Ollama, Whisper, Piper, Embeddings
+  jarvis-python-bridges:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis_python_bridges
+    ports:
+      - "8005:8005"  # API HTTP
+    environment:
+      # Ollama
+      - OLLAMA_URL=http://jarvis_ollama:11434
+      - OLLAMA_MODEL=llama2:7b
+
+      # Whisper
+      - WHISPER_MODEL=base
+
+      # Piper
+      - PIPER_BINARY=piper
+      - PIPER_VOICE=fr_FR-upmc-medium
+
+      # Embeddings
+      - EMBEDDINGS_MODEL=distiluse-base-multilingual-cased-v2
+
+      # Logging
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    # Dépendances
+    depends_on:
+      - jarvis_ollama
+
+    # Limite mémoire (Whisper + embeddings peuvent être gourmands)
+    mem_limit: 4g
+    memswap_limit: 8g
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Volumes pour logs
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  jarvis_network:
+    external: true  # Utilise le réseau existant

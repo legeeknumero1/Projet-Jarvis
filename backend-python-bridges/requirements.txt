@@ -1,0 +1,37 @@
+"""
+Dépendances pour les Bridges Python IA - Phase 3
+Services d'IA : Ollama (LLM), Whisper (STT), Piper (TTS)
+"""
+
+# Serveur web léger
+flask==3.0.0
+flask-cors==4.0.0
+
+# Clients HTTP
+requests==2.31.0
+httpx==0.25.0
+
+# Traitement audio
+numpy==1.24.3
+librosa==0.10.0
+soundfile==0.12.1
+scipy==1.11.3
+
+# Audio en temps réel
+pyaudio==0.2.13
+
+# STT/TTS
+openai-whisper==20231117
+piper-tts==1.2.0
+
+# Vectorisation/Embeddings
+sentence-transformers==2.2.2
+
+# Environnement
+python-dotenv==1.0.0
+
+# Logging et utils
+loguru==0.7.2
+
+# Typage
+pydantic==2.4.2

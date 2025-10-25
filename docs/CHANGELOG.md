@@ -13,6 +13,64 @@
 
 ---
 
+## [1.3.2] - 2025-10-25 - **PYTHON IA BRIDGES - PHASE 3 POLYGLOTTE** 🐍
+
+### [AJOUTÉ] - Services IA Découplés HTTP
+- **🤖 Ollama LLM Client** : Client HTTP pour LLM local (streaming + batch)
+- **🎤 Whisper STT Client** : Speech-to-Text (modèles tiny-large, multilingue)
+- **🔊 Piper TTS Client** : Text-to-Speech français haute qualité (3 voix)
+- **🧠 Embeddings Service** : Vectorisation Sentence Transformers multilingue
+- **📡 API Flask** : Endpoints HTTP pour tous les services IA
+- **🐳 Docker Integration** : Multi-stage Python + services orchestrés
+
+### [ARCHITECTURE] - Python Bridges
+- **HTTP Decoupling** : Services IA via endpoints REST JSON
+- **Modèles en Mémoire** : Chargement une seule fois, partagé
+- **Batch Processing** : Vectorisation multi-textes optimisée
+- **Health Checks** : Monitoring détaillé par service
+- **CORS Support** : Accès cross-origin configuré
+- **Error Handling** : Gestion robuste des exceptions
+
+### [ENDPOINTS] - API REST
+
+**LLM (Ollama) :**
+- POST /api/llm/generate - Générer texte avec prompt optionnel
+- GET /api/llm/models - Lister modèles disponibles
+
+**STT (Whisper) :**
+- POST /api/stt/transcribe - Transcrire audio base64
+- Support multilingue avec auto-détection
+
+**TTS (Piper) :**
+- POST /api/tts/synthesize - Synthétiser texte en audio
+- GET /api/tts/voices - Lister voix disponibles
+
+**Embeddings :**
+- POST /api/embeddings/embed - Vectoriser texte
+- POST /api/embeddings/embed-batch - Batch vectorisation
+
+### [DOCUMENTATION] - Complète
+- **📝 backend-python-bridges/README.md** : API complète + architecture
+- **📝 docs/README.md** : Phase 3 section avec intégration
+- **📅 docs/CHANGELOG.md** : v1.3.2 release notes
+
+### [TECHNIQUE] - Stack Python
+- **🚀 Framework** : Flask avec CORS
+- **🤖 Models** : whisper (STT), piper (TTS), sentence-transformers (embeddings)
+- **🔌 Clients** : requests + httpx pour HTTP async
+- **📊 Logging** : loguru avec rotation fichiers
+- **⚙️ Config** : Environment variables centralisées
+
+### [PERFORMANCE]
+```
+STT (Whisper):    ~5-10s pour 30s audio
+TTS (Piper):      ~2-3s pour phrase
+LLM (Ollama):     ~2-3 tokens/s (dépend modèle)
+Embeddings:       ~0.2s pour 10 textes (batch)
+```
+
+---
+
 ## [1.3.1] - 2025-10-25 - **C++ AUDIO ENGINE - PHASE 2 POLYGLOTTE** 🎤
 
 ### [AJOUTÉ] - Audio Engine C++ Haute Performance
