@@ -31,7 +31,9 @@
       "Bash(grep:*)",
       "Bash(git push:*)",
       "Bash(docker network inspect:*)",
-      "Bash(docker volume:*)"
+      "Bash(docker volume:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

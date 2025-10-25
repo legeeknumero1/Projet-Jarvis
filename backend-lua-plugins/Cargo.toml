@@ -1,0 +1,41 @@
+[package]
+name = "jarvis-lua-plugins"
+version = "1.8.0"
+edition = "2021"
+
+[dependencies]
+# Lua runtime
+mlua = { version = "0.9", features = ["lua54", "serialize"] }
+
+# Async
+tokio = { version = "1.35", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# UUID
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# DateTime
+chrono = { version = "0.4", features = ["serde"] }
+
+# File I/O
+tokio-util = "0.7"
+walkdir = "2.4"
+
+# HTTP for plugin communication
+reqwest = { version = "0.11", features = ["json"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
