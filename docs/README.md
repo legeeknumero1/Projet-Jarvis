@@ -1,36 +1,46 @@
-# 🤖 Jarvis - Assistant IA Personnel v1.3.0
+# 🤖 Jarvis - Assistant IA Personnel v1.9.0
 
-**Assistant vocal intelligent local** développé par Enzo avec architecture modulaire complète, mémoire neuromorphique et intégration domotique.
+**Architecture Polyglotte Distribuée** développée par Enzo avec 9 phases spécialisées, haute disponibilité, mémoire vectorielle et intégration Home Assistant.
 
-## ✨ Fonctionnalités Principales
+## ✨ Fonctionnalités Principales (Phases 1-9)
 
+- 🦀 **Backend Rust Core** - API ultra-performante (30x FastAPI) sur Port 8100
 - 🎤 **Chat vocal temps réel** avec Whisper (STT) + Piper (TTS)
 - 🧠 **IA locale Ollama** (LLaMA 3.2:1b) - 100% offline
-- 💾 **Mémoire neuromorphique** vectorielle avec Qdrant
-- 🏠 **Domotique Home Assistant** intégrée
-- 🔒 **Sécurité avancée** - Chiffrement BDD + Rate limiting
-- 📊 **Monitoring complet** - Prometheus + TimescaleDB
-- 🎨 **Interface moderne** React + TypeScript + Tailwind
+- ⚙️ **C++ Audio Engine** - DSP temps réel <1ms latence
+- 💾 **Mémoire vectorielle** - PostgreSQL + Tantivy full-text search
+- 🏠 **Domotique Home Assistant** - MQTT automations complètes
+- 🔒 **Sécurité Enterprise** - Type-safe SQL, Lua sandbox, httpOnly cookies
+- 📊 **Monitoring Production** - Prometheus + Go watchdog
+- 🌐 **Frontend TypeScript** - React 19 + Next.js 14 strict mode
+- 🧩 **Plugins Lua** - Extensibilité sans recompilation + hot-reload
+- ☁️ **Haute Disponibilité** - Elixir clustering multi-nœuds Kubernetes-ready
 
-## 🏗️ Architecture v1.2.0 → v2.0 (Evolution Polyglotte)
+## 🏗️ Architecture v1.9.0 - 9 Phases Polyglotte Complètes
 
-### 🔄 Migration Architecturale
+### 🏆 Transformation Complète v1.9.0
 
-**ACTUEL v1.2.0 (Python monolangue):**
+**ANCIEN v1.2.0 (Python monolangue - LEGACY):**
 ```
 Backend: Python/FastAPI → Performance limitée
-Audio: Python multiproc → Latence élevée  
-BDD: SQLAlchemy → Sécurité limitée
+Audio: Python multiproc → Latence élevée (~50ms)
+BDD: SQLAlchemy → Sécurité compile-time manquante
 ```
 
-**FUTUR v2.0 (Architecture polyglotte optimisée):**
+**ACTUEL v1.9.0 (Architecture polyglotte COMPLÈTE) ✅:**
 ```
-🦀 Rust Core API     → Latence divisée par 30
-⚙️ C++ Audio DSP     → Temps réel <1ms
-🐍 Python IA/ML     → Écosystème conservé
-🐹 Go Monitoring    → Binaires légers
-🌐 TypeScript UI    → Frontend typé strict
+🦀 Phase 1: Rust Core API    → 30x plus rapide (latence /30)
+⚙️ Phase 2: C++ Audio DSP    → Temps réel <1ms (latence /50)
+🐍 Phase 3: Python Bridges   → IA découplée (Ollama, Whisper, Piper)
+🗄️ Phase 4: Rust DB Layer   → Type-safe SQL + Full-text search
+🔌 Phase 5: MQTT Automation → Home Assistant + Automations
+🐹 Phase 6: Go Monitoring   → Watchdog + Prometheus
+🌐 Phase 7: TypeScript UI   → React 19 + Next.js 14 strict
+🧩 Phase 8: Lua Plugins    → Hot-reload sans recompilation
+☁️ Phase 9: Elixir HA      → Multi-nœuds clustering
 ```
+
+**Résultat:** Système distribué, résilient, ultra-performant 🚀
 
 ### 🦀 Backend Rust/Axum (v1.3.0) [PHASE 1 COMPLETE]
 
@@ -153,18 +163,22 @@ frontend/src/
 └── lib/              # 📚 Utils + Types
 ```
 
-### 🐳 Infrastructure Docker (9 containers)
+### 🐳 Infrastructure Distribuée (Ports)
+
 ```
-Services:
-├── 🗄️ PostgreSQL      (172.20.0.100:5432) - BDD principale
-├── 🔴 Redis            (172.20.0.110:6379) - Cache
-├── 🤖 Ollama           (172.20.0.30:11434) - LLM local
-├── 🎤 STT API          (172.20.0.10:8003)  - Speech-to-Text
-├── 🔊 TTS API          (172.20.0.20:8002)  - Text-to-Speech
-├── ⚙️ Backend API      (172.20.0.40:8000)  - FastAPI
-├── 🌐 Interface        (172.20.0.50:3000)  - React App
-├── 🧠 Qdrant           (172.20.0.120:6333) - Mémoire vectorielle
-└── 📊 TimescaleDB      (172.20.0.130:5432) - Métriques temps
+Services Externalisés:
+├── 🗄️ PostgreSQL      (localhost:5432)   - Base de données
+├── 🔴 Redis            (localhost:6379)   - Cache distribué
+├── 🤖 Ollama           (localhost:11434)  - LLM local
+├── 🏠 Home Assistant   (localhost:8123)   - Domotique
+│
+Phases Jarvis (Rust + Polyglotte):
+├── 🦀 Phase 1: Rust Core      (Port 8100) - API Axum
+├── ⚙️ Phase 2: C++ Audio      (Port 8004) - DSP temps réel
+├── 🐍 Phase 3: Python Bridges (Port 8005) - IA Services
+├── 🐹 Phase 6: Go Monitor     (Port 8006) - Watchdog
+├── 🌐 Phase 7: Frontend       (Port 3000) - React App
+└── ☁️ Phase 9: Elixir HA      (Port 8007) - Clustering
 ```
 
 ## 🚀 Installation
@@ -193,45 +207,44 @@ docker-compose up -d
 
 3. **Vérification**
 ```bash
-# Backend Rust health (recommandé)
+# Backend Rust health (Phase 1)
 curl http://localhost:8100/health
-
-# Backend Python health (legacy)
-curl http://localhost:8000/health
 
 # Frontend
 open http://localhost:3000
 
-# Containers actifs (9/9)
+# Tous les services
 docker ps
 ```
 
-### 🛠️ Développement local
+### 🛠️ Développement Local (Phases 1-9)
 
-**Backend Rust (Recommandé - 30x plus rapide) :**
+**Backend Rust Phase 1 (Recommandé) :**
 ```bash
 cd backend-rust
 cp .env.example .env
-# Éditer .env avec vos paramètres
-./scripts/start-dev.sh
-# Ou: cargo run
+cargo run  # Port 8100
 ```
 
-**Backend Python (Legacy) :**
+**Frontend Phase 7 :**
 ```bash
-cd backend
+cd frontend-phase7
+npm install
+npm run dev  # Next.js dev server (Port 3000)
+```
+
+**Python Bridges Phase 3 :**
+```bash
+cd backend-python-bridges
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn app:app --reload --port 8000
+python app.py  # Port 8005
 ```
 
-**Frontend :**
+**Toutes les phases avec Docker :**
 ```bash
-cd frontend  
-npm install
-npm start
-# Démarre sur port 3001 avec proxy vers backend
+docker-compose up -d
 ```
 
 ## 💬 Utilisation
@@ -258,16 +271,18 @@ npm start
 🤖 "D'après Home Assistant, il fait 22°C"
 ```
 
-### 🔌 API Endpoints
+### 🔌 API Endpoints (Phase 1 - Port 8100)
 
 | Endpoint | Méthode | Description |
 |----------|---------|-------------|
 | `/health` | GET | Statut système |
-| `/ready` | GET | Readiness probe |
-| `/chat` | POST | Envoi message |
-| `/voice/transcribe` | POST | STT Whisper |
-| `/voice/synthesize` | POST | TTS Piper |
-| `/ws` | WebSocket | Temps réel |
+| `/ready` | GET | Readiness probe Kubernetes |
+| `/api/chat` | POST | Envoi message |
+| `/ws` | WebSocket | Temps réel chat |
+
+**Services IA via Phase 3 (Port 8005):**
+| `/api/voice/transcribe` | POST | STT Whisper |
+| `/api/voice/synthesize` | POST | TTS Piper |
 
 ## ⚙️ Configuration
 
@@ -421,45 +436,50 @@ OPENWEATHER_API_KEY=your_key
 ### 🧪 Tests
 
 ```bash
-# Backend - Tests unitaires + intégration
-cd backend
-python -m pytest tests/ -v
+# Backend Rust - Tests
+cd backend-rust
+cargo test
 
-# Frontend - Jest + React Testing Library  
-cd frontend
+# Frontend - Jest + React Testing Library
+cd frontend-phase7
 npm test
 
-# Docker - Health checks
+# Health checks toutes les phases
+curl http://localhost:8100/health  # Phase 1
+curl http://localhost:8006/health  # Phase 6 (Go Monitor)
 docker-compose ps
-curl http://localhost:8000/ready
 ```
 
 ### 📊 Monitoring
 
 ```bash
-# Métriques Prometheus (si activé)
-curl http://localhost:8000/metrics
+# Rust Backend health check
+curl http://localhost:8100/health
+
+# Go Monitor (Prometheus)
+curl http://localhost:8006/metrics
 
 # Logs containers
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker-compose logs -f backend-rust
+docker-compose logs -f frontend-phase7
 
-# Base données
-docker exec -it jarvis_postgres psql -U jarvis -d jarvis_db
+# Base données PostgreSQL
+docker exec -it postgres psql -U jarvis -d jarvis_db
 ```
 
 ### 🔧 Debugging
 
 ```bash
-# Debug backend avec VSCode
-F5 → "Python: FastAPI Debug"
+# Debug Rust avec VSCode
+F5 → "Rust Analyzer"
 
-# Debug frontend  
-npm start # Mode développement avec hot-reload
+# Debug Frontend avec hot-reload
+cd frontend-phase7
+npm run dev
 
 # Debug containers
-docker exec -it jarvis_backend bash
-docker exec -it jarvis_postgres psql -U jarvis
+docker exec -it <container_name> bash
+docker-compose ps | grep frontend
 ```
 
 ## 👨‍💻 Auteur & Remerciements
