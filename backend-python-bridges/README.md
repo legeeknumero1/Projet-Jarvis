@@ -360,12 +360,15 @@ backend-python-bridges/
 
 **Phase 3 dans le contexte global :**
 
-- 🦀 **Phase 1 (DONE)** : Rust API Core
-- ⚙️ **Phase 2 (DONE)** : C++ Audio Engine
+- 🦀 **Phase 1** : Rust Backend Core
+- ⚙️ **Phase 2** : C++ Audio Engine
 - 🐍 **Phase 3 (YOU ARE HERE)** : Python IA Bridges
-- 🦀 **Phase 4** : Rust DB Layer
-- 🐹 **Phase 5** : Go Monitoring
-- 🌐 **Phase 6+** : Frontend + Plugins
+- 🗄️ **Phase 4** : Rust DB Layer
+- 🔌 **Phase 5** : MQTT Automations
+- 🐹 **Phase 6** : Go Monitoring
+- 🌐 **Phase 7** : Frontend TypeScript
+- 🧩 **Phase 8** : Lua Plugins
+- ☁️ **Phase 9** : Elixir HA
 
 **Phase 3 apporte :**
 - ✅ Découplage services IA via HTTP

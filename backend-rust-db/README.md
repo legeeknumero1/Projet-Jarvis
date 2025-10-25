@@ -291,12 +291,15 @@ Batch insert 100: ~50ms
 
 **Phase 4 dans le contexte global :**
 
-- 🦀 Phase 1: Rust API Core ✅
+- 🦀 Phase 1: Rust Backend Core ✅
 - ⚙️ Phase 2: C++ Audio Engine ✅
 - 🐍 Phase 3: Python Bridges ✅
-- 🦀 Phase 4: **Rust DB Layer** (YOU ARE HERE)
-- 🐹 Phase 5: Go Monitoring
-- 🌐 Phase 6+: Frontend + Plugins
+- 🗄️ Phase 4: **Rust DB Layer** (YOU ARE HERE)
+- 🔌 Phase 5: MQTT Automations
+- 🐹 Phase 6: Go Monitoring
+- 🌐 Phase 7: Frontend TypeScript
+- 🧩 Phase 8: Lua Plugins
+- ☁️ Phase 9: Elixir HA
 
 **Apports Phase 4 :**
 - ✅ Sécurité compile-time des requêtes SQL

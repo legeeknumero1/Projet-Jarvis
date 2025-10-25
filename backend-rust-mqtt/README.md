@@ -263,11 +263,15 @@ Action execution: ~50ms (dépend de l'action)
 ## 🤝 Intégration
 
 **Phase 5 dans l'architecture :**
-- ✅ Phase 1-3: Core + Audio + Python
-- ✅ Phase 4: Rust DB Layer
+- 🦀 Phase 1: Rust Backend Core ✅
+- ⚙️ Phase 2: C++ Audio Engine ✅
+- 🐍 Phase 3: Python Bridges ✅
+- 🗄️ Phase 4: Rust DB Layer ✅
 - 🔌 Phase 5: **MQTT Automations** (YOU ARE HERE)
 - 🐹 Phase 6: Go Monitoring
-- 🌐 Phase 7+: Frontend + Plugins
+- 🌐 Phase 7: Frontend TypeScript
+- 🧩 Phase 8: Lua Plugins
+- ☁️ Phase 9: Elixir HA
 
 ---
 
