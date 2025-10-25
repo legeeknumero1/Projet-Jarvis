@@ -1,10 +1,12 @@
 use axum::{
     routing::{get, post},
     Router,
+    http::HeaderValue,
 };
 use std::sync::Arc;
-use tower_http::cors::CorsLayer;
-use tracing::info;
+use std::time::Duration;
+use tower_http::cors::{CorsLayer, AllowOrigin};
+use tracing::{info, error};
 
 mod handlers;
 mod models;
@@ -18,13 +20,58 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
     info!("🦀 Jarvis Rust Backend v1.9.0 starting...");
+
+    // Configuration depuis les variables d'environnement
+    let host = std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8100".to_string());
+    let python_bridges_url = std::env::var("PYTHON_BRIDGES_URL")
+        .unwrap_or_else(|_| "http://localhost:8005".to_string());
+    let audio_engine_url = std::env::var("AUDIO_ENGINE_URL")
+        .unwrap_or_else(|_| "http://localhost:8004".to_string());
+    let cors_origins = std::env::var("CORS_ORIGINS")
+        .unwrap_or_else(|_| "http://localhost:3000".to_string());
+    info!("📋 Configuration:");
+    info!("  - Server: {}:{}", host, port);
+    info!("  - Python Bridges: {}", python_bridges_url);
+    info!("  - Audio Engine: {}", audio_engine_url);
+    info!("  - CORS Origins: {}", cors_origins);
 
     // Create application state
     let state = Arc::new(AppState {
-        python_bridges_url: "http://localhost:8005".to_string(),
-        audio_engine_url: "http://localhost:8004".to_string(),
+        python_bridges_url,
+        audio_engine_url,
     });
+
+    // Build CORS layer with restricted origins (NOT PERMISSIVE)
+    let allowed_origins: Vec<HeaderValue> = cors_origins
+        .split(',')
+        .filter_map(|origin| {
+            origin.trim().parse::<HeaderValue>().ok()
+        })
+        .collect();
+
+    let cors = CorsLayer::new()
+        .allow_origin(if allowed_origins.is_empty() {
+            AllowOrigin::any()
+        } else {
+            AllowOrigin::list(allowed_origins)
+        })
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::DELETE,
+            axum::http::Method::OPTIONS,
+        ])
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+        ])
+        .allow_credentials(true)
+        .max_age(Duration::from_secs(3600));
 
     // Build router
     let app = Router::new()
@@ -53,17 +100,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // WebSocket
         .route("/ws", axum::routing::get(chat::websocket_handler))
 
-        .layer(CorsLayer::permissive())
+        // Security layers
+        .layer(cors)
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8100").await?;
-    info!("✅ Server listening on http://0.0.0.0:8100");
-    info!("📊 Health check: http://localhost:8100/health");
-    info!("💬 Chat API: POST http://localhost:8100/api/chat");
-    info!("🎤 STT API: POST http://localhost:8100/api/voice/transcribe");
-    info!("🔊 TTS API: POST http://localhost:8100/api/voice/synthesize");
+    let addr = format!("{}:{}", host, port);
+    match tokio::net::TcpListener::bind(&addr).await {
+        Ok(listener) => {
+            info!("✅ Server listening on http://{}", addr);
+            info!("📊 Health check: http://{}/health", addr);
+            info!("💬 Chat API: POST http://{}/api/chat", addr);
+            info!("🎤 STT API: POST http://{}/api/voice/transcribe", addr);
+            info!("🔊 TTS API: POST http://{}/api/voice/synthesize", addr);
 
-    axum::serve(listener, app).await?;
+            axum::serve(listener, app).await?;
+        }
+        Err(e) => {
+            error!("❌ Erreur liaison au serveur {}: {}", addr, e);
+            return Err(e.into());
+        }
+    }
 
     Ok(())
 }

@@ -2,7 +2,7 @@
 # Services : Ollama, Whisper, Piper, Embeddings
 # Port : 8005
 
-FROM python:3.11-slim as builder
+FROM python:3.11.6-slim-bookworm as builder
 
 # Dépendances système pour audio et modèles ML
 RUN apt-get update && apt-get install -y \
@@ -22,7 +22,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
-FROM python:3.11-slim
+FROM python:3.11.6-slim-bookworm
 
 # Dépendances runtime
 RUN apt-get update && apt-get install -y \

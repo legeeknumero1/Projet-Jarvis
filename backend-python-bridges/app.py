@@ -20,7 +20,10 @@ from embeddings_service import get_embeddings_service
 
 # Configuration
 app = Flask(__name__)
-CORS(app)
+# CORS configuration - restrict to allowed origins
+cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://localhost:8100").split(",")
+cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
+CORS(app, origins=cors_origins, supports_credentials=True)
 
 # Logger
 logger.add("logs/bridges.log", rotation="500 MB", level="INFO")
