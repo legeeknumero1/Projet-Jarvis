@@ -1,9 +1,7 @@
 /// Database Service - PostgreSQL avec sqlx
 /// Type-safe SQL queries at compile time
 use sqlx::postgres::{PgPool, PgPoolOptions};
-use sqlx::Row;
-use chrono::Utc;
-use tracing::{info, error, debug};
+use tracing::{info, debug};
 
 use crate::models::*;
 use crate::error::{DbError, DbResult};
@@ -173,7 +171,7 @@ impl DatabaseService {
         .bind(&message.content)
         .bind(message.created_at)
         .bind(message.tokens)
-        .bind(message.metadata)
+        .bind(&message.metadata)
         .execute(&self.pool)
         .await?;
 

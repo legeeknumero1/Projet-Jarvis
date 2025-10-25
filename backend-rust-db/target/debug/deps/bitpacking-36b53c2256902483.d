@@ -1,0 +1,9 @@
+C:\Users\Le Geek\Documents\Projet-Jarvis\backend-rust-db\target\debug\deps\bitpacking-36b53c2256902483.d: C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\lib.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros_simple.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker1x_simple.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker4x_simple.rs
+
+C:\Users\Le Geek\Documents\Projet-Jarvis\backend-rust-db\target\debug\deps\libbitpacking-36b53c2256902483.rmeta: C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\lib.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros_simple.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker1x_simple.rs C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker4x_simple.rs
+
+C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\lib.rs:
+C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros.rs:
+C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\macros_simple.rs:
+C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker1x_simple.rs:
+C:\Users\Le\ Geek\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitpacking-0.9.2\src\bitpacker4x_simple.rs:

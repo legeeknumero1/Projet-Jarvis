@@ -128,7 +128,7 @@ impl AutomationEngine {
                 Trigger::TimeOfDay { hour, minute },
                 TriggerEvent::Time { h, m },
             ) => {
-                h == *hour && m == *minute
+                h == hour && m == minute
             }
             _ => false,
         }

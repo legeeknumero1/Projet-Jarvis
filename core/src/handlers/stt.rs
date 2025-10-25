@@ -4,13 +4,29 @@ use axum::{
     Json,
 };
 use std::sync::Arc;
+use tracing::info;
 
 use crate::models::{AppState, TranscribeRequest, TranscribeResponse, LanguageInfo};
+use crate::middleware::{ValidatedJwt, STTValidator, InputValidator};
 
 pub async fn transcribe(
+    ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
     Json(req): Json<TranscribeRequest>,
-) -> (StatusCode, Json<TranscribeResponse>) {
+) -> Result<(StatusCode, Json<TranscribeResponse>), (StatusCode, String)> {
+    // ============================================================================
+    // SECURITY FIX C7-C11: Validate audio data and language
+    // ============================================================================
+    let validator = STTValidator::new(req.audio_data.clone(), req.language.clone());
+    if let Err(e) = validator.validate() {
+        tracing::warn!("🚨 STT VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid audio data: {}", e),
+        ));
+    }
+
+    info!("🎤 Transcription request from user: {}", claims.user_id);
     let language = req.language.unwrap_or_else(|| "fr".to_string());
 
     let response = TranscribeResponse {
@@ -20,7 +36,7 @@ pub async fn transcribe(
         duration_ms: 2500,
     };
 
-    (StatusCode::OK, Json(response))
+    Ok((StatusCode::OK, Json(response)))
 }
 
 pub async fn list_languages() -> (StatusCode, Json<Vec<LanguageInfo>>) {

@@ -136,6 +136,23 @@ pub struct Metrics {
     pub avg_latency_ms: f32,
 }
 
+// ============= Authentication Models =============
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LoginRequest {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LoginResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub expires_in: i64,
+    pub user_id: String,
+    pub username: String,
+}
+
 // ============= Error Models =============
 
 #[derive(Debug, Serialize, Deserialize)]

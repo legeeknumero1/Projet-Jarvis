@@ -6,31 +6,66 @@ use axum::{
 use chrono::Utc;
 use std::sync::Arc;
 use uuid::Uuid;
+use tracing::info;
 
 use crate::models::{AppState, ChatRequest, ChatResponse, Conversation};
+use crate::middleware::{ValidatedJwt, ChatMessageValidator, ConversationIdValidator, InputValidator};
 
 pub async fn send_message(
+    ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
     Json(req): Json<ChatRequest>,
-) -> (StatusCode, Json<ChatResponse>) {
+) -> Result<(StatusCode, Json<ChatResponse>), (StatusCode, String)> {
+    // ============================================================================
+    // SECURITY FIX C7-C11: Validate chat message and conversation ID
+    // ============================================================================
+
+    // Validate chat message content
+    let message_validator = ChatMessageValidator::new(req.content.clone());
+    if let Err(e) = message_validator.validate() {
+        tracing::warn!("🚨 CHAT VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid message: {}", e),
+        ));
+    }
+
+    // Validate conversation ID if provided
+    if let Some(ref conv_id) = req.conversation_id {
+        let id_validator = ConversationIdValidator::new(conv_id.clone());
+        if let Err(e) = id_validator.validate() {
+            tracing::warn!("🚨 CONVERSATION ID VALIDATION FAILED: {} from user {}", e, claims.user_id);
+            return Err((
+                StatusCode::BAD_REQUEST,
+                format!("Invalid conversation ID: {}", e),
+            ));
+        }
+    }
+
+    info!("💬 Chat message from user: {}", claims.user_id);
     let conversation_id = req.conversation_id.unwrap_or_else(|| Uuid::new_v4().to_string());
     let message_id = Uuid::new_v4().to_string();
+
+    // Sanitize message content for any XSS attempts
+    let sanitized_content = message_validator.sanitize();
 
     let response = ChatResponse {
         id: message_id,
         conversation_id: conversation_id.clone(),
         role: "assistant".to_string(),
-        content: format!("Réponse mock: {}", req.content),
+        content: format!("Réponse mock: {}", sanitized_content),
         timestamp: Utc::now(),
         tokens: Some(50),
     };
 
-    (StatusCode::OK, Json(response))
+    Ok((StatusCode::OK, Json(response)))
 }
 
 pub async fn list_conversations(
+    ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
 ) -> (StatusCode, Json<Vec<Conversation>>) {
+    info!("📋 Listing conversations for user: {}", claims.user_id);
     let conversations = vec![
         Conversation {
             id: Uuid::new_v4().to_string(),
@@ -46,9 +81,23 @@ pub async fn list_conversations(
 }
 
 pub async fn get_history(
+    ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
-    Path(_id): Path<String>,
-) -> (StatusCode, Json<Vec<ChatResponse>>) {
+    Path(id): Path<String>,
+) -> Result<(StatusCode, Json<Vec<ChatResponse>>), (StatusCode, String)> {
+    // ============================================================================
+    // SECURITY FIX C7-C11: Validate conversation ID
+    // ============================================================================
+    let id_validator = ConversationIdValidator::new(id.clone());
+    if let Err(e) = id_validator.validate() {
+        tracing::warn!("🚨 HISTORY VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid conversation ID: {}", e),
+        ));
+    }
+
+    info!("📖 Getting history for user: {}", claims.user_id);
     let history = vec![
         ChatResponse {
             id: Uuid::new_v4().to_string(),
@@ -68,14 +117,28 @@ pub async fn get_history(
         },
     ];
 
-    (StatusCode::OK, Json(history))
+    Ok((StatusCode::OK, Json(history)))
 }
 
 pub async fn delete_conversation(
+    ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
-    Path(_id): Path<String>,
-) -> StatusCode {
-    StatusCode::OK
+    Path(id): Path<String>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    // ============================================================================
+    // SECURITY FIX C7-C11: Validate conversation ID
+    // ============================================================================
+    let id_validator = ConversationIdValidator::new(id.clone());
+    if let Err(e) = id_validator.validate() {
+        tracing::warn!("🚨 DELETE VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid conversation ID: {}", e),
+        ));
+    }
+
+    info!("🗑️ Deleting conversation for user: {}", claims.user_id);
+    Ok(StatusCode::OK)
 }
 
 pub async fn websocket_handler() -> &'static str {

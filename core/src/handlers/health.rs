@@ -40,6 +40,7 @@ pub async fn readiness_check() -> (StatusCode, Json<serde_json::Value>) {
     (StatusCode::OK, Json(response))
 }
 
+/// Metrics endpoint (Phase 6 Go Monitoring will scrape here)
 pub async fn metrics() -> (StatusCode, Json<Metrics>) {
     let metrics = Metrics {
         requests_total: 0,

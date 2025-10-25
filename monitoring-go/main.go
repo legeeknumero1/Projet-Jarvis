@@ -1,45 +1,18 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/docker/docker/client"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Watchdog monitoring for Jarvis services
-type Watchdog struct {
-	dockerClient *client.Client
-	interval     time.Duration
-}
-
 // Prometheus metrics
 var (
-	containerRestarts = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "jarvis_container_restarts_total",
-			Help: "Total number of container restarts",
-		},
-		[]string{"container"},
-	)
-
-	containerHealth = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "jarvis_container_health",
-			Help: "Container health status (1=healthy, 0=unhealthy)",
-		},
-		[]string{"container"},
-	)
-
 	serviceUptime = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "jarvis_service_uptime_seconds",
@@ -65,197 +38,174 @@ var (
 		[]string{"method", "endpoint", "status"},
 	)
 
-	systemMemory = prometheus.NewGaugeVec(
+	systemHealth = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "jarvis_system_memory_bytes",
-			Help: "System memory usage in bytes",
+			Name: "jarvis_system_health",
+			Help: "System health status (1=healthy, 0=unhealthy)",
 		},
-		[]string{"type"},
+		[]string{"component"},
 	)
 
-	systemCPU = prometheus.NewGaugeVec(
+	serviceStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "jarvis_system_cpu_percent",
-			Help: "System CPU usage in percent",
+			Name: "jarvis_service_status",
+			Help: "Service status (1=up, 0=down)",
 		},
-		[]string{"cpu"},
+		[]string{"service"},
 	)
 )
 
 func init() {
-	prometheus.MustRegister(containerRestarts)
-	prometheus.MustRegister(containerHealth)
 	prometheus.MustRegister(serviceUptime)
 	prometheus.MustRegister(apiLatency)
 	prometheus.MustRegister(requestCounter)
-	prometheus.MustRegister(systemMemory)
-	prometheus.MustRegister(systemCPU)
+	prometheus.MustRegister(systemHealth)
+	prometheus.MustRegister(serviceStatus)
 }
 
-func NewWatchdog() (*Watchdog, error) {
-	docker, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker client: %w", err)
-	}
+// HTTP Watchdog - checks health of Jarvis services
+type Watchdog struct {
+	services map[string]string // service name -> URL
+}
 
+func NewWatchdog() *Watchdog {
 	return &Watchdog{
-		dockerClient: docker,
-		interval:     30 * time.Second,
-	}, nil
-}
-
-// Health check endpoint
-func (w *Watchdog) healthCheck(writer http.ResponseWriter, request *http.Request) {
-	services := []string{
-		"jarvis_rust_backend",
-		"jarvis_audio_engine",
-		"jarvis_python_bridges",
-		"jarvis_ollama",
-		"postgres",
-		"redis",
-	}
-
-	allHealthy := true
-	healthStatus := make(map[string]string)
-
-	for _, service := range services {
-		status, err := w.checkService(request.Context(), service)
-		if err != nil {
-			healthStatus[service] = "error"
-			allHealthy = false
-		} else if status {
-			healthStatus[service] = "healthy"
-			containerHealth.WithLabelValues(service).Set(1)
-		} else {
-			healthStatus[service] = "unhealthy"
-			allHealthy = false
-			containerHealth.WithLabelValues(service).Set(0)
-		}
-	}
-
-	writer.Header().Set("Content-Type", "application/json")
-
-	if allHealthy {
-		writer.WriteHeader(http.StatusOK)
-		fmt.Fprintf(writer, `{"status":"healthy","services":%#v}`, healthStatus)
-	} else {
-		writer.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintf(writer, `{"status":"degraded","services":%#v}`, healthStatus)
+		services: map[string]string{
+			"core":   "http://localhost:8100/health",
+			"audio":  "http://localhost:8004/health",
+			"bridges": "http://localhost:8005/health",
+			"db":     "http://localhost:5432",
+			"redis":  "http://localhost:6379",
+		},
 	}
 }
 
-// Check individual service
-func (w *Watchdog) checkService(ctx context.Context, serviceName string) (bool, error) {
-	log.Printf("🔍 Checking service: %s", serviceName)
-
-	// Vérifier si le container Docker existe et tourne
-	containers, err := w.dockerClient.ContainerList(ctx, container.ListOptions{})
-	if err != nil {
-		return false, err
-	}
-
-	for _, c := range containers {
-		if contains(c.Names, "/"+serviceName) {
-			if c.State == "running" {
-				log.Printf("✅ %s is running", serviceName)
-				return true, nil
+// Check health of each service
+func (w *Watchdog) CheckHealth() {
+	for service, url := range w.services {
+		go func(svc, u string) {
+			resp, err := http.Get(u)
+			if err != nil {
+				log.Printf("❌ Service %s unavailable: %v", svc, err)
+				serviceStatus.WithLabelValues(svc).Set(0)
+				return
 			}
-		}
-	}
+			defer resp.Body.Close()
 
-	log.Printf("❌ %s is not running", serviceName)
-	return false, nil
-}
-
-// Restart dead services
-func (w *Watchdog) restartServices(ctx context.Context) {
-	services := []string{
-		"jarvis_rust_backend",
-		"jarvis_python_bridges",
-		"jarvis_audio_engine",
-	}
-
-	for _, service := range services {
-		healthy, _ := w.checkService(ctx, service)
-		if !healthy {
-			log.Printf("🔄 Restarting service: %s", service)
-			containerRestarts.WithLabelValues(service).Inc()
-			// Dans une implémentation réelle:
-			// w.dockerClient.ContainerRestart(ctx, containerID, ...)
-		}
+			if resp.StatusCode == http.StatusOK {
+				serviceStatus.WithLabelValues(svc).Set(1)
+				log.Printf("✅ Service %s is healthy", svc)
+			} else {
+				serviceStatus.WithLabelValues(svc).Set(0)
+				log.Printf("⚠️ Service %s returned status %d", svc, resp.StatusCode)
+			}
+		}(service, url)
 	}
 }
 
-// Watchdog loop
-func (w *Watchdog) Start(ctx context.Context) {
-	log.Println("🐕 Watchdog started")
-
-	ticker := time.NewTicker(w.interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Println("🛑 Watchdog stopped")
-			return
-		case <-ticker.C:
-			w.restartServices(ctx)
+// Start periodic health checks
+func (w *Watchdog) Start(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		for range ticker.C {
+			w.CheckHealth()
 		}
-	}
+	}()
+	log.Printf("🔍 Watchdog started (interval: %v)", interval)
 }
 
 func main() {
-	// Load .env
-	_ = godotenv.Load()
+	// Load env vars
+	godotenv.Load()
 
-	log.Println("🐹 Jarvis Monitoring v1.6.0")
-
-	// Create watchdog
-	watchdog, err := NewWatchdog()
-	if err != nil {
-		log.Fatalf("Failed to create watchdog: %v", err)
+	port := os.Getenv("MONITORING_PORT")
+	if port == "" {
+		port = "9090"
 	}
 
-	// Setup HTTP routes
-	http.HandleFunc("/health", watchdog.healthCheck)
+	// Initialize watchdog
+	watchdog := NewWatchdog()
+	watchdog.Start(15 * time.Second)
+
+	// Initial health check
+	watchdog.CheckHealth()
+
+	// Prometheus metrics endpoint
 	http.Handle("/metrics", promhttp.Handler())
 
-	// Start watchdog in goroutine
-	ctx, cancel := context.WithCancel(context.Background())
-	go watchdog.Start(ctx)
+	// Health check endpoint
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"healthy","version":"1.6.0"}`))
+	})
 
-	// Start HTTP server
-	server := &http.Server{
-		Addr:         ":8006",
-		Handler:      http.DefaultServeMux,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+	// Status endpoint
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"monitoring":"active","timestamp":"` + time.Now().String() + `"}`))
+	})
+
+	// Dashboard (minimal)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusOK)
+		html := `
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Jarvis Monitoring (Phase 6)</title>
+	<style>
+		body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+		.header { color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; }
+		.metrics { background: white; padding: 20px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+		.metric-item { margin: 10px 0; }
+		.label { font-weight: bold; color: #0066cc; }
+		a { color: #0066cc; text-decoration: none; }
+		a:hover { text-decoration: underline; }
+	</style>
+</head>
+<body>
+	<div class="header">
+		<h1>🔍 Jarvis Monitoring Dashboard (Phase 6)</h1>
+		<p>Go Monitoring Service - Port 9090 - Prometheus + HTTP Watchdog</p>
+	</div>
+
+	<div class="metrics">
+		<h2>📊 Metrics Endpoints</h2>
+		<div class="metric-item"><span class="label">Prometheus:</span> <a href="/metrics">/metrics</a></div>
+		<div class="metric-item"><span class="label">Health:</span> <a href="/health">/health</a></div>
+		<div class="metric-item"><span class="label">Status:</span> <a href="/status">/status</a></div>
+	</div>
+
+	<div class="metrics">
+		<h2>🚀 Jarvis Services</h2>
+		<div class="metric-item">• Core Backend (8100) - Rust with Axum</div>
+		<div class="metric-item">• Audio Engine (8004) - C++ DSP</div>
+		<div class="metric-item">• Python Bridges (8005) - Whisper/Piper/Ollama</div>
+		<div class="metric-item">• DB Layer - PostgreSQL + Redis + Tantivy</div>
+		<div class="metric-item">• MQTT Automations - rumqttc event bus</div>
+	</div>
+
+	<div class="metrics">
+		<h2>📈 Monitoring Capabilities</h2>
+		<ul>
+			<li>Service uptime tracking</li>
+			<li>API latency histograms</li>
+			<li>Request counters by endpoint/method/status</li>
+			<li>System health gauges</li>
+			<li>HTTP watchdog health checks (15s interval)</li>
+		</ul>
+	</div>
+</body>
+</html>
+		`
+		w.Write([]byte(html))
+	})
+
+	log.Printf("🚀 Jarvis Monitoring (Phase 6) starting on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("❌ Server error: %v", err)
 	}
-
-	log.Println("📊 Prometheus metrics on :8006/metrics")
-	log.Println("🏥 Health check on :8006/health")
-
-	// Handle shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		log.Println("📵 Shutting down...")
-		cancel()
-		server.Shutdown(context.Background())
-	}()
-
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server error: %v", err)
-	}
-}
-
-func contains(arr []string, str string) bool {
-	for _, v := range arr {
-		if v == str {
-			return true
-		}
-	}
-	return false
 }

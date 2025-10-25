@@ -1,8 +1,7 @@
 /// Search Service - Full-text search avec Tantivy
 use tantivy::schema::*;
-use tantivy::{Document, Index, Term};
-use tracing::{info, debug, error};
-use std::path::Path;
+use tantivy::{Index, Term};
+use tracing::{info, debug};
 
 use crate::models::*;
 use crate::error::{DbError, DbResult};
@@ -23,7 +22,7 @@ impl SearchService {
         schema_builder.add_text_field("content", TEXT | STORED);
         schema_builder.add_text_field("source", STRING | STORED);
         schema_builder.add_text_field("source_id", STRING | STORED);
-        schema_builder.add_date_field("created_at", STORED);
+        schema_builder.add_i64_field("created_at", STORED);
 
         let schema = schema_builder.build();
 
@@ -51,15 +50,18 @@ impl SearchService {
             .writer(50_000_000)
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        let mut document = Document::new();
-        document.add_text(self.schema.get_field("id").unwrap(), &chunk.id);
-        document.add_text(self.schema.get_field("content").unwrap(), &chunk.content);
-        document.add_text(self.schema.get_field("source").unwrap(), &chunk.source);
-        document.add_text(self.schema.get_field("source_id").unwrap(), &chunk.source_id);
-        document.add_date(
-            self.schema.get_field("created_at").unwrap(),
-            chunk.created_at.with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()).into(),
-        );
+        let mut document = tantivy::TantivyDocument::new();
+        let id_field = self.schema.get_field("id").unwrap();
+        let content_field = self.schema.get_field("content").unwrap();
+        let source_field = self.schema.get_field("source").unwrap();
+        let source_id_field = self.schema.get_field("source_id").unwrap();
+        let created_at_field = self.schema.get_field("created_at").unwrap();
+
+        document.add_text(id_field, &chunk.id);
+        document.add_text(content_field, &chunk.content);
+        document.add_text(source_field, &chunk.source);
+        document.add_text(source_id_field, &chunk.source_id);
+        document.add_i64(created_at_field, chunk.created_at.timestamp());
 
         index_writer.add_document(document)
             .map_err(|e| DbError::Search(e.to_string()))?;
@@ -79,16 +81,19 @@ impl SearchService {
             .writer(50_000_000)
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        for chunk in chunks {
-            let mut document = Document::new();
-            document.add_text(self.schema.get_field("id").unwrap(), &chunk.id);
-            document.add_text(self.schema.get_field("content").unwrap(), &chunk.content);
-            document.add_text(self.schema.get_field("source").unwrap(), &chunk.source);
-            document.add_text(self.schema.get_field("source_id").unwrap(), &chunk.source_id);
-            document.add_date(
-                self.schema.get_field("created_at").unwrap(),
-                chunk.created_at.with_timezone(&chrono::FixedOffset::east_opt(0).unwrap()).into(),
-            );
+        let id_field = self.schema.get_field("id").unwrap();
+        let content_field = self.schema.get_field("content").unwrap();
+        let source_field = self.schema.get_field("source").unwrap();
+        let source_id_field = self.schema.get_field("source_id").unwrap();
+        let created_at_field = self.schema.get_field("created_at").unwrap();
+
+        for chunk in chunks.iter() {
+            let mut document = tantivy::TantivyDocument::new();
+            document.add_text(id_field, &chunk.id);
+            document.add_text(content_field, &chunk.content);
+            document.add_text(source_field, &chunk.source);
+            document.add_text(source_id_field, &chunk.source_id);
+            document.add_i64(created_at_field, chunk.created_at.timestamp());
 
             index_writer.add_document(document)
                 .map_err(|e| DbError::Search(e.to_string()))?;
@@ -135,23 +140,23 @@ impl SearchService {
         let mut results = Vec::new();
 
         for (_score, doc_address) in top_docs {
-            let retrieved_doc = searcher
+            let retrieved_doc: tantivy::TantivyDocument = searcher
                 .doc(doc_address)
                 .map_err(|e| DbError::Search(e.to_string()))?;
 
             let id = retrieved_doc
                 .get_first(id_field)
-                .and_then(|f| f.as_text().map(String::from))
+                .and_then(|f| f.as_str().map(String::from))
                 .unwrap_or_default();
 
             let content = retrieved_doc
                 .get_first(content_field)
-                .and_then(|f| f.as_text().map(String::from))
+                .and_then(|f| f.as_str().map(String::from))
                 .unwrap_or_default();
 
             let source = retrieved_doc
                 .get_first(source_field)
-                .and_then(|f| f.as_text().map(String::from))
+                .and_then(|f| f.as_str().map(String::from))
                 .unwrap_or_default();
 
             results.push(SearchResult {
@@ -173,7 +178,7 @@ impl SearchService {
         debug!("Deleting document: {}", id);
 
         let mut index_writer = self.index
-            .writer(50_000_000)
+            .writer::<tantivy::TantivyDocument>(50_000_000)
             .map_err(|e| DbError::Search(e.to_string()))?;
 
         let id_field = self.schema.get_field("id").unwrap();
@@ -195,17 +200,17 @@ impl SearchService {
             .searcher();
 
         let query = tantivy::query::AllQuery;
-        let count = searcher
+        let count: usize = searcher
             .search(&query, &tantivy::collector::Count)
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        Ok(count)
+        Ok(count as u64)
     }
 
     /// Clear tous les documents
     pub async fn clear(&self) -> DbResult<()> {
         let mut index_writer = self.index
-            .writer(50_000_000)
+            .writer::<tantivy::TantivyDocument>(50_000_000)
             .map_err(|e| DbError::Search(e.to_string()))?;
 
         index_writer.delete_all_documents()

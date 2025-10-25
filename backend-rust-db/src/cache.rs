@@ -69,11 +69,15 @@ impl CacheService {
         let mut conn = self.client.clone();
 
         if let Some(ttl) = ttl_secs {
-            conn.set_ex(key, json, ttl as usize)
+            redis::cmd("SETEX")
+                .arg(key)
+                .arg(ttl)
+                .arg(json)
+                .query_async::<_, ()>(&mut conn)
                 .await
                 .map_err(|e| DbError::Cache(e.to_string()))?;
         } else {
-            conn.set(key, json)
+            conn.set::<_, _, ()>(key, json)
                 .await
                 .map_err(|e| DbError::Cache(e.to_string()))?;
         }
@@ -92,7 +96,7 @@ impl CacheService {
     }
 
     /// Invalider un pattern (ex: "user:123:*")
-    pub async fn invalidate_pattern(&self, pattern: &str) -> DbResult<u32> {
+    pub async fn invalidate_pattern(&self, pattern: &str) -> DbResult<usize> {
         debug!("Cache INVALIDATE: {}", pattern);
 
         let mut conn = self.client.clone();
@@ -105,7 +109,7 @@ impl CacheService {
             return Ok(0);
         }
 
-        let count: u32 = conn
+        let count: usize = conn
             .del(keys)
             .await
             .map_err(|e| DbError::Cache(e.to_string()))?;
@@ -146,7 +150,10 @@ impl CacheService {
     /// Incrémenter counter Redis
     pub async fn increment(&self, key: &str, amount: i32) -> DbResult<i64> {
         let mut conn = self.client.clone();
-        conn.incr(key, amount as u64)
+        redis::cmd("INCRBY")
+            .arg(key)
+            .arg(amount)
+            .query_async::<_, i64>(&mut conn)
             .await
             .map_err(|e| DbError::Cache(e.to_string()))
     }
@@ -154,7 +161,10 @@ impl CacheService {
     /// Ajouter à set Redis
     pub async fn sadd(&self, key: &str, member: &str) -> DbResult<()> {
         let mut conn = self.client.clone();
-        conn.sadd(key, member)
+        redis::cmd("SADD")
+            .arg(key)
+            .arg(member)
+            .query_async::<_, ()>(&mut conn)
             .await
             .map_err(|e| DbError::Cache(e.to_string()))
     }

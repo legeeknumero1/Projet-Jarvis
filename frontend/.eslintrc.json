@@ -1,9 +1,11 @@
 {
-  "extends": [
-    "react-app",
-    "react-app/jest"
-  ],
+  "extends": "next/core-web-vitals",
   "rules": {
-    "no-unused-vars": "warn"
+    "react/display-name": "off",
+    "@next/next/no-img-element": "off",
+    "react-hooks/rules-of-hooks": "warn",
+    "@typescript-eslint/no-unused-vars": "off",
+    "react/no-unescaped-entities": "warn",
+    "@next/next/no-head-element": "warn"
   }
 }

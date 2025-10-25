@@ -11,12 +11,38 @@ from typing import Dict, Any
 from loguru import logger
 import os
 import traceback
+from functools import wraps
+import jwt
+from datetime import datetime, timedelta
 
 # Clients IA
 from ollama_client import get_ollama_client
 from whisper_client import get_whisper_client
 from piper_client import get_piper_client
 from embeddings_service import get_embeddings_service
+
+# Input Validators - SECURITY FIX C7-C11
+from validators import (
+    PromptValidator,
+    TTSValidator,
+    STTValidator,
+    LoginValidator,
+    EmbeddingsValidator,
+    sanitize_text
+)
+
+# Rate Limiting - SECURITY FIX C14
+from rate_limiter import (
+    create_limiter,
+    rate_limit_auth_login,
+    rate_limit_auth_verify,
+    rate_limit_llm_generate,
+    rate_limit_stt_transcribe,
+    rate_limit_tts_synthesize,
+    rate_limit_embeddings,
+    RateLimitMonitor,
+    handle_rate_limit_exceeded
+)
 
 # Configuration
 app = Flask(__name__)
@@ -25,9 +51,75 @@ cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://loca
 cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
 CORS(app, origins=cors_origins, supports_credentials=True)
 
+# Initialize Rate Limiting - SECURITY FIX C14
+limiter = create_limiter(app)
+handle_rate_limit_exceeded(limiter, app)
+
+# JWT Configuration - SECURITY FIX C1
+JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24
+
 # Logger
 logger.add("logs/bridges.log", rotation="500 MB", level="INFO")
 os.makedirs("logs", exist_ok=True)
+
+# ============================================================================
+# JWT Authentication Helper Functions
+# ============================================================================
+
+def generate_token(user_id: str, username: str) -> str:
+    """Générer un token JWT"""
+    payload = {
+        "sub": user_id,
+        "user_id": user_id,
+        "username": username,
+        "iat": datetime.utcnow(),
+        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
+        "permissions": ["llm", "stt", "tts", "embeddings"],
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def verify_token(token: str) -> Dict[str, Any]:
+    """Vérifier un token JWT"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+
+def require_auth(f):
+    """Décorateur pour protéger les endpoints avec JWT"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        # Extract token from Authorization header
+        if "Authorization" in request.headers:
+            auth_header = request.headers["Authorization"]
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({"error": "Invalid authorization header"}), 401
+
+        if not token:
+            return jsonify({"error": "Missing authorization token"}), 401
+
+        # Verify token
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({"error": "Invalid or expired token"}), 401
+
+        # Store user info in request context
+        request.user = payload
+
+        return f(*args, **kwargs)
+
+    return decorated
 
 
 # ============================================================================
@@ -74,12 +166,72 @@ def ready():
 
 
 # ============================================================================
+# AUTHENTICATION ENDPOINTS
+# ============================================================================
+
+@app.route("/api/auth/login", methods=["POST"])
+@rate_limit_auth_login(limiter)
+def login():
+    """Générer un token JWT pour l'authentification - SECURITY FIX C7 (Input Validation) + C14 (Rate Limiting)"""
+    try:
+        data = request.get_json()
+        username = data.get("username", "")
+        password = data.get("password", "")
+
+        # Input Validation - SECURITY FIX C7
+        validator = LoginValidator(username, password)
+        is_valid, error_msg = validator.validate()
+        if not is_valid:
+            logger.warning(f"❌ LOGIN VALIDATION FAILED: {error_msg} from {request.remote_addr}")
+            return jsonify({"error": "Invalid credentials"}), 400
+
+        # TODO: In production, validate against real user database
+        # For now, accept any username with valid format
+        user_id = f"user-{username}"
+        token = generate_token(user_id, username)
+
+        logger.info(f"🔐 Login successful for user: {username}")
+
+        return jsonify({
+            "access_token": token,
+            "token_type": "Bearer",
+            "expires_in": JWT_EXPIRATION_HOURS * 3600,
+            "user_id": user_id,
+            "username": username,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"❌ Login error: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/api/auth/verify", methods=["POST"])
+@require_auth
+@rate_limit_auth_verify(limiter)
+def verify():
+    """Vérifier la validité d'un token JWT - SECURITY FIX C14 (Rate Limiting)"""
+    try:
+        logger.info(f"✅ Token verified for user: {request.user.get('username')}")
+        return jsonify({
+            "valid": True,
+            "user_id": request.user.get("user_id"),
+            "username": request.user.get("username"),
+            "permissions": request.user.get("permissions"),
+        }), 200
+    except Exception as e:
+        logger.error(f"❌ Token verification error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
 # OLLAMA LLM ENDPOINTS
 # ============================================================================
 
 @app.route("/api/llm/generate", methods=["POST"])
+@require_auth
+@rate_limit_llm_generate(limiter)
 def llm_generate():
-    """Générer texte avec Ollama"""
+    """Générer texte avec Ollama - SECURITY FIX C7 (Input Validation) + C14 (Rate Limiting)"""
     try:
         data = request.get_json()
         prompt = data.get("prompt", "")
@@ -87,8 +239,13 @@ def llm_generate():
         temperature = data.get("temperature", 0.7)
         max_tokens = data.get("max_tokens", 512)
 
-        if not prompt:
-            return jsonify({"error": "prompt required"}), 400
+        # Input Validation - SECURITY FIX C7
+        validator = PromptValidator(prompt, system_prompt=system_prompt,
+                                   temperature=temperature, max_tokens=max_tokens)
+        is_valid, error_msg = validator.validate()
+        if not is_valid:
+            logger.warning(f"❌ LLM VALIDATION FAILED: {error_msg}")
+            return jsonify({"error": error_msg}), 400
 
         client = get_ollama_client()
         result = client.generate(
@@ -108,10 +265,11 @@ def llm_generate():
 
     except Exception as e:
         logger.error(f"❌ LLM generation error: {e}\n{traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/llm/models", methods=["GET"])
+@require_auth
 def llm_models():
     """Lister les modèles Ollama disponibles"""
     try:
@@ -128,15 +286,21 @@ def llm_models():
 # ============================================================================
 
 @app.route("/api/stt/transcribe", methods=["POST"])
+@require_auth
+@rate_limit_stt_transcribe(limiter)
 def stt_transcribe():
-    """Transcrire audio Whisper"""
+    """Transcrire audio Whisper - SECURITY FIX C10 (Input Validation) + C14 (Rate Limiting)"""
     try:
         data = request.get_json()
         audio_b64 = data.get("audio_data", "")
         language = data.get("language")
 
-        if not audio_b64:
-            return jsonify({"error": "audio_data required"}), 400
+        # Input Validation - SECURITY FIX C10
+        validator = STTValidator(audio_b64, language=language)
+        is_valid, error_msg = validator.validate()
+        if not is_valid:
+            logger.warning(f"❌ STT VALIDATION FAILED: {error_msg}")
+            return jsonify({"error": error_msg}), 400
 
         # Décoder audio base64
         audio_bytes = base64.b64decode(audio_b64)
@@ -159,7 +323,7 @@ def stt_transcribe():
 
     except Exception as e:
         logger.error(f"❌ Transcription error: {e}\n{traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 # ============================================================================
@@ -167,20 +331,41 @@ def stt_transcribe():
 # ============================================================================
 
 @app.route("/api/tts/synthesize", methods=["POST"])
+@require_auth
+@rate_limit_tts_synthesize(limiter)
 def tts_synthesize():
-    """Synthétiser texte Piper"""
+    """Synthétiser texte Piper - SECURITY FIX C3 (RCE) + C8 (XSS) + C9 (Input Validation) + C14 (Rate Limiting)"""
     try:
         data = request.get_json()
         text = data.get("text", "")
         voice = data.get("voice", "fr_FR-upmc-medium")
         speed = data.get("speed", 1.0)
 
-        if not text:
-            return jsonify({"error": "text required"}), 400
+        # Input Validation - SECURITY FIX C8/C9
+        validator = TTSValidator(text, voice=voice, speed=speed)
+        is_valid, error_msg = validator.validate()
+        if not is_valid:
+            logger.warning(f"❌ TTS VALIDATION FAILED: {error_msg}")
+            return jsonify({"error": error_msg}), 400
+
+        # Sanitize text to remove XSS attempts - SECURITY FIX C8
+        clean_text = sanitize_text(text)
+
+        # CRITICAL SECURITY FIX: Validate voice against whitelist only - SECURITY FIX C3
+        ALLOWED_VOICES = [
+            "fr_FR-upmc-medium",
+            "fr_FR-siwis-medium",
+            "fr_FR-tom-medium",
+            "en_US-glow-tts",
+            "en_US-bryce-medium"
+        ]
+
+        if voice not in ALLOWED_VOICES:
+            return jsonify({"error": f"Invalid voice. Allowed: {', '.join(ALLOWED_VOICES)}"}), 400
 
         client = get_piper_client()
         result = client.synthesize(
-            text=text,
+            text=clean_text,
             voice=voice,
             speed=speed
         )
@@ -198,10 +383,11 @@ def tts_synthesize():
 
     except Exception as e:
         logger.error(f"❌ Synthesis error: {e}\n{traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/tts/voices", methods=["GET"])
+@require_auth
 def tts_voices():
     """Lister les voix TTS disponibles"""
     try:
@@ -218,14 +404,20 @@ def tts_voices():
 # ============================================================================
 
 @app.route("/api/embeddings/embed", methods=["POST"])
+@require_auth
+@rate_limit_embeddings(limiter)
 def embed_text():
-    """Vectoriser un texte"""
+    """Vectoriser un texte - SECURITY FIX C11 (Input Validation) + C14 (Rate Limiting)"""
     try:
         data = request.get_json()
         text = data.get("text", "")
 
-        if not text:
-            return jsonify({"error": "text required"}), 400
+        # Input Validation - SECURITY FIX C11
+        validator = EmbeddingsValidator(text)
+        is_valid, error_msg = validator.validate()
+        if not is_valid:
+            logger.warning(f"❌ EMBEDDINGS VALIDATION FAILED: {error_msg}")
+            return jsonify({"error": error_msg}), 400
 
         service = get_embeddings_service()
         result = service.embed_text(text)
@@ -242,18 +434,29 @@ def embed_text():
 
     except Exception as e:
         logger.error(f"❌ Embedding error: {e}\n{traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/api/embeddings/embed-batch", methods=["POST"])
+@require_auth
+@rate_limit_embeddings(limiter)
 def embed_batch():
-    """Vectoriser plusieurs textes"""
+    """Vectoriser plusieurs textes - SECURITY FIX C11 (Input Validation) + C14 (Rate Limiting)"""
     try:
         data = request.get_json()
         texts = data.get("texts", [])
 
         if not texts:
             return jsonify({"error": "texts required"}), 400
+
+        # Input Validation - SECURITY FIX C11
+        # Validate each text in the batch
+        for text in texts:
+            validator = EmbeddingsValidator(text)
+            is_valid, error_msg = validator.validate()
+            if not is_valid:
+                logger.warning(f"❌ BATCH EMBEDDINGS VALIDATION FAILED: {error_msg}")
+                return jsonify({"error": f"Batch validation failed: {error_msg}"}), 400
 
         service = get_embeddings_service()
         results = service.embed_texts(texts)
@@ -275,7 +478,7 @@ def embed_batch():
 
     except Exception as e:
         logger.error(f"❌ Batch embedding error: {e}\n{traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 
 # ============================================================================

@@ -6,63 +6,64 @@
 
 ---
 
-## 🚨 RÈGLE ABSOLUE - ARCHITECTURE DOCKER COMPLÈTE
+## 📊 AUDIT 2025-10-25: ÉTAT RÉEL DU PROJET
 
-### ⚡ ARCHITECTURE POUPÉE RUSSE OBLIGATOIRE
+### ✅ STATUT RÉEL CONFIRMÉ - 10/10 CONTAINERS ACTIFS
 
-**L'architecture Jarvis DOIT contenir EXACTEMENT 7 containers Docker :**
+**L'architecture Jarvis CONTIENT ACTUELLEMENT 10 containers Docker (PAS 7 comme documenté) :**
 
-1. **PostgreSQL** (172.20.0.100:5432) - Base de données ✅
-2. **Redis** (172.20.0.110:6379) - Cache ✅  
-3. **Ollama** (172.20.0.30:11434) - LLM Engine ✅
-4. **STT API** (172.20.0.10:8003) - Speech-to-Text ✅
-5. **TTS API** (172.20.0.20:8002) - Text-to-Speech ✅
-6. **🚨 Backend API** (172.20.0.40:8000) - MANQUANT ❌
-7. **🚨 Interface** (172.20.0.50:3000/8001) - MANQUANT ❌
+| # | Container | IP | Port | Status | Role |
+|---|-----------|----|----|--------|------|
+| 1 | PostgreSQL | 172.20.0.100 | 5432 | ✅ HEALTHY | Base de données |
+| 2 | Redis | 172.20.0.110 | 6379 | ✅ HEALTHY | Cache distribué |
+| 3 | Ollama | 172.20.0.30 | 11434 | ✅ HEALTHY | LLM Engine |
+| 4 | STT API | 172.20.0.10 | 8003 | ✅ HEALTHY | Speech-to-Text |
+| 5 | TTS API | 172.20.0.20 | 8002 | ✅ HEALTHY | Text-to-Speech |
+| 6 | Backend (Rust Core) | 172.20.0.40 | 8100 | ✅ HEALTHY | Orchestration Axum |
+| 7 | Interface (Backend Python) | 172.20.0.50 | 8010 | ✅ HEALTHY | API Services Python |
+| 8 | Frontend (React UI) | 172.20.0.60 | 3000 | ✅ HEALTHY | Interface utilisateur |
+| 9 | Qdrant | 172.20.0.120 | 6333/6334 | ✅ HEALTHY | Vector DB |
+| 10 | TimescaleDB | 172.20.0.130 | 5432 | ✅ HEALTHY | Time-series DB |
 
-### 📋 STATUT ACTUEL (MISE À JOUR 18:15)
-```bash
-# CONTAINERS ACTIFS (5/7)
-docker ps
-# ✅ jarvis_postgres - PostgreSQL (172.20.0.100:5432)
-# ✅ jarvis_redis - Redis (172.20.0.110:6379)
-# ✅ jarvis_ollama - Ollama (172.20.0.30:11434)
-# ✅ jarvis_stt_api - STT API (172.20.0.10:8003) - HEALTHY
-# ✅ jarvis_tts_api - TTS API (172.20.0.20:8002) - HEALTHY
-# 🔄 jarvis_backend - Backend API (BUILD EN COURS avec Python 3.12 + setuptools)
-# ❌ jarvis_interface - Interface (PRÊT À CONSTRUIRE)
-```
+### 🔴 PROBLÈME CRITIQUE DÉCOUVERT
 
-### 🔧 CORRECTIONS APPLIQUÉES & PROBLÈME ESPACE DISQUE IDENTIFIÉ
-- **Requirements restaurées** : Toutes dépendances Backend/STT/TTS complètes
-- **Dockerfile amélioré** : Ajout build-essential, setuptools, wheel  
-- **Build fixes** : Python 3.12 avec outils de compilation
-- **Connectivité testée** : Communication inter-containers validée ✅
-- **🚨 PROBLÈME CRITIQUE** : Partition root 120GB saturée par Docker
-- **📋 SOLUTION PLANIFIÉE** : Migration Docker vers /home/jarvis-docker/
-- **📄 PROCÉDURE** : Voir docs/MIGRATION_DOCKER_HOME.md
+**CLAUDE_PARAMS.md est OBSOLÈTE depuis 2025-01-17**
+- Documentation annonce: 7/7 containers avec Backend/Interface "MANQUANT"
+- Réalité audit 2025-10-25: 10/10 containers TOUS actifs et sains
+- 3 containers totalement non-documentés: Frontend-UI, Qdrant, TimescaleDB
+- Migration Docker était marquée "CRITIQUE" mais déjà complétée
 
-### 🎯 RÈGLES DE COMPLETION ABSOLUES
+### 🚨 VULNÉRABILITÉS SÉCURITÉ DÉCOUVERTES - 15 CRITIQUES/HAUTES
 
-1. **BACKEND OBLIGATOIRE** : Le container `jarvis_backend` DOIT être construit et démarré
-2. **INTERFACE OBLIGATOIRE** : Le container `jarvis_interface` DOIT être construit et démarré  
-3. **RÉSEAU COMPLET** : Tous les 7 containers DOIVENT communiquer sur `jarvis_network`
-4. **TESTS REQUIS** : Connectivité inter-containers DOIT être validée
-5. **ARCHITECTURE FINALE** : AUCUN service ne peut être omis ou simplifié
+**Audit complet 2025-10-25 a identifié :**
+- **6 CRITIQUES** : Authentification zéro, RCE, CORS permissif, Pas TLS, Pas rate limiting, Pas secrets management
+- **4 HAUTES** : Validation minimale, Buffer overflow, Handlers mock, Timeouts manquants
+- **5 MOYENNES** : Erreurs exposées, CORS config, Allocations en boucle, STT/TTS placeholder
 
-### 🔧 ACTIONS IMMÉDIATES REQUISES
+**Rapport complet**: `AUDIT_SECURITY_REPORT.md` (15 vulnérabilités avec CVSS scores)
 
-**🚨 PRIORITÉ ABSOLUE - MIGRATION DOCKER :**
-1. **Exécuter migration Docker** vers /home (voir MIGRATION_DOCKER_HOME.md)
-2. **Libérer espace disque** partition root (120GB → /home)
-3. **Reconfigurer Docker daemon** avec nouveau data-root
+---
 
-**📋 APRÈS MIGRATION :**
-4. **Terminer le build Backend** avec plus d'espace
-5. **Démarrer le container jarvis_backend** 
-6. **Construire l'image jarvis_interface**
-7. **Démarrer le container jarvis_interface**
-8. **Valider l'architecture complète 7/7**
+### 🔴 ACTIONS IMMÉDIATES PRIORITAIRES (Audit 2025-10-25)
+
+**CETTE SEMAINE - SÉCURITÉ CRITIQUE:**
+1. **Authentification JWT/API Key** - Tous les endpoints actuellement publics
+2. **CORS Configuration** - Remplacer permissive par whitelist stricte
+3. **Sécuriser subprocess Piper** - Whitelist voix, échapper user inputs
+4. **HTTPS/TLS Configuration** - Self-signed certs dev, Let's Encrypt prod
+5. **Validation inputs structurée** - Pydantic (Python), validator (Rust), MAX_SIZE (C++)
+
+**SEMAINE 1:**
+6. **Rate Limiting** - Protéger contra DoS (100 req/min default)
+7. **Buffer Size Limits** - C++ Audio max 100MB par request
+8. **HTTP Timeouts** - Reqwest 30s timeout, éviter blocages infinis
+9. **Error Handling** - Pas de stacktraces en HTTP responses
+
+**SEMAINE 2:**
+10. **Secrets Management** - Vault ou Docker Secrets (jamais .env plaintext)
+11. **Audit Logging Centralisé** - Elasticsearch/Loki
+12. **Security Testing** - bandit, cargo audit, OWASP ZAP
+13. **Rate Limit Persistence** - Redis pour rate limits distribués
 
 ---
 

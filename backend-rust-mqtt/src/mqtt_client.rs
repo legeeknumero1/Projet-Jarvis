@@ -26,7 +26,7 @@ impl MqttService {
             .map_err(|_| MqttError::Connection("Port must be number".to_string()))?;
 
         // Créer options MQTT
-        let mut options = MqttOptions::new("jarvis-automation", host, port);
+        let mut options = MqttOptions::new("jarvis-automation", host.to_string(), port);
         options.set_keep_alive(std::time::Duration::from_secs(60));
         options.set_transport(Transport::Tcp);
 
@@ -52,8 +52,14 @@ impl MqttService {
     pub async fn publish(&self, topic: &str, payload: &str, qos: u8) -> MqttResult<()> {
         debug!("Publishing to {}: {}", topic, payload);
 
+        let qos_level = match qos {
+            0 => rumqttc::QoS::AtMostOnce,
+            1 => rumqttc::QoS::AtLeastOnce,
+            _ => rumqttc::QoS::ExactlyOnce,
+        };
+
         let client = self.client.lock().await;
-        client.publish(topic, rumqttc::QoS::from(qos), false, payload)
+        client.publish(topic, qos_level, false, payload)
             .await
             .map_err(|e| MqttError::Publish(e.to_string()))?;
 
@@ -65,8 +71,14 @@ impl MqttService {
     pub async fn subscribe(&self, topic: &str, qos: u8) -> MqttResult<()> {
         debug!("Subscribing to: {}", topic);
 
+        let qos_level = match qos {
+            0 => rumqttc::QoS::AtMostOnce,
+            1 => rumqttc::QoS::AtLeastOnce,
+            _ => rumqttc::QoS::ExactlyOnce,
+        };
+
         let client = self.client.lock().await;
-        client.subscribe(topic, rumqttc::QoS::from(qos))
+        client.subscribe(topic, qos_level)
             .await
             .map_err(|e| MqttError::Subscribe(e.to_string()))?;
 

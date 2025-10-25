@@ -11,7 +11,7 @@ tokio = { version = "1.35", features = ["full"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "uuid", "chrono", "json"] }
 
 # Full-text search
-tantivy = "0.21"
+tantivy = "0.22"
 
 # Cache
 redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }

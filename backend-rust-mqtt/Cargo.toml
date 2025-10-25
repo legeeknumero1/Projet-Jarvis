@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 # MQTT client stable
-rumqttc = { version = "0.24", features = ["tokio-native-tls"] }
+rumqttc = "0.24"
 
 # Async runtime
 tokio = { version = "1.35", features = ["full"] }

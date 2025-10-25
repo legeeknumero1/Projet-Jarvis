@@ -1,3 +1,0 @@
-# Reference vers requirements unifies
--r requirements-unified.txt
-aiohttp-cors==0.7.0

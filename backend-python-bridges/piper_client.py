@@ -87,6 +87,18 @@ class PiperClient:
         """
         selected_voice = voice or self.voice
 
+        # SECURITY FIX: Validate voice against whitelist (defense in depth)
+        if selected_voice not in self.FRENCH_VOICES:
+            raise ValueError(f"Invalid voice: {selected_voice}. Allowed voices: {list(self.FRENCH_VOICES.keys())}")
+
+        # Validate input text length
+        if not text or len(text) > 5000:
+            raise ValueError("Text must be between 1 and 5000 characters")
+
+        # Validate speed
+        if not (0.5 <= speed <= 2.0):
+            raise ValueError("Speed must be between 0.5 and 2.0")
+
         try:
             import time
             start_time = time.time()
@@ -99,7 +111,7 @@ class PiperClient:
                 tmp_path = tmp.name
 
             try:
-                # Exécuter Piper
+                # Exécuter Piper (subprocess.Popen with list prevents shell injection)
                 cmd = [
                     self.piper_binary,
                     "--model", selected_voice,
