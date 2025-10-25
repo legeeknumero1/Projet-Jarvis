@@ -176,3 +176,83 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# CRITICAL: Security Files - NEVER commit these
+# Secrets and credentials
+.env*
+!.env.example
+!.env.template
+.env.*.local
+.env.*.secret
+.env.production
+.env.staging
+.env.development
+.env.test
+secrets.json
+credentials.json
+*.key
+*.pem
+*.crt
+*.cert
+*.p12
+*.pfx
+.aws/
+.ssh/
+
+# API Keys and Tokens
+MCP/configs/*.json
+MCP/configs/*.yaml
+MCP/configs/*.yml
+config/*.json
+config/*.yaml
+config/*.yml
+config/secrets/
+config/*secret*
+config/*token*
+config/*key*
+
+# Database credentials
+database.conf
+db.conf
+db.password
+db.secret
+
+# Local IDE/Developer settings
+.claude/settings.local.json
+.claude/*.local.*
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.iml
+
+# Audit and vulnerability reports with sensitive data
+AUDIT*.md
+AUDIT*.json
+AUDIT*.txt
+*security*report*.json
+*vulnerability*.json
+
+# Compiled binaries and artifacts
+target/
+build/
+dist/
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+.DS_Store
+Thumbs.db
+
+# Cargo and Rust build artifacts
+Cargo.lock
+/target/
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
