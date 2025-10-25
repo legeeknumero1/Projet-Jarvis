@@ -1,0 +1,391 @@
+# Docker Compose sécurisé pour Jarvis v1.3 - Corrections audit critique
+# Suppression version field (obsolète 2025)
+
+networks:
+  jarvis_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    external: false
+    attachable: false  # Sécurité: Pas de connexions externes
+    driver_opts:
+      com.docker.network.bridge.name: jarvis-br0
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: 1500
+
+services:
+  # Container 1: STT API (Speech-to-Text)
+  stt-api:
+    build:
+      context: ./services/stt
+      dockerfile: Dockerfile
+    container_name: jarvis_stt_api
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "8003:8003"
+    environment:
+      - SERVICE_NAME=stt-api
+      - STT_MODEL_PATH=/app/models/stt
+      - BACKEND_API_URL=http://172.20.0.40:8000
+    volumes:
+      - stt_models:/app/models/stt
+      - app_logs:/app/logs
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Container 2: TTS API (Text-to-Speech)
+  tts-api:
+    build:
+      context: ./services/tts
+      dockerfile: Dockerfile
+    container_name: jarvis_tts_api
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.20
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVICE_NAME=tts-api
+      - TTS_MODEL_PATH=/app/models/tts
+      - BACKEND_API_URL=http://172.20.0.40:8000
+    volumes:
+      - tts_models:/app/models/tts
+      - app_logs:/app/logs
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Container 3: Ollama avec GPU RTX 4080 sécurisé
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jarvis_ollama
+    runtime: nvidia
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN  # Requis pour GPU access
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.30
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/home/jarvis/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+          cpus: '4.0'
+        reservations:
+          memory: 4G
+          cpus: '2.0'
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+  # Container 4: Backend API sécurisé
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jarvis_backend
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.40
+    ports:
+      - "8000:8000"
+    environment:
+      - BACKEND_ENV=production
+      - OLLAMA_BASE_URL=http://172.20.0.30:11434
+      - STT_API_URL=http://172.20.0.10:8003
+      - TTS_API_URL=http://172.20.0.20:8002
+    secrets:
+      - postgres_password
+      - api_key
+    volumes:
+      - app_logs:/app/logs
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+
+  # Container 5: Frontend ollama-webui sécurisé
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jarvis_frontend
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.50
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    volumes:
+      - frontend_cache:/app/.next/cache
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Container 6: PostgreSQL sécurisé
+  postgres:
+    image: postgres:17-alpine
+    container_name: jarvis_postgres
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.100
+    # Pas de port exposé publiquement
+    environment:
+      - POSTGRES_DB=jarvis_db
+      - POSTGRES_USER=jarvis
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_db"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Container 7: Redis sécurisé
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis_redis
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.110
+    # Pas de port exposé publiquement
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 60s
+      timeout: 5s
+      retries: 5
+
+  # Container 8: Qdrant Vector DB sécurisé
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: jarvis_qdrant
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.120
+    # Ports exposés uniquement pour développement - À SUPPRIMER EN PRODUCTION
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+      - ./config/qdrant_config.yaml:/qdrant/config/production.yaml:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6333/collections"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+  # Container 9: TimescaleDB sécurisé
+  timescale:
+    image: timescale/timescaledb:latest-pg17
+    container_name: jarvis_timescale
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.130
+    # Pas de port exposé publiquement
+    environment:
+      - POSTGRES_DB=jarvis_timeseries
+      - POSTGRES_USER=jarvis
+    secrets:
+      - timescale_password
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./backend/db/timescale_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+
+# Volumes nommés sécurisés
+volumes:
+  stt_models:
+    driver: local
+  tts_models:
+    driver: local
+  ollama_data:
+    driver: local
+  app_logs:
+    driver: local
+  frontend_cache:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  timescale_data:
+    driver: local
+
+# Secrets Docker sécurisés
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  timescale_password:
+    file: ./secrets/timescale_password.txt
+  api_key:
+    file: ./secrets/api_key.txt

@@ -1,0 +1,58 @@
+{
+  "name": "browserbase",
+  "description": "Navigation internet et automation web via Browserbase",
+  "version": "2.0.1",
+  "capabilities": [
+    "navigate",
+    "screenshot", 
+    "extract",
+    "click",
+    "fill",
+    "search",
+    "observe",
+    "act"
+  ],
+  "installation": {
+    "method": "local",
+    "path": "/home/enzo/Projet-Jarvis/MCP/servers/browserbase/dist/cli.js",
+    "command": "node",
+    "requirements": {
+      "BROWSERBASE_API_KEY": "required",
+      "BROWSERBASE_PROJECT_ID": "required",
+      "GEMINI_API_KEY": "optional"
+    }
+  },
+  "configuration": {
+    "default_timeout": 30000,
+    "max_sessions": 3,
+    "enable_stealth": true,
+    "enable_proxies": false,
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    }
+  },
+  "tools": {
+    "navigate": {
+      "description": "Navigue vers une URL",
+      "parameters": ["url"]
+    },
+    "screenshot": {
+      "description": "Prend une capture d'écran",
+      "parameters": ["url", "fullPage", "selector"]
+    },
+    "extract": {
+      "description": "Extrait des données d'une page",
+      "parameters": ["url", "instruction", "schema"]
+    },
+    "act": {
+      "description": "Effectue une action sur la page",
+      "parameters": ["instruction", "modelName"]
+    },
+    "observe": {
+      "description": "Observe et analyse une page",
+      "parameters": ["instruction", "modelName"]
+    }
+  },
+  "status": "active"
+}

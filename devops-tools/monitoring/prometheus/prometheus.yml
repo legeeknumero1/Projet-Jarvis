@@ -1,0 +1,86 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - Métriques système
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor - Métriques containers
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Jarvis Backend - Métriques applicatives
+  - job_name: 'jarvis-backend'
+    static_configs:
+      - targets: ['jarvis_backend:8000']  # Backend Jarvis via nom Docker
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Jarvis Services - APIs  
+  - job_name: 'jarvis-stt'
+    static_configs:
+      - targets: ['jarvis_stt_api:8003']  # STT API
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    
+  - job_name: 'jarvis-tts'
+    static_configs:
+      - targets: ['jarvis_tts_api:8002']  # TTS API
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    
+  - job_name: 'jarvis-interface'
+    static_configs:
+      - targets: ['jarvis_interface:3000']  # Interface via nom Docker
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Databases (pas d'endpoints /metrics natifs pour ces services)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['jarvis_postgres:5432']
+  #   metrics_path: '/metrics'
+
+  # - job_name: 'redis' 
+  #   static_configs:
+  #     - targets: ['jarvis_redis:6379']
+
+  # - job_name: 'qdrant'
+  #   static_configs:
+  #     - targets: ['jarvis_qdrant:6333']
+  #   metrics_path: '/metrics'
+
+  # Ollama LLM (pas d'endpoint /metrics natif)
+  # - job_name: 'ollama'
+  #   static_configs:
+  #     - targets: ['jarvis_ollama:11434']
+  #   metrics_path: '/metrics'
+
+  # Jenkins
+  - job_name: 'jenkins'
+    static_configs:
+      - targets: ['jenkins:8080']
+    metrics_path: '/prometheus'
+
+  # Docker
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']

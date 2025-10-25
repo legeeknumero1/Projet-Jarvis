@@ -1,0 +1,128 @@
+# Production Docker Compose avec reverse proxy sécurisé
+version: '3.8'
+
+services:
+  # Reverse Proxy Nginx avec TLS
+  nginx:
+    image: nginx:alpine
+    container_name: jarvis_proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/letsencrypt:ro
+      - ../frontend/build:/var/www/jarvis:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backend API (pas d'exposition directe)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: jarvis_backend
+    expose:
+      - "8000"  # Pas de ports publics - via proxy uniquement
+    environment:
+      - JARVIS_API_KEY_FILE=/run/secrets/api_key
+      - ALLOWED_ORIGINS=["https://jarvis.example.com"]
+      - LOG_LEVEL=INFO
+      - DB_HOST=postgres
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_URL=http://ollama:11434
+    secrets:
+      - api_key
+      - db_password
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Base de données avec secrets
+  postgres:
+    image: postgres:15-alpine
+    container_name: jarvis_postgres
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_DB=jarvis_db
+      - POSTGRES_USER=jarvis
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis_redis
+    expose:
+      - "6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # LLM Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jarvis_ollama
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  # Services STT/TTS (optionnel en prod selon besoins)
+  stt:
+    build:
+      context: ../services/stt
+      dockerfile: Dockerfile
+    container_name: jarvis_stt
+    expose:
+      - "8003"
+    restart: unless-stopped
+
+  tts:
+    build:
+      context: ../services/tts
+      dockerfile: Dockerfile
+    container_name: jarvis_tts
+    expose:
+      - "8002"
+    restart: unless-stopped
+
+# Docker Secrets (production)
+secrets:
+  api_key:
+    file: ./secrets/api_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

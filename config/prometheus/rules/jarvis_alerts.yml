@@ -1,0 +1,245 @@
+# Règles d'alerting Jarvis - Scalable Architecture v1.3.2
+# Alertes critiques pour monitoring infrastructure microservices
+
+groups:
+  - name: jarvis.backend
+    rules:
+      - alert: BackendInstanceDown
+        expr: up{job="jarvis-backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Instance backend Jarvis indisponible"
+          description: "L'instance {{ $labels.instance }} du backend Jarvis est indisponible depuis plus de 30 secondes"
+
+      - alert: BackendHighResponseTime
+        expr: jarvis_response_time_seconds > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "Temps de réponse élevé backend Jarvis"
+          description: "Le temps de réponse moyen du backend {{ $labels.instance }} est de {{ $value }}s"
+
+      - alert: BackendHighErrorRate
+        expr: rate(jarvis_requests_errors_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Taux d'erreur élevé backend Jarvis"
+          description: "Le taux d'erreur du backend {{ $labels.instance }} est de {{ $value | humanizePercentage }}"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(jarvis_db_slow_queries_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Requêtes lentes détectées"
+          description: "Taux élevé de requêtes lentes: {{ $value }} req/s sur {{ $labels.table }}"
+
+  - name: jarvis.ollama
+    rules:
+      - alert: OllamaInstanceDown
+        expr: up{job="ollama-instances"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: ollama
+        annotations:
+          summary: "Instance Ollama indisponible"
+          description: "L'instance Ollama {{ $labels.instance }} est indisponible"
+
+      - alert: OllamaLoadBalancerDown
+        expr: up{job="ollama-lb"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: ollama-lb
+        annotations:
+          summary: "Load Balancer Ollama indisponible"
+          description: "Le load balancer Ollama est indisponible"
+
+      - alert: OllamaHighQueueSize
+        expr: ollama_lb_queue_size > 50
+        for: 2m
+        labels:
+          severity: warning
+          service: ollama
+        annotations:
+          summary: "File d'attente Ollama élevée"
+          description: "La file d'attente de {{ $labels.upstream }} est de {{ $value }} requêtes"
+
+      - alert: OllamaNoHealthyUpstreams
+        expr: sum(ollama_lb_upstream_status) == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: ollama
+        annotations:
+          summary: "Aucun upstream Ollama sain"
+          description: "Tous les upstreams Ollama sont indisponibles"
+
+  - name: jarvis.database
+    rules:
+      - alert: PostgresMasterDown
+        expr: up{job="postgres", instance=~".*master.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL Master indisponible"
+          description: "Le serveur PostgreSQL master est indisponible"
+
+      - alert: PostgresReplicationLag
+        expr: pg_stat_replication_lag_seconds > 300
+        for: 2m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Retard de réplication PostgreSQL"
+          description: "Le retard de réplication est de {{ $value }}s"
+
+      - alert: PostgresHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Trop de connexions PostgreSQL"
+          description: "{{ $value | humanizePercentage }} des connexions utilisées"
+
+      - alert: RedisClusterDown
+        expr: sum(up{job="redis-cluster"}) < 2
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Cluster Redis dégradé"
+          description: "Moins de 2 instances Redis sont disponibles"
+
+  - name: jarvis.infrastructure
+    rules:
+      - alert: NginxLoadBalancerDown
+        expr: up{job="nginx-lb"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: nginx
+        annotations:
+          summary: "Load Balancer Nginx indisponible"
+          description: "Le load balancer Nginx principal est indisponible"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Utilisation mémoire élevée"
+          description: "L'utilisation mémoire est de {{ $value | humanizePercentage }} sur {{ $labels.instance }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 3m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Utilisation CPU élevée"
+          description: "L'utilisation CPU est de {{ $value | printf \"%.2f\" }}% sur {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Espace disque faible"
+          description: "Espace disque utilisé à {{ $value | humanizePercentage }} sur {{ $labels.mountpoint }}"
+
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Container utilise trop de mémoire"
+          description: "Le container {{ $labels.name }} utilise {{ $value | humanizePercentage }} de sa limite mémoire"
+
+  - name: jarvis.application
+    rules:
+      - alert: InterfaceDown
+        expr: up{job="jarvis-interface"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: interface
+        annotations:
+          summary: "Interface Jarvis indisponible"
+          description: "L'interface {{ $labels.instance }} est indisponible"
+
+      - alert: QdrantVectorDBDown
+        expr: up{job="qdrant"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: qdrant
+        annotations:
+          summary: "Base de données vectorielle indisponible"
+          description: "Qdrant vector database est indisponible"
+
+      - alert: JaegerTracingDown
+        expr: up{job="jaeger"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: tracing
+        annotations:
+          summary: "Système de tracing indisponible"
+          description: "Jaeger tracing est indisponible"
+
+  - name: jarvis.business_logic
+    rules:
+      - alert: LowSuccessRate
+        expr: (rate(jarvis_requests_total[5m]) - rate(jarvis_requests_errors_total[5m])) / rate(jarvis_requests_total[5m]) < 0.95
+        for: 3m
+        labels:
+          severity: critical
+          service: application
+        annotations:
+          summary: "Taux de succès faible"
+          description: "Le taux de succès des requêtes est de {{ $value | humanizePercentage }}"
+
+      - alert: WebSocketConnectionsHigh
+        expr: jarvis_active_connections > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: websocket
+        annotations:
+          summary: "Beaucoup de connexions WebSocket"
+          description: "{{ $value }} connexions WebSocket actives"
+
+      - alert: MemorySystemOverloaded
+        expr: rate(jarvis_db_query_duration_seconds_sum[5m]) / rate(jarvis_db_query_duration_seconds_count[5m]) > 2
+        for: 3m
+        labels:
+          severity: warning
+          service: memory
+        annotations:
+          summary: "Système mémoire surchargé"
+          description: "Temps moyen des requêtes mémoire: {{ $value }}s"

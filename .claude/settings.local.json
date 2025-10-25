@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(touch:*)",
+      "Bash(git config:*)",
+      "Bash(rg:*)",
+      "Bash(rm:*)",
+      "Bash(python -m pytest tests/backend/test_health.py -q --maxfail=1)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/backend/test_health.py::test_health -v)",
+      "Bash(chmod:*)",
+      "Bash(jq:*)",
+      "Bash(python:*)",
+      "Bash(git add .)",
+      "Bash(git fetch:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(cd:*)",
+      "Bash(PORT=3001 npm start)",
+      "Bash(docker-compose:*)",
+      "Bash(docker system prune:*)",
+      "Bash(curl:*)",
+      "Bash(docker stats:*)",
+      "Bash(grep:*)",
+      "Bash(git push:*)",
+      "Bash(docker network inspect:*)",
+      "Bash(docker volume:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": []
+  }
+}

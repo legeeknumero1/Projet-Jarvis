@@ -1,492 +1,624 @@
-# 🔌 Documentation API - Jarvis V1.1.0
+# 🔌 API Reference - Jarvis v1.2.0
 
-## 📡 Endpoints API - MISE À JOUR COMPLÈTE
+**API REST + WebSocket** pour l'assistant IA personnel avec architecture modulaire.
 
-### Base URL
+## ✅ **État Actuel** (24/10/2025 18:40)
+- **Backend API** : ✅ Opérationnel (port 8000)
+- **Health Endpoint** : ✅ Réponse healthy
+- **Services connectés** : ✅ LLM, PostgreSQL, Redis, Qdrant
+- **Architecture** : ✅ Factory Pattern avec 1622 fichiers Python
+
+## 🌐 Base URL
+
 ```
-http://localhost:8000
+Production: http://localhost:8000
+Développement: http://localhost:8000
+WebSocket: ws://localhost:8000/ws
 ```
 
-### Authentification
-*Pas d'authentification requise pour le moment (développement)*
+## 🔐 Authentification
+
+```bash
+# Optionnel - JWT pour fonctionnalités avancées
+Authorization: Bearer <jwt_token>
+
+# Header API Key (développement)
+X-API-Key: <jarvis_api_key>
+```
 
 ---
 
-## 🔄 Endpoints principaux ACTIFS
+## 🏥 Health & Status
 
-### GET /
-**Description** : Message de bienvenue de l'API Jarvis
-**URL** : `http://localhost:8000/`
-**Méthode** : GET
-**Réponse** :
-```json
-{
-  "message": "Jarvis AI Assistant is running",
-  "version": "1.1.0",
-  "status": "operational"
-}
-```
+### GET `/health`
 
-### GET /health
-**Description** : Vérification complète du statut du système
-**URL** : `http://localhost:8000/health`
-**Méthode** : GET
-**Réponse** :
+Vérification complète du statut système avec tous les services.
+
+**Réponse :**
 ```json
 {
   "status": "healthy",
-  "timestamp": "2025-07-19T19:45:00Z",
+  "timestamp": "2025-10-24T16:00:00Z",
   "services": {
-    "database": "connected",
-    "ollama": "running",
-    "memory": "initialized",
-    "speech": "ready"
+    "database": {
+      "status": "connected",
+      "response_time_ms": 12
+    },
+    "llm": {
+      "status": "ready", 
+      "model": "llama3.2:1b",
+      "ollama_url": "http://172.20.0.30:11434"
+    },
+    "memory": {
+      "status": "initialized",
+      "storage": "postgresql+qdrant"
+    },
+    "voice": {
+      "stt_status": "ready",
+      "tts_status": "ready"
+    }
   },
   "uptime": "2h 15m 30s"
 }
 ```
 
-### POST /chat
-**Description** : Envoi de message textuel à Jarvis avec IA Ollama
-**URL** : `http://localhost:8000/chat`
-**Méthode** : POST
-**Headers** : `Content-Type: application/json`
-**Body** :
+### GET `/ready`
+
+**Kubernetes readiness probe** - vérification rapide.
+
+**Réponse :**
 ```json
 {
-  "message": "string",                    // Message utilisateur
-  "user_id": "string",                   // optionnel, défaut: "default"  
-  "context": "string",                   // optionnel, contexte conversation
-  "save_memory": "boolean"               // optionnel, sauvegarder en mémoire
-}
-```
-**Réponse** :
-```json
-{
-  "response": "string",                  // Réponse de l'IA
-  "timestamp": "2025-07-19T19:45:00Z",
-  "user_id": "string",
-  "model": "llama3.2:1b",
-  "memory_saved": "boolean",
-  "conversation_id": "uuid"
+  "status": "ready",
+  "timestamp": "2025-10-24T16:00:00Z"
 }
 ```
 
-### WebSocket /ws
-**Description** : Communication temps réel bidirectionnelle
-**URL** : `ws://localhost:8000/ws`
-**Protocole** : WebSocket
-**Messages envoyés** :
+---
+
+## 💬 Chat & Conversation
+
+### POST `/chat`
+
+Conversation textuelle avec IA locale + mémoire contextuelle.
+
+**Request :**
+```json
+{
+  "message": "Bonjour Jarvis, comment ça va ?",
+  "user_id": "default",           // optionnel
+  "context": "",                  // optionnel
+  "save_memory": true,           // optionnel, défaut: true
+  "model": "llama3.2:1b"        // optionnel
+}
+```
+
+**Response :**
+```json
+{
+  "response": "Bonjour ! Je vais très bien merci. Comment puis-je vous aider aujourd'hui ?",
+  "timestamp": "2025-10-24T16:00:00Z",
+  "user_id": "default",
+  "model": "llama3.2:1b",
+  "memory_saved": true,
+  "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "context_used": [
+    {
+      "content": "L'utilisateur préfère les explications techniques détaillées",
+      "importance_score": 0.8,
+      "memory_type": "preference"
+    }
+  ]
+}
+```
+
+**Codes d'erreur :**
+- `400` : Message manquant ou invalide
+- `500` : Erreur LLM ou base de données
+- `503` : Service Ollama indisponible
+
+---
+
+## 🎤 Voice & Speech
+
+### POST `/voice/transcribe`
+
+**Reconnaissance vocale** Whisper STT multilingue.
+
+**Request :**
+```bash
+curl -X POST http://localhost:8000/voice/transcribe \
+  -F "audio=@recording.wav" \
+  -F "language=fr" \
+  -F "user_id=default"
+```
+
+**Response :**
+```json
+{
+  "transcript": "Bonjour Jarvis comment ça va",
+  "confidence": 0.94,
+  "language": "fr",
+  "duration": 2.3,
+  "timestamp": "2025-10-24T16:00:00Z",
+  "user_id": "default"
+}
+```
+
+**Formats supportés :** wav, mp3, m4a, ogg, flac
+
+### POST `/voice/synthesize`
+
+**Synthèse vocale** Piper TTS français haute qualité.
+
+**Request :**
+```json
+{
+  "text": "Bonjour ! Comment allez-vous aujourd'hui ?",
+  "voice": "fr_FR-upmc-medium",  // optionnel
+  "speed": 1.0,                  // optionnel, 0.5-2.0
+  "user_id": "default"           // optionnel
+}
+```
+
+**Response :** Fichier audio WAV
+```
+Content-Type: audio/wav
+Content-Disposition: attachment; filename="synthesis.wav"
+Content-Length: 45632
+```
+
+---
+
+## 🧠 Memory & Context
+
+### GET `/memory/search`
+
+**Recherche hybride** dans les souvenirs (SQL + vectorielle).
+
+**Request :**
+```json
+{
+  "query": "préférences utilisateur",
+  "user_id": "default",
+  "limit": 5,                    // optionnel, défaut: 5
+  "threshold": 0.7               // optionnel, défaut: 0.7
+}
+```
+
+**Response :**
+```json
+{
+  "results": [
+    {
+      "content": "L'utilisateur préfère les explications techniques détaillées",
+      "importance_score": 0.8,
+      "created_at": "2025-10-23T14:30:00Z",
+      "last_accessed": "2025-10-24T15:45:00Z",
+      "memory_type": "preference",
+      "emotional_context": {},
+      "metadata": {
+        "id": 123,
+        "category": "user_preference"
+      }
+    }
+  ],
+  "query": "préférences utilisateur",
+  "total_found": 1
+}
+```
+
+### POST `/memory/store`
+
+**Stockage manuel** d'une mémoire (usage avancé).
+
+**Request :**
+```json
+{
+  "content": "L'utilisateur développe en Python et préfère FastAPI",
+  "user_id": "default",
+  "category": "preference",
+  "importance_score": 0.9,       // 0.0-1.0
+  "emotional_context": {
+    "valence": 0.7,
+    "arousal": 0.3
+  }
+}
+```
+
+**Response :**
+```json
+{
+  "id": 124,
+  "status": "stored",
+  "embedding_created": true,
+  "timestamp": "2025-10-24T16:00:00Z"
+}
+```
+
+---
+
+## 🌐 WebSocket Real-time
+
+### WebSocket `/ws`
+
+**Communication bidirectionnelle** temps réel pour chat interactif.
+
+**Connexion :**
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws');
+
+ws.onopen = () => {
+  console.log('Connecté à Jarvis');
+};
+
+// Envoi message
+ws.send(JSON.stringify({
+  type: "message",
+  message: "Salut Jarvis !",
+  user_id: "default",
+  timestamp: new Date().toISOString()
+}));
+
+// Réception réponse
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Jarvis:', data.response);
+};
+```
+
+**Message types :**
+
+**Envoi :**
 ```json
 {
   "type": "message",
   "message": "string",
   "user_id": "string",
-  "timestamp": "2025-07-19T19:45:00Z"
+  "timestamp": "2025-10-24T16:00:00Z"
 }
 ```
-**Messages reçus** :
+
+**Réception :**
 ```json
 {
-  "type": "response",
+  "type": "response", 
   "response": "string",
-  "timestamp": "2025-07-19T19:45:00Z",
+  "timestamp": "2025-10-24T16:00:00Z",
   "user_id": "string",
-  "conversation_id": "uuid"
+  "conversation_id": "uuid",
+  "model": "llama3.2:1b"
 }
 ```
+
+**Events spéciaux :**
+- `typing_start` / `typing_stop` - Indicateur de frappe
+- `error` - Erreurs de traitement
+- `system` - Messages système
 
 ---
 
-## 🎤 Endpoints Vocaux OPÉRATIONNELS
+## 🏠 Home Assistant Integration
 
-### POST /voice/transcribe
-**Description** : Transcription audio vers texte avec Whisper
-**URL** : `http://localhost:8000/voice/transcribe`
-**Méthode** : POST
-**Headers** : `Content-Type: multipart/form-data`
-**Body** : FormData avec fichier audio
-```
-audio: File (formats supportés: wav, mp3, m4a, ogg)
-language: string (optionnel, défaut: "fr")
-user_id: string (optionnel)
-```
-**Réponse** :
+### GET `/homeassistant/status`
+
+**Statut connexion** Home Assistant (si configuré).
+
+**Response :**
 ```json
 {
-  "transcript": "string",               // Texte transcrit
-  "confidence": 0.95,                  // Score de confiance
-  "language": "fr",                    // Langue détectée
-  "duration": 3.2,                     // Durée audio en secondes
-  "timestamp": "2025-07-19T19:45:00Z",
-  "user_id": "string"
+  "connected": true,
+  "ha_url": "http://localhost:8123",
+  "version": "2024.10.1",
+  "entities_count": 47,
+  "last_sync": "2025-10-24T15:30:00Z"
 }
 ```
 
-### POST /voice/synthesize
-**Description** : Synthèse vocale français avec Piper TTS
-**URL** : `http://localhost:8000/voice/synthesize`
-**Méthode** : POST
-**Headers** : `Content-Type: application/json`
-**Body** :
-```json
-{
-  "text": "string",                      // Texte à synthétiser
-  "voice": "string",                  // optionnel, modèle voix
-  "speed": 1.0,                      // optionnel, vitesse lecture
-  "user_id": "string"                // optionnel
-}
-```
-**Réponse** : Fichier audio WAV
-**Headers de réponse** :
-```
-Content-Type: audio/wav
-Content-Disposition: attachment; filename="synthesis.wav"
-```
+### GET `/homeassistant/entities`
 
----
+**Liste entités** disponibles (lumières, capteurs, etc.).
 
-## 🧠 Endpoints Mémoire OPÉRATIONNELS
-
-### GET /memory/{user_id}
-**Description** : Récupération des mémoires utilisateur
-**URL** : `http://localhost:8000/memory/{user_id}`
-**Méthode** : GET
-**Paramètres** :
-- `user_id` : Identifiant utilisateur
-- `limit` : Nombre max de mémoires (optionnel, défaut: 50)
-- `category` : Catégorie de mémoire (optionnel)
-**Réponse** :
-```json
-{
-  "memories": [
-    {
-      "id": "uuid",
-      "content": "string",
-      "category": "conversation|fact|preference|reminder",
-      "importance": 5,
-      "created_at": "2025-07-19T19:45:00Z",
-      "accessed_at": "2025-07-19T19:45:00Z",
-      "access_count": 3
-    }
-  ],
-  "total": 150,
-  "user_id": "string"
-}
-```
-
-### POST /memory/store
-**Description** : Stockage d'une nouvelle mémoire
-**URL** : `http://localhost:8000/memory/store`
-**Méthode** : POST
-**Body** :
-```json
-{
-  "content": "string",                  // Contenu de la mémoire
-  "user_id": "string",               // Identifiant utilisateur
-  "category": "conversation",         // conversation|fact|preference|reminder
-  "importance": 5,                   // 1-10, niveau d'importance
-  "metadata": {}                     // optionnel, métadonnées additionnelles
-}
-```
-**Réponse** :
-```json
-{
-  "id": "uuid",
-  "status": "stored",
-  "embedding_created": true,
-  "timestamp": "2025-07-19T19:45:00Z"
-}
-```
-
-### POST /memory/search
-**Description** : Recherche sémantique dans les mémoires
-**URL** : `http://localhost:8000/memory/search`
-**Méthode** : POST
-**Body** :
-```json
-{
-  "query": "string",                 // Requête de recherche
-  "user_id": "string",              // Identifiant utilisateur
-  "limit": 10,                      // Nombre max de résultats
-  "threshold": 0.7,                 // Seuil de similarité
-  "category": "string"              // optionnel, filtrer par catégorie
-}
-```
-**Réponse** :
-```json
-{
-  "results": [
-    {
-      "memory": {
-        "id": "uuid",
-        "content": "string",
-        "category": "string",
-        "importance": 5,
-        "created_at": "datetime"
-      },
-      "similarity": 0.89,           // Score de similarité
-      "relevance": "high"           // high|medium|low
-    }
-  ],
-  "query": "string",
-  "total_found": 5
-}
-```
-
----
-
-## 🤖 Endpoints Ollama OPÉRATIONNELS
-
-### POST /ollama/chat
-**Description** : Communication directe avec Ollama avec mémoire contextuelle
-**URL** : `http://localhost:8000/ollama/chat`
-**Méthode** : POST
-**Body** :
-```json
-{
-  "message": "string",               // Message utilisateur
-  "user_id": "string",              // Identifiant utilisateur
-  "include_memory": true,           // Inclure mémoire contextuelle
-  "model": "llama3.2:1b",          // optionnel, modèle à utiliser
-  "system_prompt": "string",        // optionnel, prompt système
-  "temperature": 0.7                // optionnel, créativité réponse
-}
-```
-**Réponse** :
-```json
-{
-  "response": "string",             // Réponse de l'IA
-  "model": "llama3.2:1b",          // Modèle utilisé
-  "timestamp": "2025-07-19T19:45:00Z",
-  "memory_used": true,              // Mémoire utilisée
-  "context_tokens": 156,            // Tokens de contexte
-  "response_tokens": 89,            // Tokens de réponse
-  "generation_time": 1.2            // Temps génération (secondes)
-}
-```
-
-### GET /ollama/models
-**Description** : Liste des modèles Ollama disponibles
-**URL** : `http://localhost:8000/ollama/models`
-**Méthode** : GET
-**Réponse** :
-```json
-{
-  "models": [
-    {
-      "name": "llama3.2:1b",
-      "size": "1.3GB",
-      "modified_at": "2025-07-19T15:30:00Z",
-      "digest": "sha256:abc123...",
-      "details": {
-        "family": "llama",
-        "parameter_size": "1B",
-        "quantization_level": "Q4_0"
-      }
-    }
-  ],
-  "total": 1,
-  "default_model": "llama3.2:1b"
-}
-```
-
-### GET /ollama/status
-**Description** : Statut détaillé du service Ollama
-**URL** : `http://localhost:8000/ollama/status`
-**Méthode** : GET
-**Réponse** :
-```json
-{
-  "status": "running",              // running|stopped|error
-  "model_loaded": "llama3.2:1b",   // Modèle actuellement chargé
-  "memory_usage": "2.1GB",         // Utilisation mémoire
-  "gpu_usage": "45%",              // Utilisation GPU (si applicable)
-  "uptime": "5h 23m",              // Temps de fonctionnement
-  "version": "0.1.17",             // Version Ollama
-  "available": true                // Service disponible
-}
-```
-
-### GET /memory/{user_id}
-**Description** : Récupération des mémoires utilisateur
-**Réponse** :
-```json
-{
-  "memories": [
-    {
-      "content": "string",
-      "category": "string",
-      "importance": "integer",
-      "created_at": "datetime"
-    }
-  ]
-}
-```
-
-### POST /memory/search
-**Description** : Recherche dans les mémoires
-**Body** :
-```json
-{
-  "query": "string",
-  "user_id": "string",
-  "limit": "integer"
-}
-```
-
-### GET /homeassistant/entities
-**Description** : Liste des entités Home Assistant
-**Réponse** :
+**Response :**
 ```json
 {
   "entities": [
     {
-      "entity_id": "string",
-      "state": "string",
-      "attributes": "object"
-    }
-  ]
-}
-```
-
-### POST /homeassistant/control
-**Description** : Contrôle des appareils domotiques
-**Body** :
-```json
-{
-  "entity_id": "string",
-  "action": "string",
-  "value": "any" // optionnel
-}
-```
-
----
-
-## 🔄 Codes d'erreur
-
-### 400 - Bad Request
-```json
-{
-  "detail": "Message d'erreur détaillé"
-}
-```
-
-### 500 - Internal Server Error
-```json
-{
-  "detail": "Erreur interne du serveur"
-}
-```
-
-### 503 - Service Unavailable
-```json
-{
-  "detail": "Service temporairement indisponible"
-}
-```
-
----
-
-## 🔧 Endpoints Ollama
-
-### POST /ollama/chat
-**Description** : Communication directe avec Ollama avec mémoire
-**Body** :
-```json
-{
-  "message": "string",
-  "user_id": "string",
-  "include_memory": "boolean"
-}
-```
-**Réponse** :
-```json
-{
-  "response": "string",
-  "model": "string",
-  "timestamp": "2025-01-17T17:00:00Z",
-  "memory_used": "boolean"
-}
-```
-
-### GET /ollama/models
-**Description** : Liste des modèles Ollama disponibles
-**Réponse** :
-```json
-{
-  "models": [
+      "entity_id": "light.salon",
+      "state": "on",
+      "attributes": {
+        "brightness": 180,
+        "friendly_name": "Lumière Salon"
+      }
+    },
     {
-      "name": "string",
-      "size": "string",
-      "modified_at": "datetime"
+      "entity_id": "sensor.temperature_salon", 
+      "state": "22.1",
+      "attributes": {
+        "unit_of_measurement": "°C",
+        "friendly_name": "Température Salon"
+      }
     }
-  ]
+  ],
+  "total": 47
 }
 ```
 
-### GET /ollama/status
-**Description** : Statut du service Ollama
-**Réponse** :
+### POST `/homeassistant/control`
+
+**Contrôle appareils** domotiques via HA.
+
+**Request :**
 ```json
 {
-  "status": "running|stopped|error",
-  "model_loaded": "string",
-  "memory_usage": "string"
+  "entity_id": "light.salon",
+  "action": "turn_on",
+  "params": {
+    "brightness": 200,
+    "color_name": "blue"
+  }
+}
+```
+
+**Response :**
+```json
+{
+  "success": true,
+  "entity_id": "light.salon",
+  "previous_state": "off",
+  "new_state": "on",
+  "timestamp": "2025-10-24T16:00:00Z"
 }
 ```
 
 ---
 
-## 🧠 Endpoints Mémoire
+## 🌤️ Weather Service
 
-### POST /memory/store
-**Description** : Stockage d'une nouvelle mémoire
-**Body** :
+### GET `/weather/current`
+
+**Météo actuelle** (si API key configurée).
+
+**Request :**
 ```json
 {
-  "content": "string",
-  "user_id": "string",
-  "category": "conversation|fact|preference|reminder",
-  "importance": "integer"
+  "location": "Perpignan, FR",  // optionnel, défaut depuis config
+  "units": "metric"             // optionnel
 }
 ```
 
-### GET /memory/stats/{user_id}
-**Description** : Statistiques de mémoire utilisateur
-**Réponse** :
+**Response :**
 ```json
 {
-  "total_memories": "integer",
-  "categories": "object",
-  "oldest_memory": "datetime",
-  "newest_memory": "datetime"
+  "location": "Perpignan, France",
+  "temperature": 23.5,
+  "feels_like": 25.1,
+  "humidity": 65,
+  "description": "Partly cloudy",
+  "wind_speed": 12.3,
+  "timestamp": "2025-10-24T16:00:00Z"
 }
 ```
 
 ---
 
-## 🎛️ Endpoints Services
+## ⚙️ System & Admin
 
-### GET /services/status
-**Description** : Statut de tous les services
-**Réponse** :
+### GET `/services/status`
+
+**Statut détaillé** tous les microservices.
+
+**Response :**
 ```json
 {
-  "database": "healthy|unhealthy",
-  "redis": "healthy|unhealthy", 
-  "ollama": "healthy|unhealthy",
-  "hybrid_server": "running|stopped"
+  "services": {
+    "llm": {
+      "status": "healthy",
+      "model_loaded": "llama3.2:1b",
+      "ollama_version": "0.1.17",
+      "memory_usage": "1.3GB"
+    },
+    "memory": {
+      "status": "healthy", 
+      "postgres_connected": true,
+      "qdrant_connected": true,
+      "total_memories": 1247
+    },
+    "voice": {
+      "status": "healthy",
+      "stt_ready": true,
+      "tts_ready": true
+    },
+    "database": {
+      "status": "healthy",
+      "connection_pool": "5/10",
+      "response_time_ms": 8
+    }
+  },
+  "overall_status": "healthy"
 }
 ```
 
-### POST /services/restart/{service_name}
-**Description** : Redémarrage d'un service spécifique
-**Paramètres** : service_name (database|redis|ollama|hybrid_server)
+### GET `/metrics`
+
+**Métriques Prometheus** (si activé).
+
+**Response :** Format OpenMetrics
+```
+# HELP jarvis_requests_total Total HTTP requests
+# TYPE jarvis_requests_total counter
+jarvis_requests_total{method="POST",endpoint="/chat"} 1247
+
+# HELP jarvis_response_time_seconds Response time
+# TYPE jarvis_response_time_seconds histogram
+jarvis_response_time_seconds_bucket{le="0.1"} 892
+jarvis_response_time_seconds_bucket{le="0.5"} 1205
+```
 
 ---
 
-## 🔄 Dernière mise à jour
-**Date** : 2025-01-18 - 14:30
-**Par** : Instance #1 (Claude)
-**Action** : Ajout endpoints Ollama, mémoire et services
+## 🚨 Error Handling
+
+### Codes d'erreur standards
+
+| Code | Description | Exemple |
+|------|------------|---------|
+| `400` | Bad Request | Message manquant, format invalide |
+| `401` | Unauthorized | JWT expiré ou invalide |
+| `404` | Not Found | Endpoint inexistant |
+| `422` | Validation Error | Schéma Pydantic non respecté |
+| `500` | Internal Error | Erreur base de données, LLM crash |
+| `503` | Service Unavailable | Ollama déconnecté, PostgreSQL down |
+
+### Format d'erreur standard
+
+```json
+{
+  "detail": "Description de l'erreur",
+  "error_code": "JARVIS_ERROR_001",
+  "timestamp": "2025-10-24T16:00:00Z",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Erreurs spécifiques
+
+**Service LLM indisponible :**
+```json
+{
+  "detail": "Ollama service unavailable",
+  "error_code": "LLM_UNAVAILABLE", 
+  "service": "ollama",
+  "suggested_action": "Check docker-compose ps and ollama container logs"
+}
+```
+
+**Mémoire saturée :**
+```json
+{
+  "detail": "Memory storage limit reached",
+  "error_code": "MEMORY_FULL",
+  "current_usage": "95%",
+  "suggested_action": "Clean old memories or increase storage"
+}
+```
+
+---
+
+## 🔧 Configuration & Development
+
+### Variables d'environnement
+
+```bash
+# Core API
+JARVIS_API_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
+ALLOWED_ORIGINS=["http://localhost:3000"]
+
+# Services URLs
+OLLAMA_URL=http://localhost:11434
+STT_API_URL=http://localhost:8003  
+TTS_API_URL=http://localhost:8002
+
+# Base de données
+DATABASE_URL=postgresql+asyncpg://jarvis:password@localhost:5432/jarvis_db
+REDIS_URL=redis://localhost:6379
+
+# Home Assistant (optionnel)
+HOME_ASSISTANT_URL=http://localhost:8123
+HOME_ASSISTANT_TOKEN=your-long-lived-token
+
+# Monitoring (optionnel)
+ENABLE_PROMETHEUS_METRICS=true
+```
+
+### Rate Limiting
+
+| Endpoint | Limite | Fenêtre |
+|----------|--------|---------|
+| `/chat` | 30 req/min | Par IP |
+| `/voice/*` | 10 req/min | Par IP |
+| `/memory/*` | 60 req/min | Par user_id |
+| `/ws` | 1 connexion | Par IP |
+
+### Formats de données
+
+**Timestamps :** ISO 8601 UTC (`2025-10-24T16:00:00Z`)
+**UUIDs :** RFC 4122 v4
+**Encoding :** UTF-8
+**Content-Type :** `application/json` (sauf audio)
+
+---
+
+## 📚 Exemples d'usage
+
+### Chat simple
+
+```python
+import requests
+
+response = requests.post('http://localhost:8000/chat', json={
+    'message': 'Explique-moi FastAPI en 2 phrases',
+    'user_id': 'developer_001'
+})
+
+print(response.json()['response'])
+```
+
+### Chat vocal complet
+
+```python
+import requests
+import io
+
+# 1. Transcription
+with open('question.wav', 'rb') as f:
+    transcript = requests.post(
+        'http://localhost:8000/voice/transcribe',
+        files={'audio': f}
+    ).json()
+
+# 2. Chat IA
+chat_response = requests.post('http://localhost:8000/chat', json={
+    'message': transcript['transcript'],
+    'user_id': 'voice_user'
+}).json()
+
+# 3. Synthèse vocale
+audio = requests.post('http://localhost:8000/voice/synthesize', json={
+    'text': chat_response['response']
+}).content
+
+with open('response.wav', 'wb') as f:
+    f.write(audio)
+```
+
+### WebSocket interactif
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws');
+
+ws.onopen = () => {
+    // Conversation continue
+    ws.send(JSON.stringify({
+        type: 'message',
+        message: 'Peux-tu me rappeler mes tâches du jour ?',
+        user_id: 'assistant_user'
+    }));
+};
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    
+    if (data.type === 'response') {
+        console.log('🤖 Jarvis:', data.response);
+        
+        // Afficher dans l'interface
+        displayMessage(data.response, 'bot');
+    }
+};
+```
+
+---
+
+**📡 Architecture modulaire • 🧠 Mémoire persistante • 🎤 Vocal temps réel • 🏠 Domotique intégrée**

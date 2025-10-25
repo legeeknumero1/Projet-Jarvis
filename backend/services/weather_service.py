@@ -5,9 +5,9 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 class WeatherService:
-    def __init__(self):
+    def __init__(self, api_key: Optional[str] = None):
         self.base_url = "https://api.openweathermap.org/data/2.5"
-        self.api_key = None  # Clé API gratuite à configurer
+        self.api_key = api_key
         self.logger = logging.getLogger(__name__)
         
     async def get_weather(self, city: str = "Perpignan", country: str = "FR") -> Dict[str, Any]:
@@ -44,6 +44,12 @@ class WeatherService:
                 except Exception as e:
                     self.logger.warning(f"⚠️ [WEATHER] Erreur API wttr.in: {e}")
             
+            # Si API OpenWeatherMap disponible, tenter fallback
+            if self.api_key:
+                api_result = await self.get_weather_with_api(city, self.api_key)
+                if api_result:
+                    return api_result
+            
             # Fallback : retourner erreur au lieu de données hardcodées
             return {
                 "error": f"Impossible de récupérer la météo pour {city}",
@@ -60,8 +66,10 @@ class WeatherService:
                 "timestamp": datetime.now().isoformat()
             }
     
-    async def get_weather_with_api(self, city: str, api_key: str) -> Optional[Dict[str, Any]]:
+    async def get_weather_with_api(self, city: str, api_key: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Récupère la météo via API OpenWeatherMap (si clé disponible)"""
+        if api_key is None:
+            api_key = self.api_key
         if not api_key:
             return None
             

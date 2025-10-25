@@ -12,11 +12,12 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip setuptools wheel
 
 # Install Python dependencies
-COPY requirements.txt .
+COPY services/interface/requirements.txt ./requirements.txt
+COPY requirements-unified.txt ./requirements-unified.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY services/interface/ .
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

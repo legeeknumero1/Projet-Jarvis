@@ -1,0 +1,220 @@
+# 🛠️ Stack DevOps complète pour Jarvis
+# Jenkins + ArgoCD + Prometheus + Grafana + Loki
+
+services:
+  # ===========================================
+  # 🔧 CI/CD - JENKINS
+  # ===========================================
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jarvis_jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/plugins.txt:/usr/share/jenkins/ref/plugins.txt
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 🚀 GITOPS - ARGOCD (Running on K3s)
+  # ArgoCD is now deployed on local Kubernetes cluster
+  # Access via: kubectl port-forward svc/argocd-server -n argocd 8081:443
+  # ===========================================
+
+  # ===========================================
+  # 📊 MONITORING - PROMETHEUS
+  # ===========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: jarvis_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 📈 DASHBOARDS - GRAFANA
+  # ===========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: jarvis_grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 📝 LOGS - LOKI
+  # ===========================================
+  loki:
+    image: grafana/loki:latest
+    container_name: jarvis_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: jarvis_promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/loki/promtail.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ../logs:/app/logs:ro  # Logs Jarvis
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 🚨 ALERTING - ALERTMANAGER
+  # ===========================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: jarvis_alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--log.level=info'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 📊 EXPORTERS - MÉTRIQUES SYSTÈME
+  # ===========================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: jarvis_node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: jarvis_cadvisor
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+  # ===========================================
+  # 🌐 REVERSE PROXY - NGINX
+  # ===========================================
+  nginx-devops:
+    image: nginx:alpine
+    container_name: jarvis_nginx_devops
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./configs/ssl:/etc/nginx/ssl
+    depends_on:
+      - jenkins
+      - grafana
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - jarvis_devops
+      - jarvis_network
+
+volumes:
+  jenkins_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+
+networks:
+  jarvis_devops:
+    external: true
+  jarvis_network:
+    external: true

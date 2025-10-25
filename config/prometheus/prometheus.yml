@@ -1,0 +1,159 @@
+# Configuration Prometheus - Jarvis v1.3.2 Scalable
+# Monitoring complet de l'infrastructure microservices
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'jarvis-scalable'
+    environment: 'production'
+
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # === JARVIS SERVICES ===
+  
+  # Backend instances
+  - job_name: 'jarvis-backend'
+    static_configs:
+      - targets: 
+          - 'backend-1:8000'
+          - 'backend-2:8000'
+    metrics_path: '/monitoring/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Ollama Load Balancer
+  - job_name: 'ollama-lb'
+    static_configs:
+      - targets: ['ollama-lb:11434']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Ollama instances direct
+  - job_name: 'ollama-instances'
+    static_configs:
+      - targets:
+          - 'ollama-1:11434'
+          - 'ollama-2:11434'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Interface instances
+  - job_name: 'jarvis-interface'
+    static_configs:
+      - targets:
+          - 'interface-1:3000'
+          - 'interface-2:3000'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # === INFRASTRUCTURE SERVICES ===
+  
+  # PostgreSQL Master-Replica
+  - job_name: 'postgres'
+    static_configs:
+      - targets: 
+          - 'postgres-master:9187'
+          - 'postgres-replica:9187'
+    scrape_interval: 30s
+
+  # Redis Cluster
+  - job_name: 'redis-cluster'
+    static_configs:
+      - targets:
+          - 'redis-1:9121'
+          - 'redis-2:9121'
+          - 'redis-3:9121'
+    scrape_interval: 30s
+
+  # Qdrant Vector DB
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant-cluster:6333']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # === INFRASTRUCTURE MONITORING ===
+  
+  # Nginx Load Balancer
+  - job_name: 'nginx-lb'
+    static_configs:
+      - targets: ['nginx-lb:9113']
+    scrape_interval: 15s
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+          - 'node-exporter:9100'
+    scrape_interval: 30s
+
+  # cAdvisor (container metrics)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+
+  # Docker daemon metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    scrape_interval: 30s
+
+  # === SELF-MONITORING ===
+  
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    scrape_interval: 30s
+
+  # Grafana
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 60s
+
+  # Jaeger tracing
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:16686']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+
+  # === CUSTOM EXPORTERS ===
+
+  # Custom Jarvis metrics
+  - job_name: 'jarvis-custom-metrics'
+    static_configs:
+      - targets: ['pushgateway:9091']
+    honor_labels: true
+    scrape_interval: 15s
+
+# Configuration pour service discovery (si Kubernetes/Consul utilisé)
+# - job_name: 'kubernetes-pods'
+#   kubernetes_sd_configs:
+#   - role: pod
+#   relabel_configs:
+#   - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+#     action: keep
+#     regex: true

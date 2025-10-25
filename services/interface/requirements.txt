@@ -1,15 +1,3 @@
-# Requirements Interface API - Basé sur requirements unifiés
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic>=2.7.0,<3.0.0
-pydantic-settings==2.5.2
-jinja2==3.1.2
-aiofiles==23.2.1
-python-multipart==0.0.6
-websockets==12.0
-httpx>=0.25.0,<0.28.0
-requests==2.31.0
-aiohttp>=3.8.0
-aiohttp-cors>=0.7.0
-setuptools>=65.0.0
-wheel
+# Reference vers requirements unifies
+-r requirements-unified.txt
+aiohttp-cors==0.7.0

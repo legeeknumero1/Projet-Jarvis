@@ -1,0 +1,21 @@
+# Plugins essentiels Jenkins pour Jarvis
+ant:latest
+antisamy-markup-formatter:latest
+build-timeout:latest
+credentials-binding:latest
+docker-plugin:latest
+docker-workflow:latest
+git:latest
+github:latest
+github-branch-source:latest
+pipeline-github-lib:latest
+pipeline-stage-view:latest
+ssh-slaves:latest
+timestamper:latest
+workflow-aggregator:latest
+ws-cleanup:latest
+slack:latest
+prometheus:latest
+blueocean:latest
+kubernetes:latest
+configuration-as-code:latest
