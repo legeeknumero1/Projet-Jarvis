@@ -1,48 +1,48 @@
-# 🤖 JARVIS - Documentation Complète
+# Jarvis - Complete Documentation
 
-## 📚 Structure Documentation
+## Documentation Structure
 
-### 🚀 **Démarrage Rapide**
-- **[README.md](README.md)** - Vue d'ensemble du projet
+### Quick Start
+- [README.md](README.md) - Project overview
 
-### 🏗️ **Architecture & Design**
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architecture polyglotte 9 phases
-- **[ROADMAP_POLYGLOTTE.md](ROADMAP_POLYGLOTTE.md)** - Roadmap détaillée des phases
+### Architecture & Design
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Polyglot architecture 9 phases
+- [ROADMAP_POLYGLOTTE.md](ROADMAP_POLYGLOTTE.md) - Detailed phases roadmap
 
-### 🔧 **Déploiement & Opérations**
-- **[DEPLOYMENT_GUIDE_MULTI_ENV.md](DEPLOYMENT_GUIDE_MULTI_ENV.md)** - Guide déploiement multi-environnements
-- **[DEVOPS_GUIDE.md](DEVOPS_GUIDE.md)** - Guide DevOps complet
-- **[RUNBOOKS_OPERATIONNELS.md](RUNBOOKS_OPERATIONNELS.md)** - Runbooks pour opérations
-- **[MONITORING_DATABASE_GUIDE.md](MONITORING_DATABASE_GUIDE.md)** - Guide monitoring
+### Deployment & Operations
+- [DEPLOYMENT_GUIDE_MULTI_ENV.md](DEPLOYMENT_GUIDE_MULTI_ENV.md) - Multi-environment deployment guide
+- [DEVOPS_GUIDE.md](DEVOPS_GUIDE.md) - Complete DevOps guide
+- [RUNBOOKS_OPERATIONNELS.md](RUNBOOKS_OPERATIONNELS.md) - Operational runbooks
+- [MONITORING_DATABASE_GUIDE.md](MONITORING_DATABASE_GUIDE.md) - Monitoring guide
 
-### 🔐 **Sécurité**
-- **[SECURITY.md](SECURITY.md)** - Politique de sécurité
-- **[PLAN_ACTION_SECURITE.md](PLAN_ACTION_SECURITE.md)** - Plan d'action sécurité
+### Security
+- [SECURITY.md](SECURITY.md) - Security policy
+- [PLAN_ACTION_SECURITE.md](PLAN_ACTION_SECURITE.md) - Security action plan
 
-### 📡 **API & Intégrations**
-- **[API.md](API.md)** - Documentation API complète
+### API & Integrations
+- [API.md](API.md) - Complete API documentation
 
-### 🐛 **Maintenance**
-- **[BUGS.md](BUGS.md)** - Bugs connus et résolutions
-- **[CHANGELOG.md](CHANGELOG.md)** - Historique des changements
+### Maintenance
+- [BUGS.md](BUGS.md) - Known issues and resolutions
+- [CHANGELOG.md](CHANGELOG.md) - Change history
 
-### 👥 **Collaboration**
-- **[PROFIL_JARVIS.md](PROFIL_JARVIS.md)** - Profil/contexte du projet
-- **[CLAUDE.md](CLAUDE.md)** - Instructions Claude Code
-- **[CLAUDE_PARAMS.md](CLAUDE_PARAMS.md)** - Paramètres Claude Code
-
----
-
-## 📊 État du Projet
-
-**Phase actuelle:** Phase 6 - Go Monitoring (COMPLÈTE)
-**Phases implémentées:** 1-6
-**Phases en cours:** 7 (Frontend React)
-**Phases pendantes:** 8 (Lua), 9 (Elixir)
+### Development
+- [PROFIL_JARVIS.md](PROFIL_JARVIS.md) - Project profile/context
+- [DEVELOPMENT_GUIDELINES.md](DEVELOPMENT_GUIDELINES.md) - Development guidelines
+- [DEVELOPMENT_PARAMETERS.md](DEVELOPMENT_PARAMETERS.md) - Development parameters
 
 ---
 
-## 🔗 Répertoires du Projet
+## Project Status
+
+Current Phase: Phase 6 - Go Monitoring (COMPLETE)
+Implemented Phases: 1-6
+In Progress Phases: 7 (Frontend React)
+Pending Phases: 8 (Lua), 9 (Elixir)
+
+---
+
+## Project Directories
 
 ```
 Projet-Jarvis/
@@ -56,41 +56,40 @@ Projet-Jarvis/
 ├── backend-lua-plugins/          # Phase 8: Lua Plugins
 ├── clustering-elixir/            # Phase 9: Elixir Clustering
 │
-├── docs/                         # Documentation (CE FICHIER)
+├── docs/                         # Documentation
 ├── config/                       # Configuration files
-├── scripts/                      # Utilitaires et scripts
-├── tests/                        # Tests intégrés
-├── docker-compose.yml            # Orchestration conteneurs
-└── certs/                        # Certificats TLS
+├── scripts/                      # Utilities and scripts
+├── tests/                        # Integrated tests
+├── docker-compose.yml            # Container orchestration
+└── certs/                        # TLS certificates
 ```
 
 ---
 
-## ⚡ Commandes Essentielles
+## Essential Commands
 
-### Démarrage
+### Startup
 ```bash
 docker-compose up -d
 ```
 
-### Vérification
+### Health Check
 ```bash
 curl http://localhost:8100/health      # Backend Core
 curl http://localhost:3000             # Frontend
 curl http://localhost:9090/metrics     # Monitoring
 ```
 
-### Arrêt
+### Shutdown
 ```bash
 docker-compose down
 ```
 
 ---
 
-## 📝 Notes
+## Notes
 
-- Toute la documentation est à jour (nettoyée le 2025-10-25)
-- Les fichiers obsolètes ont été supprimés
-- Structure simplifiée pour meilleure navigation
-- Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique récent
-
+- All documentation updated 2025-10-25
+- Obsolete files have been removed
+- Simplified structure for better navigation
+- See [CHANGELOG.md](CHANGELOG.md) for recent history

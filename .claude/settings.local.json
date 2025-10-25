@@ -105,7 +105,11 @@
       "Bash(go mod tidy:*)",
       "Bash(npm install)",
       "Bash(npm run build:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(while read f)",
+      "Bash(do if grep -l \"Claude Code\\|Generated with\" \"$f\")",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)"
     ],
     "deny": []
   }
