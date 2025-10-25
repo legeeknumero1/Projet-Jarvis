@@ -67,8 +67,9 @@ GET  /api/chat/conversations  # Liste conversations
 DEL  /api/chat/conversation/{id} # Supprimer conversation
 ```
 
-### 🎤 Voice Processing
+### 🎤 Voice Processing (Phase 3)
 ```
+# Via Python Bridges (Port 8005):
 POST /api/voice/transcribe    # Speech-to-Text
 POST /api/voice/synthesize    # Text-to-Speech
 GET  /api/voice/voices        # Voix disponibles
@@ -174,7 +175,7 @@ wrk -t12 -c400 -d30s http://localhost:8100/health
 **Serveur :**
 ```bash
 HOST=0.0.0.0                    # Interface d'écoute
-PORT=8000                       # Port d'écoute
+PORT=8100                       # Port d'écoute (Phase 1 - Rust Core)
 WORKERS=4                       # Nombre de workers
 REQUEST_TIMEOUT_SECS=30         # Timeout requêtes
 ```
@@ -186,12 +187,15 @@ DB_MAX_CONNECTIONS=20           # Pool maximum
 DB_ACQUIRE_TIMEOUT_SECS=10      # Timeout acquisition
 ```
 
-**Services externes :**
+**Services externes (Phases 2-3) :**
 ```bash
-OLLAMA_URL=http://localhost:11434    # Ollama LLM
-STT_URL=http://localhost:8003        # Service STT
-TTS_URL=http://localhost:8002        # Service TTS
-QDRANT_URL=http://localhost:6333     # Qdrant vectoriel
+PYTHON_BRIDGES_URL=http://localhost:8005  # Phase 3: Python IA Bridges
+AUDIO_ENGINE_URL=http://localhost:8004    # Phase 2: C++ Audio Engine
+# Services découplés appelés via Python Bridges:
+# - Ollama LLM
+# - Whisper STT
+# - Piper TTS
+# - Embeddings
 ```
 
 **Sécurité :**
