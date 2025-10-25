@@ -1,0 +1,106 @@
+version: '3.9'
+
+services:
+  # Rust Backend Core - Phase 1
+  jarvis-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jarvis-core
+    ports:
+      - "8100:8100"
+    environment:
+      RUST_LOG: info
+      HOST: 0.0.0.0
+      PORT: 8100
+      PYTHON_BRIDGES_URL: http://python-bridges:8005
+      AUDIO_ENGINE_URL: http://audio-engine:8004
+    depends_on:
+      - python-bridges
+      - audio-engine
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Python Bridges - Phase 3 (placeholder)
+  python-bridges:
+    image: python:3.11-slim
+    container_name: python-bridges
+    ports:
+      - "8005:8005"
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+    command: /bin/bash -c "echo 'Python Bridges (Phase 3) placeholder'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Audio Engine - Phase 2 (placeholder)
+  audio-engine:
+    image: debian:bookworm-slim
+    container_name: audio-engine
+    ports:
+      - "8004:8004"
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+    command: /bin/bash -c "echo 'Audio Engine (Phase 2) placeholder'"
+
+  # Frontend - Phase 7 (placeholder)
+  frontend:
+    image: node:20-alpine
+    container_name: jarvis-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+    command: /bin/sh -c "echo 'Frontend (Phase 7) placeholder'"
+
+  # PostgreSQL (optional - for future DB implementation)
+  postgres:
+    image: postgres:15-alpine
+    container_name: jarvis-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: jarvis_db
+      POSTGRES_USER: jarvis
+      POSTGRES_PASSWORD: jarvis123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+
+  # Redis (optional - for caching)
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - jarvis_network
+    restart: unless-stopped
+
+networks:
+  jarvis_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
