@@ -33,7 +33,22 @@
       "Bash(docker network inspect:*)",
       "Bash(docker volume:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(rustc:*)",
+      "Bash(cargo:*)",
+      "Bash(sh:*)",
+      "Bash(source $HOME/.cargo/env)",
+      "Bash(\"$HOME/.cargo/bin/cargo\" --version)",
+      "Bash(\"$HOME/.cargo/bin/rustc\" --version)",
+      "Bash(\"$HOME/.cargo/bin/cargo\" init core --bin)",
+      "Bash(\"$HOME/.cargo/bin/cargo\" build)",
+      "Bash(/c/Users/\"Le Geek\"/.cargo/bin/cargo build)",
+      "Bash(/c/Users/\"Le Geek\"/.cargo/bin/cargo check)",
+      "Bash(/c/Users/\"Le Geek\"/.cargo/bin/cargo build --release)",
+      "Bash(for i in {1..10})",
+      "Bash(do curl -s http://localhost:8100/health)",
+      "Bash(done)"
     ],
     "deny": []
   }
