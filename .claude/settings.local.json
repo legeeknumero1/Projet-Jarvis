@@ -104,7 +104,8 @@
       "Bash(go build:*)",
       "Bash(go mod tidy:*)",
       "Bash(npm install)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(awk:*)"
     ],
     "deny": []
   }
