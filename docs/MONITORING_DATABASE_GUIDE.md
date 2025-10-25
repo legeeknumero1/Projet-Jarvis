@@ -1,4 +1,4 @@
-# 📊 Guide Monitoring Base de Données PostgreSQL - Jarvis v1.3.2
+# Guide Monitoring Base de Données PostgreSQL - Jarvis v1.9.0
 
 **Date**: 2025-01-17  
 **Version**: 1.0.0  
@@ -496,5 +496,5 @@ print(f"Stats: {db_monitor.get_query_statistics()}")
 
 ---
 
-**Développé pour Jarvis v1.3.2 - Système de monitoring PostgreSQL enterprise**  
+**Développé pour Jarvis v1.9.0 - Système de monitoring PostgreSQL enterprise**  
 **🔒 Sécurisé JWT | 📊 Métriques Prometheus | 🚀 Production-ready**

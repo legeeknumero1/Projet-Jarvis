@@ -8,7 +8,7 @@
 
 **15 vulnérabilités critiques/hautes découvertes par audit complet du 2025-10-25**
 
-**Rapport Détaillé**: Voir [SECURITY.md](./SECURITY.md) et [AUDIT_SECURITY_REPORT.md](../AUDIT_SECURITY_REPORT.md)
+**Rapport Détaillé**: Voir [SECURITY.md](./SECURITY.md)
 
 ### CRITIQUES (À fixer immédiatement - 24-48h)
 

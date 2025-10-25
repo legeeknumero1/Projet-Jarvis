@@ -1,4 +1,4 @@
-# 📚 RUNBOOKS OPÉRATIONNELS JARVIS v1.3.2
+# RUNBOOKS OPÉRATIONNELS JARVIS v1.9.0
 
 ## 📋 **SOMMAIRE OPÉRATIONNEL**
 
@@ -62,7 +62,7 @@
 #!/bin/bash
 # startup-standard.sh
 
-echo "🚀 [$(date)] Démarrage Standard Jarvis v1.3.2"
+echo "🚀 [$(date)] Démarrage Standard Jarvis v1.9.0"
 
 # Pré-vérifications
 echo "🔍 Pré-vérifications système..."
@@ -1144,7 +1144,7 @@ on_call_schedule:
 
 ## 📝 **CONCLUSION RUNBOOKS**
 
-Ces runbooks opérationnels couvrent tous les aspects critiques de l'exploitation de Jarvis v1.3.2 :
+Ces runbooks opérationnels couvrent tous les aspects critiques de l'exploitation de Jarvis v1.9.0 :
 
 ### ✅ **Procédures Couvertes**
 - **Démarrage/Arrêt** : Gracieux et d'urgence

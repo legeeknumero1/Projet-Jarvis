@@ -217,5 +217,5 @@ En cas d'incident de sécurité :
 
 ---
 
-*Dernière mise à jour : 2024-08-26*
-*Version : 1.3.0-hardened*
+Last Updated: 2025-10-25
+*Version : 1.9.0*

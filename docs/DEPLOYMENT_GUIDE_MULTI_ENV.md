@@ -1,4 +1,4 @@
-# 🚀 GUIDE DÉPLOIEMENT MULTI-ENVIRONNEMENT JARVIS v1.3.2
+# GUIDE DÉPLOIEMENT MULTI-ENVIRONNEMENT JARVIS v1.9.0
 
 ## 📋 **SOMMAIRE DÉPLOIEMENT**
 
@@ -280,7 +280,7 @@ BACKUP_RETENTION_DAYS=30
 #!/bin/bash
 # setup-development.sh
 
-echo "🚀 Configuration environnement développement Jarvis v1.3.2"
+echo "🚀 Configuration environnement développement Jarvis v1.9.0"
 
 # 1. Clonage repository
 git clone https://github.com/enzo/jarvis.git
@@ -367,7 +367,7 @@ docker-compose up --build
 #!/bin/bash
 # deploy-staging.sh
 
-echo "🎯 Déploiement Staging Jarvis v1.3.2"
+echo "🎯 Déploiement Staging Jarvis v1.9.0"
 
 # 1. Configuration kubectl
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
@@ -590,7 +590,7 @@ spec:
 #!/bin/bash
 # deploy-production.sh
 
-echo "🏭 Déploiement PRODUCTION Jarvis v1.3.2"
+echo "🏭 Déploiement PRODUCTION Jarvis v1.9.0"
 
 # Validation sécurité pré-déploiement
 if [[ "$ENVIRONMENT" != "production" ]]; then
@@ -932,7 +932,7 @@ resource "azurerm_redis_cache" "jarvis" {
 CLOUD_PROVIDER=${1:-aws}  # aws or azure
 ENVIRONMENT=production
 
-echo "☁️ Déploiement Cloud ${CLOUD_PROVIDER} - Jarvis v1.3.2"
+echo "☁️ Déploiement Cloud ${CLOUD_PROVIDER} - Jarvis v1.9.0"
 
 case $CLOUD_PROVIDER in
   "aws")
@@ -1273,7 +1273,7 @@ disaster_recovery:
 
 ## 📝 **CONCLUSION DÉPLOIEMENT**
 
-Ce guide couvre tous les aspects du déploiement multi-environnement de Jarvis v1.3.2 :
+Ce guide couvre tous les aspects du déploiement multi-environnement de Jarvis v1.9.0 :
 
 ### ✅ **Objectifs Atteints**
 - **Multi-environnement** : Dev, Staging, Production, Cloud

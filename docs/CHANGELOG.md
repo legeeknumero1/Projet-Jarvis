@@ -7,7 +7,6 @@
 **Date**: 2025-10-25
 **Scope**: Architecture Docker (10/10 containers), Backend Python, Rust Core, C++ Audio, Dépendances
 **Durée**: ~2 heures
-**Rapport**: [AUDIT_SECURITY_REPORT.md](./AUDIT_SECURITY_REPORT.md)
 
 ### 🔴 DÉCOUVERTES CRITIQUES
 
@@ -51,10 +50,6 @@
 
 #### Fichiers Créés
 - ✅ **SECURITY.md** (500+ lignes) - Guide complet remédiation sécurité
-- ✅ **AUDIT_SECURITY_REPORT.md** (328 lignes) - Rapport détaillé avec CVSS scores
-- ✅ **AUDIT_FINDINGS_2025_10_25.md** - Findings architecture + infra
-- ✅ **AUDIT_INDEX.md** - Index détaillé des résultats
-- ✅ **AUDIT_SUMMARY.txt** - Executive summary
 
 #### Fichiers Mis à Jour
 - ✅ **CLAUDE_PARAMS.md** - Infos architecture 10/10 containers + actions sécurité immédiates
