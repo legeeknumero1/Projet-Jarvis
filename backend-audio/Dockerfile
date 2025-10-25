@@ -46,9 +46,9 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     libasound2 \
     libpipewire-0.3-0 \
-    libspa-0.2-0 \
     libstdc++6 \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier les binaires compilés
