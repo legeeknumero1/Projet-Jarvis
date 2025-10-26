@@ -126,9 +126,9 @@ impl DbService {
     /// Health check
     pub async fn health_check(&self) -> Result<bool> {
         // Simple query to check connection
+        use sea_orm::EntityTrait;
         let result = conversation::Entity::find()
-            .limit(1)
-            .all(&self.conn)
+            .one(&self.conn)
             .await;
 
         Ok(result.is_ok())

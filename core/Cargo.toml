@@ -39,7 +39,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # Full-text search
-tantivy = "0.21"
+tantivy = "0.25"
 
 # Cache
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
@@ -65,3 +65,6 @@ regex = "1"
 rustls = "0.21"
 rustls-pemfile = "2.0"
 tokio-rustls = "0.25"
+
+[dev-dependencies]
+tempfile = "3.8"

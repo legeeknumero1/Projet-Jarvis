@@ -6,8 +6,8 @@ use std::path::Path;
 use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
 use tantivy::schema::*;
-use tantivy::{doc, Index, IndexWriter, ReloadPolicy};
-use tracing::{info, error};
+use tantivy::{doc, Index, IndexWriter, ReloadPolicy, TantivyDocument};
+use tracing::info;
 
 /// Search index for conversation memory
 pub struct SearchIndex {
@@ -94,7 +94,7 @@ impl SearchIndex {
     pub fn search(&self, query_text: &str, limit: usize) -> Result<Vec<SearchResult>> {
         let reader = self.index
             .reader_builder()
-            .reload_policy(ReloadPolicy::OnCommit)
+            .reload_policy(ReloadPolicy::OnCommitWithDelay)
             .try_into()?;
 
         let searcher = reader.searcher();
@@ -113,7 +113,7 @@ impl SearchIndex {
         let mut results = Vec::new();
 
         for (_score, doc_address) in top_docs {
-            let retrieved_doc = searcher.doc(doc_address)?;
+            let retrieved_doc = searcher.doc::<TantivyDocument>(doc_address)?;
 
             let conversation_id = retrieved_doc
                 .get_first(self.conversation_id)
@@ -163,7 +163,7 @@ impl SearchIndex {
     pub fn stats(&self) -> Result<IndexStats> {
         let reader = self.index
             .reader_builder()
-            .reload_policy(ReloadPolicy::OnCommit)
+            .reload_policy(ReloadPolicy::OnCommitWithDelay)
             .try_into()?;
 
         let searcher = reader.searcher();
@@ -171,7 +171,7 @@ impl SearchIndex {
 
         Ok(IndexStats {
             num_documents: num_docs,
-            index_size_bytes: self.index.directory().get_cache_info().mmapped_bytes,
+            index_size_bytes: 0, // Tantivy 0.25 doesn't expose cache_info directly
         })
     }
 }
