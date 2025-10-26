@@ -1,10 +1,10 @@
-# 🏗️ Architecture Polyglotte Complète v1.9.0
+# Architecture Polyglotte Complète v1.9.0
 
 **Documentation détaillée des 9 phases de l'architecture distribuée Jarvis**
 
 ---
 
-## 📊 Vue d'Ensemble Global
+## Vue d'Ensemble Global
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -36,9 +36,9 @@
 
 ---
 
-## 🔢 Les 9 Phases Détaillées
+## Les 9 Phases Détaillées
 
-### **Phase 1: Rust Backend Core** 🦀 (Port 8100)
+### **Phase 1: Rust Backend Core** (Port 8100)
 
 **Technologie:** Rust + Axum + Tokio
 
@@ -92,7 +92,7 @@ CPU:        5% vs Python 25%
 
 ---
 
-### **Phase 3: Python Bridges IA** 🐍 (Port 8005)
+### **Phase 3: Python Bridges IA** (Port 8005)
 
 **Technologie:** Python + Flask + Async
 
@@ -117,7 +117,7 @@ POST /api/embeddings/encode     # Vecteurs sémantiques
 
 ---
 
-### **Phase 4: Rust DB Layer** 🗄️ (Interne - Lib)
+### **Phase 4: Rust DB Layer** (Interne - Lib)
 
 **Technologie:** Rust + sqlx + Tantivy + Redis
 
@@ -147,7 +147,7 @@ MemoryEntry { id, user_id, content, vector, importance, ... }
 
 ---
 
-### **Phase 5: MQTT Automations** 🔌 (Interne - Lib)
+### **Phase 5: MQTT Automations** (Interne - Lib)
 
 **Technologie:** Rust + rumqttc
 
@@ -200,7 +200,7 @@ GET /ready         # Readiness
 
 ---
 
-### **Phase 7: Frontend TypeScript** 🌐 (Port 3000)
+### **Phase 7: Frontend TypeScript** (Port 3000)
 
 **Technologie:** React 19 + Next.js 14 + TypeScript
 
@@ -252,7 +252,7 @@ lib/
 
 ---
 
-### **Phase 8: Lua Plugins** 🧩 (Interne - Lib)
+### **Phase 8: Lua Plugins** (Interne - Lib)
 
 **Technologie:** Rust + mlua
 
@@ -307,7 +307,7 @@ end
 
 ---
 
-### **Phase 9: Elixir HA** ☁️ (Port 8007)
+### **Phase 9: Elixir HA** (Port 8007)
 
 **Technologie:** Elixir/Erlang + OTP
 
@@ -340,7 +340,7 @@ GET /metrics       # Prometheus metrics
 
 ---
 
-## 🌐 Ports et Services
+## Ports et Services
 
 ```
 Phase 1:  Port 8100  - Rust Backend Core
@@ -359,7 +359,7 @@ Port 8123         - Home Assistant
 
 ---
 
-## 🔗 Flux de Données
+## Flux de Données
 
 ### Chat Message Complet
 
@@ -426,7 +426,7 @@ TTS:
 
 ---
 
-## 🔐 Security Model
+## Security Model
 
 ### Authentication
 - JWT tokens (Phase 1)
@@ -453,7 +453,7 @@ TTS:
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Docker Compose (Local Dev)
 ```bash
@@ -491,7 +491,7 @@ NAMESPACE=default
 
 ---
 
-## 📊 Performance Targets
+## Performance Targets
 
 | Métrique | Target |
 |----------|--------|
@@ -505,7 +505,7 @@ NAMESPACE=default
 
 ---
 
-## 🔄 Development Workflow
+## Development Workflow
 
 1. **Code Changes**
    - Modify relevant phase (Rust/Python/TypeScript/etc)

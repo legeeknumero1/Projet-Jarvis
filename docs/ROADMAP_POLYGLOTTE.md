@@ -272,4 +272,4 @@ async fn store_message(pool: &PgPool, content: &str) -> Result<Conversation, sql
 
 **🚀 Architecture polyglotte = Performance + Sécurité + Maintenabilité**
 
-*Développé par Instance Claude sur demande Enzo - 24/10/2025*
+*Dernière mise à jour: 24/10/2025*
