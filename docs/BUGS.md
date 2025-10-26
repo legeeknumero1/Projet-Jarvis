@@ -83,9 +83,9 @@ unable to prepare context: path "C:\\Users\\Le Geek\\Documents\\Projet-Jarvis\\b
 
 **Problèmes identifiés**:
 1. Ligne 103: `context: ./backend` → répertoire inexistant
-2. Ligne 110: Port 8000 (ancien backend Python)
+2. Ligne 110: Port 8100 (Rust backend)
 3. Lignes 222, 283: Références à `./backend/db/init.sql` (inexistant)
-4. Ligne 174: Env var BACKEND_API_URL=:8000 (mauvais port)
+4. Ligne 174: Env var BACKEND_API_URL=:8100 (correct port)
 
 **Solution appliquée** (25/10/2025 15:15):
 ```yaml
@@ -95,7 +95,7 @@ backend:
     context: ./backend  # ❌ N'existe pas!
     dockerfile: Dockerfile
   ports:
-    - "8000:8000"  # ❌ Mauvais port
+    - "8100:8100"  # ✅ Correct port
 
 # APRÈS (CORRECT)
 backend:
@@ -139,7 +139,7 @@ backend:
 **Solution appliquée** :
 - Ajouté `allowed_origins: list` dans backend/config/config.py
 - Backend démarre maintenant correctement
-- Log : `✅ [CORS] Configured for origins: ['http://localhost:3000', 'http://localhost:8000', 'http://172.20.0.50:3000']`
+- Log : `✅ [CORS] Configured for origins: ['http://localhost:3000', 'http://localhost:8100', 'http://172.20.0.50:3000']`
 
 ### **BUG-DB-001** - Base "jarvis" inexistante ✅ RÉSOLU
 

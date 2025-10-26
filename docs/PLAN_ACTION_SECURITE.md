@@ -252,12 +252,12 @@ async def chat_endpoint(
 #### **✅ Tests authentification**
 ```bash
 # Test login/logout
-curl -X POST http://localhost:8000/auth/jwt/login \
+curl -X POST http://localhost:8100/auth/jwt/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=enzo&password=secure_password"
 
 # Test endpoint protégé  
-curl -X POST http://localhost:8000/chat \
+curl -X POST http://localhost:8100/chat \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message": "Test sécurisé"}'

@@ -320,7 +320,7 @@ security = SecurityManager('dev_secret_key_32_chars_long_123')
 
 echo "✅ Environnement développement prêt !"
 echo "🌐 Interface: http://localhost:3000"
-echo "📊 API: http://localhost:8000"
+echo "📊 API: http://localhost:8100"
 echo "📈 Grafana: http://localhost:3001"
 ```
 

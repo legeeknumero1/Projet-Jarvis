@@ -57,7 +57,7 @@ Le système valide automatiquement :
 ```yaml
 # Ports exposés (docker-compose.yml)
 - 3000:3000   # Interface web (HTTPS en production)
-- 8000:8000   # API Backend (JWT requis)
+- 8100:8100   # API Backend (JWT requis)
 - 8001:8001   # WebSocket (authentifié)
 - 8002:8002   # TTS API (réseau interne)
 - 8003:8003   # STT API (réseau interne) 

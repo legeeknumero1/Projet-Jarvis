@@ -23,7 +23,7 @@
 │                                                                │
 │  TIER 1 - CRITIQUE (RTO: 5 min, RPO: 1 min)                  │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │ Backend API (8000) │ PostgreSQL (5432) │ Redis (6379) │   │
+│  │ Backend API (8100) │ PostgreSQL (5432) │ Redis (6379) │   │
 │  └─────────────────────────────────────────────────────────┘   │
 │                                                                │
 │  TIER 2 - IMPORTANT (RTO: 15 min, RPO: 5 min)                │
@@ -88,7 +88,7 @@ docker-compose up -d ollama
 
 echo "⚙️ Démarrage Backend..."
 docker-compose up -d backend
-./scripts/wait-for-service.sh backend:8000 30
+./scripts/wait-for-service.sh backend:8100 30
 
 # 3. Microservices
 echo "🎤 Démarrage STT API..."
@@ -239,7 +239,7 @@ kubectl patch deployment jarvis-backend \
 # 3. Attendre fin des requêtes en cours (max 60s)
 echo "⏳ Attente fin requêtes en cours..."
 for i in $(seq 1 60); do
-    ACTIVE_CONN=$(curl -s http://backend:8000/metrics | grep jarvis_active_connections | awk '{print $2}')
+    ACTIVE_CONN=$(curl -s http://backend:8100/metrics | grep jarvis_active_connections | awk '{print $2}')
     if [[ "${ACTIVE_CONN:-0}" -eq 0 ]]; then
         echo "✅ Plus de connexions actives après ${i}s"
         break
@@ -516,7 +516,7 @@ check_service() {
 }
 
 # Vérifications services
-check_service "Backend API" "http://localhost:8000/health"
+check_service "Backend API" "http://localhost:8100/health"
 check_service "Frontend" "http://localhost:3000" 200
 check_service "STT API" "http://localhost:8003/health"
 check_service "TTS API" "http://localhost:8002/health"
@@ -594,7 +594,7 @@ kubectl rollout status deployment jarvis-backend -n jarvis-production
 # 6. Validation post-incident
 echo "✅ Validation post-incident..."
 sleep 30
-curl -f http://backend:8000/health || {
+curl -f http://backend:8100/health || {
     echo "❌ Backend toujours non réactif - Escalade nécessaire"
     curl -X POST $CRITICAL_ALERT_WEBHOOK \
         -d '{"text":"🚨 CRITICAL: Backend restart failed - Manual intervention required"}'

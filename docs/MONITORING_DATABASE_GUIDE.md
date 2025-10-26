@@ -120,8 +120,8 @@ await db_monitor.initialize_analysis_pool(config.database_url)
 python test_simple_monitoring.py
 
 # Vérification des endpoints
-curl http://localhost:8000/monitoring/health
-curl http://localhost:8000/monitoring/metrics
+curl http://localhost:8100/monitoring/health
+curl http://localhost:8100/monitoring/metrics
 ```
 
 ---
