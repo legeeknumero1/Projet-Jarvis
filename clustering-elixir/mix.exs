@@ -28,6 +28,9 @@ defmodule JarvisHA.MixProject do
       # Supervision & resilience
       {:supervisor_tree, "~> 0.1"},
 
+      # Consensus algorithm
+      {:ra, "~> 2.6"},
+
       # State management
       {:ecto, "~> 3.10"},
       {:ecto_sql, "~> 3.10"},

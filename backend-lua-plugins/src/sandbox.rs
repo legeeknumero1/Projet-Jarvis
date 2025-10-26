@@ -43,12 +43,31 @@ impl LuaSandbox {
 
     /// Create new Lua sandbox with custom resource limits
     pub async fn with_limits(limits: ResourceLimits) -> PluginResult<Self> {
-        info!("🔒 Creating Lua sandbox with limits: {:?}", limits);
+        info!("Creating Lua sandbox with limits: {:?}", limits);
 
         let lua = Lua::new();
 
         // Set memory limit
         lua.set_memory_limit(Some(limits.max_memory_bytes))?;
+
+        // Set CPU limit via instruction hook
+        let max_instructions = limits.max_instructions;
+        lua.set_hook(mlua::HookTriggers {
+            every_nth_instruction: Some(10000), // Check every 10k instructions
+            ..Default::default()
+        }, move |_lua, _debug| {
+            static mut INSTRUCTION_COUNT: u64 = 0;
+            unsafe {
+                INSTRUCTION_COUNT += 10000;
+                if INSTRUCTION_COUNT >= max_instructions {
+                    INSTRUCTION_COUNT = 0;
+                    return Err(mlua::Error::RuntimeError(
+                        format!("CPU limit exceeded: {} instructions", max_instructions)
+                    ));
+                }
+            }
+            Ok(())
+        })?;
 
         // Setup safe environment (restrict dangerous functions)
         let globals = lua.globals();
@@ -66,7 +85,7 @@ impl LuaSandbox {
         // - math, string, table OK
         // - coroutine OK (with limits)
 
-        info!("✅ Lua sandbox created (safe mode with resource limits)");
+        info!("Lua sandbox created (safe mode with resource limits)");
 
         Ok(Self {
             lua: Arc::new(Mutex::new(lua)),
@@ -97,31 +116,44 @@ impl LuaSandbox {
     ) -> PluginResult<serde_json::Value> {
         debug!("Calling hook: {}::{}", plugin_id, hook_name);
 
-        let lua = self.lua.lock().await;
-        let globals = lua.globals();
+        let timeout_duration = self.limits.max_execution_time;
 
-        // Get hook function
-        let hook_fn: Function = globals.get(hook_name)
-            .map_err(|_| PluginError::ExecutionError(
-                format!("Hook not found: {}", hook_name)
-            ))?;
+        // Execute hook with timeout enforcement
+        let result = tokio::time::timeout(timeout_duration, async {
+            let lua = self.lua.lock().await;
+            let globals = lua.globals();
 
-        // Convert args to Lua value
-        let lua_args: mlua::Value = lua.to_value(&args)?;
+            // Get hook function
+            let hook_fn: Function = globals.get(hook_name)
+                .map_err(|_| PluginError::ExecutionError(
+                    format!("Hook not found: {}", hook_name)
+                ))?;
 
-        // Call hook with timeout protection
-        match hook_fn.call::<_, mlua::Value>(lua_args) {
-            Ok(result) => {
-                let json_result: serde_json::Value = lua.from_value(result)?;
-                info!("✅ Hook executed: {}::{}", plugin_id, hook_name);
-                Ok(json_result)
+            // Convert args to Lua value
+            let lua_args: mlua::Value = lua.to_value(&args)?;
+
+            // Call hook
+            match hook_fn.call::<_, mlua::Value>(lua_args) {
+                Ok(result) => {
+                    let json_result: serde_json::Value = lua.from_value(result)?;
+                    info!("Hook executed: {}::{}", plugin_id, hook_name);
+                    Ok(json_result)
+                }
+                Err(e) => {
+                    Err(PluginError::ExecutionError(format!(
+                        "Hook execution failed: {}",
+                        e
+                    )))
+                }
             }
-            Err(e) => {
-                Err(PluginError::ExecutionError(format!(
-                    "Hook execution failed: {}",
-                    e
-                )))
-            }
+        }).await;
+
+        match result {
+            Ok(inner_result) => inner_result,
+            Err(_) => Err(PluginError::ExecutionError(format!(
+                "Hook execution timeout after {:?}",
+                timeout_duration
+            )))
         }
     }
 
