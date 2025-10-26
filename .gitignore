@@ -70,8 +70,9 @@ docker-compose.override.yml
 data/postgres/
 data/redis/
 
-# Modèles IA
-models/
+# Modèles IA (weights, not code)
+/models/
+backend-python-bridges/models/
 *.model
 *.pt
 *.pth

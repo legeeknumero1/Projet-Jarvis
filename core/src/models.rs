@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 
+pub mod entities;
+
 #[derive(Clone)]
 pub struct AppState {
     pub python_bridges_url: String,
