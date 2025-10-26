@@ -1,0 +1,48 @@
+[package]
+name = "jarvis-secretsd"
+version = "0.1.0"
+edition = "2021"
+authors = ["Jarvis Team"]
+description = "Lightweight, offline secrets management daemon for Jarvis"
+license = "MIT"
+
+[dependencies]
+# Web framework
+axum = "0.7"
+tokio = { version = "1.39", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+serde_yaml = "0.9"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# Crypto
+rand = "0.8"
+rand_core = "0.6"
+aes-gcm = "0.10"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+argon2 = "0.5"
+base64 = "0.22"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Concurrency
+parking_lot = "0.12"
+
+# Filesystem
+tokio-util = "0.7"
+
+[dev-dependencies]
+tempfile = "3.8"
