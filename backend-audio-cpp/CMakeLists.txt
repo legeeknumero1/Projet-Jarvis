@@ -46,15 +46,42 @@ set_target_properties(audio_engine_shared PROPERTIES
 )
 
 # ============================================================================
-# Optional: External Dependencies
+# External Dependencies
 # ============================================================================
 
-# NOTE: In production, you would link:
-# - FFmpeg (libavformat, libavcodec, libavutil)
-# - PortAudio (libportaudio)
-# - libsamplerate (for SRC resampling)
+# Find FFmpeg libraries
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED
+    libavformat
+    libavcodec
+    libavutil
+    libswresample
+)
 
-# For now, we use header-only lock-free queue implementation
+# Find PortAudio
+pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
+
+# Find libsamplerate (optional but recommended)
+pkg_check_modules(SAMPLERATE libsamplerate)
+
+# Include directories
+target_include_directories(audio_engine_shared PRIVATE
+    ${FFMPEG_INCLUDE_DIRS}
+    ${PORTAUDIO_INCLUDE_DIRS}
+    $<$<BOOL:${SAMPLERATE_FOUND}>:${SAMPLERATE_INCLUDE_DIRS}>
+)
+
+# Link libraries
+target_link_libraries(audio_engine_shared PRIVATE
+    ${FFMPEG_LIBRARIES}
+    ${PORTAUDIO_LIBRARIES}
+    $<$<BOOL:${SAMPLERATE_FOUND}>:${SAMPLERATE_LIBRARIES}>
+)
+
+# Compiler definitions
+if(SAMPLERATE_FOUND)
+    target_compile_definitions(audio_engine_shared PRIVATE HAVE_SAMPLERATE)
+endif()
 
 # ============================================================================
 # Testing

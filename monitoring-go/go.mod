@@ -5,6 +5,8 @@ go 1.21
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.18.0
+	github.com/grafana/loki/pkg/push v0.0.0-20231201161119-b0e3c5dbfccb
+	github.com/prometheus/alertmanager v0.27.0
 )
 
 require (

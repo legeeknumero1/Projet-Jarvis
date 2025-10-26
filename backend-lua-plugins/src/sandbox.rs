@@ -1,23 +1,54 @@
 /// Lua Sandbox - Sécurité et isolation pour plugins
 use mlua::{Lua, LuaSerdeExt, Table, Function};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use tracing::{info, debug};
+use tracing::{info, debug, warn};
 
 use crate::error::{PluginError, PluginResult};
 use crate::plugin_manager::Plugin;
 
+/// Resource limits for Lua sandbox
+#[derive(Debug, Clone)]
+pub struct ResourceLimits {
+    /// Maximum memory in bytes (default: 50 MB)
+    pub max_memory_bytes: usize,
+    /// Maximum execution time per hook call (default: 5 seconds)
+    pub max_execution_time: Duration,
+    /// Maximum instructions before timeout (default: 1 million)
+    pub max_instructions: u64,
+}
+
+impl Default for ResourceLimits {
+    fn default() -> Self {
+        Self {
+            max_memory_bytes: 50 * 1024 * 1024, // 50 MB
+            max_execution_time: Duration::from_secs(5), // 5 seconds
+            max_instructions: 1_000_000, // 1 million instructions
+        }
+    }
+}
+
 /// Lua Sandbox pour exécuter plugins en sécurité
 pub struct LuaSandbox {
     lua: Arc<Mutex<Lua>>,
+    limits: ResourceLimits,
 }
 
 impl LuaSandbox {
-    /// Create new Lua sandbox
+    /// Create new Lua sandbox with default limits
     pub async fn new() -> PluginResult<Self> {
-        info!("🔒 Creating Lua sandbox");
+        Self::with_limits(ResourceLimits::default()).await
+    }
+
+    /// Create new Lua sandbox with custom resource limits
+    pub async fn with_limits(limits: ResourceLimits) -> PluginResult<Self> {
+        info!("🔒 Creating Lua sandbox with limits: {:?}", limits);
 
         let lua = Lua::new();
+
+        // Set memory limit
+        lua.set_memory_limit(Some(limits.max_memory_bytes))?;
 
         // Setup safe environment (restrict dangerous functions)
         let globals = lua.globals();
@@ -35,10 +66,11 @@ impl LuaSandbox {
         // - math, string, table OK
         // - coroutine OK (with limits)
 
-        info!("✅ Lua sandbox created (safe mode)");
+        info!("✅ Lua sandbox created (safe mode with resource limits)");
 
         Ok(Self {
             lua: Arc::new(Mutex::new(lua)),
+            limits,
         })
     }
 

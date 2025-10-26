@@ -24,8 +24,14 @@ pyaudio==0.2.13
 openai-whisper==20231117
 piper-tts==1.2.0
 
+# Deep Learning Framework
+torch==2.1.0
+torchvision==0.16.0
+torchaudio==2.1.0
+
 # Vectorisation/Embeddings
 sentence-transformers==2.2.2
+transformers==4.35.0
 
 # Environnement
 python-dotenv==1.0.0
