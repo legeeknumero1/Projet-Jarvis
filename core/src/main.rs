@@ -12,10 +12,14 @@ mod handlers;
 mod middleware;
 mod models;
 mod services;
+mod openapi;
 
 use handlers::{auth, chat, health, memory, stt, tts};
 use middleware::{SecretsValidator, EnvironmentChecklist, TlsConfig, CertificateLoader};
 use models::AppState;
+use openapi::ApiDoc;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -125,6 +129,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allow_credentials(true)
         .max_age(Duration::from_secs(3600));
 
+    // Initialize Prometheus metrics
+    let (prometheus_layer, metric_handle) = axum_prometheus::PrometheusMetricLayer::pair();
+
     // Build router
     let app = Router::new()
         // ============================================================================
@@ -134,7 +141,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Health endpoints
         .route("/health", get(health::health_check))
         .route("/ready", get(health::readiness_check))
-        .route("/metrics", get(health::metrics))
+        .route("/metrics", get(|| async move { metric_handle.render() }))
+
+        // OpenAPI/Swagger UI
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
 
         // Auth endpoints
         .route("/api/auth/login", post(auth::login))
@@ -167,6 +177,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Security layers
         .layer(cors)
+        .layer(prometheus_layer)
         .with_state(state);
 
     let app = app.into_make_service_with_connect_info::<std::net::SocketAddr>();
