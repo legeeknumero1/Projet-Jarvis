@@ -123,8 +123,8 @@ services:
       - OLLAMA_BASE_URL=http://172.20.0.30:11434
       - TTS_API_URL=http://172.20.0.20:8002
       - STT_API_URL=http://172.20.0.10:8003
-      - PYTHON_BRIDGES_URL=http://172.20.0.35:8005
-      - AUDIO_ENGINE_URL=http://172.20.0.36:8004
+      # - PYTHON_BRIDGES_URL=http://172.20.0.35:8005  # Phase 3 not deployed yet
+      # - AUDIO_ENGINE_URL=http://172.20.0.36:8004    # Phase 2 not deployed yet
       - QDRANT_URL=http://172.20.0.120:6333
       - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@172.20.0.130:5432/${TIMESCALE_DB:-jarvis_timeseries}
     volumes:
@@ -198,7 +198,7 @@ services:
       jarvis_network:
         ipv4_address: 172.20.0.60
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       - REACT_APP_WS_URL=ws://localhost:8010/ws
       - REACT_APP_API_KEY=jarvis-dev-key

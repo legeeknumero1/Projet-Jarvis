@@ -14,7 +14,7 @@ docker-compose up -d
 Frontend:    http://localhost:3000
 API Core:    http://localhost:8100
 Health:      http://localhost:8100/health
-Monitoring:  http://localhost:9090/metrics
+Monitoring:  http://localhost:8006/metrics (when deployed)
 ```
 
 ## 9-Phase Architecture
@@ -26,8 +26,8 @@ Monitoring:  http://localhost:9090/metrics
 | 3 | Python (IA) | 8005 | Complete |
 | 4 | Rust (DB) | - | Complete |
 | 5 | Rust (MQTT) | - | Complete |
-| 6 | Go (Monitor) | 9090 | Complete |
-| 7 | React (UI) | 3000 | In Progress |
+| 6 | Go (Monitor) | 8006 | Not Deployed |
+| 7 | React (UI) | 3000 | Complete |
 | 8 | Lua (Plugins) | - | Pending |
 | 9 | Elixir (HA) | 8007 | Pending |
 

@@ -173,7 +173,7 @@ Actions:   TurnOn/Off Light, SetTemperature, SendNotification, PublishMQTT
 
 ---
 
-### **Phase 6: Go Monitoring** (Port 9090)
+### **Phase 6: Go Monitoring** (Port 8006)
 
 **Technologie:** Go + Prometheus
 
@@ -346,7 +346,7 @@ GET /metrics       # Prometheus metrics
 Phase 1:  Port 8100  - Rust Backend Core
 Phase 2:  Port 8004  - C++ Audio Engine
 Phase 3:  Port 8005  - Python Bridges IA
-Phase 6:  Port 9090  - Go Monitoring
+Phase 6:  Port 8006  - Go Monitoring
 Phase 7:  Port 3000  - Frontend React
 Phase 9:  Port 8007  - Elixir HA
 
