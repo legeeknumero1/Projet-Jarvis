@@ -20,7 +20,7 @@ services:
   jarvis-secretsd:
     build:
       context: ./jarvis-secretsd
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.runtime
     container_name: jarvis_secretsd
     networks:
       jarvis_network:

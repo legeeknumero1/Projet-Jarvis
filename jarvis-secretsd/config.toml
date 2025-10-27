@@ -2,7 +2,7 @@
 # Copy to /etc/jarvis-secretsd/config.toml and customize
 
 [server]
-bind_addr = "127.0.0.1:8081"     # TCP socket
+bind_addr = "0.0.0.0:8081"       # TCP socket (Docker-compatible)
 # bind_addr = "unix:///tmp/jarvis-secretsd.sock"  # Unix socket
 allow_unix_socket = true
 
