@@ -16,6 +16,37 @@ networks:
       com.docker.network.driver.mtu: 1500
 
 services:
+  # Jarvis Secrets Daemon - Secure secrets management
+  jarvis-secretsd:
+    build:
+      context: ./jarvis-secretsd
+      dockerfile: Dockerfile
+    container_name: jarvis_secretsd
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.5
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - secretsd_vault:/opt/jarvis/secrets
+      - secretsd_audit:/opt/jarvis/audit
+      - ./jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro
+      - ./jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp:noexec,nosuid
+
   # Container 1: STT API (Speech-to-Text) - Premier dans le schéma
   stt-api:
     build:
@@ -123,7 +154,7 @@ services:
       - OLLAMA_BASE_URL=http://172.20.0.30:11434
       - TTS_API_URL=http://172.20.0.20:8002
       - STT_API_URL=http://172.20.0.10:8003
-      # - PYTHON_BRIDGES_URL=http://172.20.0.35:8005  # Phase 3 not deployed yet
+      - PYTHON_BRIDGES_URL=http://172.20.0.35:8005
       # - AUDIO_ENGINE_URL=http://172.20.0.36:8004    # Phase 2 not deployed yet
       - QDRANT_URL=http://172.20.0.120:6333
       - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@172.20.0.130:5432/${TIMESCALE_DB:-jarvis_timeseries}
@@ -206,6 +237,28 @@ services:
     depends_on:
       - interface
 
+  # PyO3 Rust-Python Bridge
+  pyo3-bridge:
+    build:
+      context: ./backend-pyo3-bridge
+      dockerfile: Dockerfile
+    container_name: jarvis_pyo3_bridge
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.35
+    ports:
+      - "8005:8005"
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import jarvis_bridge; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # Services de support
   postgres:
     image: postgres:15
@@ -213,6 +266,8 @@ services:
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.100
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
       POSTGRES_USER: ${POSTGRES_USER:-jarvis}
@@ -232,6 +287,8 @@ services:
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.110
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -312,6 +369,8 @@ services:
     restart: "no"
 
 volumes:
+  secretsd_vault:
+  secretsd_audit:
   postgres_data:
   redis_data:
   ollama_data:

@@ -1,0 +1,28 @@
+# Jarvis Secrets Daemon Configuration
+# Copy to /etc/jarvis-secretsd/config.toml and customize
+
+[server]
+bind_addr = "127.0.0.1:8081"     # TCP socket
+# bind_addr = "unix:///tmp/jarvis-secretsd.sock"  # Unix socket
+allow_unix_socket = true
+
+[paths]
+vault_path = "/opt/jarvis/secrets/vault.json"
+audit_path = "/opt/jarvis/audit/audit.jsonl"
+master_key_path = "/opt/jarvis/secrets/master.key"   # file mode 600
+
+[security]
+rotation_days = 90                # Rotate secrets every 90 days
+grace_days = 14                   # Keep old secrets for 14 days
+require_client_id_header = true   # Require "X-Jarvis-Client: <name>"
+deny_network_remote = true        # Only allow localhost
+rbac_policy_path = "/etc/jarvis-secretsd/policy.yaml"
+
+[crypto]
+aead = "aes-gcm-256"              # or "chacha20poly1305"
+jwt_sign_algo = "ed25519"         # future-proof (not HS256)
+kdf = "argon2id"                  # if passphrase unlock mode
+
+[logging]
+level = "info"                    # trace, debug, info, warn, error
+json = false                      # JSON structured logs

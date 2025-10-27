@@ -1,0 +1,46 @@
+# Jarvis Secrets Daemon RBAC Policy
+# Copy to /etc/jarvis-secretsd/policy.yaml and customize
+
+clients:
+  # Backend can access JWT signing keys, encryption keys, API keys
+  backend:
+    allow:
+      - "jwt_signing_key"
+      - "jarvis_encryption_key"
+      - "brave_api_key"
+      - "openweather_api_key"
+      - "backup_encryption_key"
+    deny: []
+
+  # Database service can only access DB passwords
+  db:
+    allow:
+      - "postgres_password"
+      - "timescale_password"
+      - "redis_password"
+    deny: []
+
+  # TTS service can access TTS-specific keys
+  tts:
+    allow:
+      - "tts_api_key"
+    deny: []
+
+  # STT service can access STT-specific keys
+  stt:
+    allow:
+      - "stt_api_key"
+    deny: []
+
+  # Monitoring can list but not read secret values
+  monitoring:
+    allow: []
+    deny: ["*"]
+
+  # Admin has full access (for management)
+  admin:
+    allow: ["*"]
+    deny: []
+
+# Default deny (deny all clients not in the list)
+default_deny: true
