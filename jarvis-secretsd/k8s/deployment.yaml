@@ -1,0 +1,191 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jarvis-secrets
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secretsd-config
+  namespace: jarvis-secrets
+data:
+  config.toml: |
+    [server]
+    bind_addr = "0.0.0.0:8081"
+
+    [paths]
+    vault_path = "/data/vault.json"
+    audit_path = "/data/audit/audit.jsonl"
+    master_key_path = "/data/master.key"
+
+    [security]
+    rotation_days = 90
+    grace_days = 14
+    require_client_id_header = true
+    rbac_policy_path = "/etc/secretsd/policy.yaml"
+
+    [crypto]
+    aead = "aes-gcm-256"
+
+    [logging]
+    level = "info"
+    json = true
+
+  policy.yaml: |
+    clients:
+      backend:
+        allow:
+          - "jwt_signing_key"
+          - "jarvis_encryption_key"
+          - "brave_api_key"
+      db:
+        allow:
+          - "postgres_password"
+          - "redis_password"
+      admin:
+        allow: ["*"]
+    default_deny: true
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: secretsd-data
+  namespace: jarvis-secrets
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-secretsd
+  namespace: jarvis-secrets
+  labels:
+    app: jarvis-secretsd
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jarvis-secretsd
+  template:
+    metadata:
+      labels:
+        app: jarvis-secretsd
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      containers:
+      - name: secretsd
+        image: jarvis-secretsd:latest
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: http
+          containerPort: 8081
+          protocol: TCP
+
+        env:
+        - name: RUST_LOG
+          value: "info"
+
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /etc/secretsd
+          readOnly: true
+
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
+
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: secretsd-data
+      - name: config
+        configMap:
+          name: secretsd-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-secretsd
+  namespace: jarvis-secrets
+  labels:
+    app: jarvis-secretsd
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: jarvis-secretsd
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: secretsd-network-policy
+  namespace: jarvis-secrets
+spec:
+  podSelector:
+    matchLabels:
+      app: jarvis-secretsd
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: jarvis
+    ports:
+    - protocol: TCP
+      port: 8081
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53  # DNS

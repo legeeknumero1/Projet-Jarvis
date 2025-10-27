@@ -1,4 +1,5 @@
 use crate::audit::AuditLog;
+use crate::metrics::Metrics;
 use crate::policy::Policy;
 use crate::rotation::rotate_if_due;
 use crate::storage::VaultStore;
@@ -19,6 +20,7 @@ pub struct AppState {
     pub store: Arc<VaultStore>,
     pub policy: Arc<Policy>,
     pub audit: Arc<AuditLog>,
+    pub metrics: Arc<Metrics>,
     pub start_time: Instant,
 }
 
@@ -26,6 +28,7 @@ pub struct AppState {
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(health_handler))
+        .route("/metrics", get(metrics_handler))
         .route("/secret/:name", get(get_secret_handler))
         .route("/secret", post(create_secret_handler))
         .route("/secrets", get(list_secrets_handler))
@@ -45,6 +48,9 @@ fn extract_client(headers: &HeaderMap) -> Option<String> {
 async fn health_handler(State(state): State<AppState>) -> impl IntoResponse {
     let stats = state.store.stats();
 
+    // Update metrics
+    state.metrics.update_secrets_total(stats.total_secrets);
+
     let response = HealthResponse {
         status: "ok".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -53,6 +59,22 @@ async fn health_handler(State(state): State<AppState>) -> impl IntoResponse {
     };
 
     (StatusCode::OK, Json(response))
+}
+
+/// Prometheus metrics endpoint
+async fn metrics_handler(State(state): State<AppState>) -> impl IntoResponse {
+    // Update vault size metric
+    let stats = state.store.stats();
+    state.metrics.update_secrets_total(stats.total_secrets);
+
+    // Encode metrics in Prometheus format
+    let metrics_text = state.metrics.encode();
+
+    (
+        StatusCode::OK,
+        [("Content-Type", "text/plain; version=0.0.4")],
+        metrics_text,
+    )
 }
 
 /// Get a secret

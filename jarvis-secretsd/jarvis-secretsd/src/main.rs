@@ -2,6 +2,7 @@ mod api;
 mod audit;
 mod config;
 mod crypto;
+mod metrics;
 mod policy;
 mod rotation;
 mod storage;
@@ -11,6 +12,7 @@ use crate::api::{router, AppState};
 use crate::audit::AuditLog;
 use crate::config::Config;
 use crate::crypto::gen_bytes_32;
+use crate::metrics::Metrics;
 use crate::policy::Policy;
 use crate::storage::VaultStore;
 use anyhow::{Context, Result};
@@ -66,23 +68,27 @@ async fn main() -> Result<()> {
     let audit = AuditLog::init(&config.paths.audit_path)?;
     let audit = Arc::new(audit);
 
-    // 5. Start rotation scheduler
+    // 5. Initialize metrics
+    let metrics = Arc::new(Metrics::new());
+
+    // 6. Start rotation scheduler
     let store_clone = store.clone();
     tokio::spawn(async move {
         rotation::start_rotation_scheduler(store_clone).await;
     });
 
-    // 6. Build Axum app
+    // 7. Build Axum app
     let app_state = AppState {
         store,
         policy,
         audit: audit.clone(),
+        metrics,
         start_time: Instant::now(),
     };
 
     let app = router(app_state);
 
-    // 7. Start server
+    // 8. Start server
     let bind_addr = config.server.bind_addr.clone();
     info!("🌐 Starting server on {}", bind_addr);
 

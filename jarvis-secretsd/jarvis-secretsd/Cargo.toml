@@ -44,5 +44,8 @@ parking_lot = "0.12"
 # Filesystem
 tokio-util = "0.7"
 
+# Metrics
+prometheus-client = "0.22"
+
 [dev-dependencies]
 tempfile = "3.8"
