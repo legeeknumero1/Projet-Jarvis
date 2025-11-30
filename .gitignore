@@ -228,11 +228,16 @@ db.secret
 *.iml
 
 # Audit and vulnerability reports with sensitive data
-AUDIT*.md
+# NOTE: Ne plus ignorer les audits - ils doivent être versionnés
+# AUDIT*.md  # COMMENTÉ - garder les audits dans git
 AUDIT*.json
 AUDIT*.txt
 *security*report*.json
 *vulnerability*.json
+
+# Rapports temporaires Claude (à ne pas commiter)
+RAPPORT_AUDIT_*.md
+*_ANALYSIS_*.md
 
 # Compiled binaries and artifacts
 target/

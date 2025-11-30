@@ -1,0 +1,74 @@
+# ============================================================================
+# GitHub Linguist Configuration
+# Force le bon affichage des langages sur GitHub
+# ============================================================================
+
+# === IGNORE DOCUMENTATION FROM STATS ===
+# Les fichiers docs ne devraient pas être comptés dans les stats de code
+*.md linguist-documentation
+*.markdown linguist-documentation
+*.txt linguist-documentation
+
+# Exceptions: README files sont importants
+README.md -linguist-documentation
+*/README.md -linguist-documentation
+
+# === IGNORE VENDOR/GENERATED CODE ===
+# Ne pas compter les dépendances et code généré
+frontend/node_modules/** linguist-vendored
+frontend/.next/** linguist-generated
+**/target/** linguist-vendored
+**/build/** linguist-generated
+**/dist/** linguist-generated
+
+# === IGNORE CONFIG FILES FROM STATS ===
+# Les fichiers de config ne sont pas du "vrai code"
+*.json linguist-data
+*.yaml linguist-data
+*.yml linguist-data
+*.toml linguist-data
+Cargo.lock linguist-generated
+
+# === FORCE CORRECT LANGUAGE DETECTION ===
+# Forcer la détection correcte pour certains fichiers
+
+# Rust
+*.rs linguist-language=Rust
+Cargo.toml linguist-language=TOML
+
+# TypeScript/JavaScript
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
+*.js linguist-language=JavaScript
+*.jsx linguist-language=JavaScript
+
+# Python
+*.py linguist-language=Python
+requirements.txt linguist-language=pip-requirements
+
+# Shell scripts
+*.sh linguist-language=Shell
+
+# C++
+*.cpp linguist-language=C++
+*.h linguist-language=C++
+*.hpp linguist-language=C++
+
+# Elixir
+*.ex linguist-language=Elixir
+*.exs linguist-language=Elixir
+mix.exs linguist-language=Elixir
+
+# Lua
+*.lua linguist-language=Lua
+
+# === MARK TEST FILES AS DETECTABLE ===
+# Tests should appear in stats
+**/*test*.rs linguist-detectable=true
+**/*test*.py linguist-detectable=true
+**/*test*.ts linguist-detectable=true
+
+# === ARCHIVE DIRECTORY ===
+# Old documentation shouldn't count
+docs/archive/** linguist-documentation
+docs/old/** linguist-documentation
