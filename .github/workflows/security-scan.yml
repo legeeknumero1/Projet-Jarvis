@@ -1,9 +1,11 @@
 name: Security Scan
-on: 
+on:
   push:
     branches: [main, master, develop]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly scan Monday 2AM
 
 jobs:
   gitleaks:
@@ -12,19 +14,92 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history pour scan complet
-      
+          fetch-depth: 0
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # optionnel
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
         with:
           args: --verbose --report-format json --report-path gitleaks-report.json
-          
+
       - name: Upload Gitleaks report
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: gitleaks-report
           path: gitleaks-report.json
+
+  trivy-repo:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner (filesystem)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  cargo-audit:
+    name: Rust dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run cargo audit
+        run: cargo audit --deny warnings
+        continue-on-error: true
+
+  trivy-docker:
+    name: Trivy Docker image scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        image:
+          - jarvis-core
+          - jarvis-secretsd
+          - backend-python-bridges
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ${{ matrix.image }}:latest -f ${{ matrix.image }}/Dockerfile ${{ matrix.image }}
+        continue-on-error: true
+
+      - name: Run Trivy vulnerability scanner (Docker)
+        uses: aquasecurity/trivy-action@master
+        if: success()
+        with:
+          image-ref: '${{ matrix.image }}:latest'
+          format: 'sarif'
+          output: 'trivy-docker-${{ matrix.image }}.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy Docker results
+        uses: github/codeql-action/upload-sarif@v3
+        if: success()
+        with:
+          sarif_file: 'trivy-docker-${{ matrix.image }}.sarif'
