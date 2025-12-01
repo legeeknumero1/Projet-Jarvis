@@ -1,5 +1,5 @@
 # Multi-stage build for jarvis-secretsd
-FROM rust:1.75-slim as builder
+FROM rust:1.82-slim AS builder
 
 WORKDIR /build
 

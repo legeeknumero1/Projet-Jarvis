@@ -1,22 +1,22 @@
-# 📋 CHANGELOG - Projet Jarvis
+#  CHANGELOG - Projet Jarvis
 
-## [Audit-2025-10-25] - 2025-10-25 - "Audit Complet Sécurité & Architecture" 🔍
+## [Audit-2025-10-25] - 2025-10-25 - "Audit Complet Sécurité & Architecture" 
 
-### 📊 Audit Complet Exécuté
+###  Audit Complet Exécuté
 
 **Date**: 2025-10-25
 **Scope**: Architecture Docker (10/10 containers), Backend Python, Rust Core, C++ Audio, Dépendances
 **Durée**: ~2 heures
 
-### 🔴 DÉCOUVERTES CRITIQUES
+###  DÉCOUVERTES CRITIQUES
 
 #### Architecture Réelle vs Documentation
-- ✅ **10/10 containers ACTIFS** (pas 7/7 comme documenté)
-- ✅ Backend (Rust Core, Port 8100) - **OPÉRATIONNEL**
-- ✅ Interface (Python Bridges, Port 8005) - **OPÉRATIONNEL**
-- ✅ Frontend React (Port 3000) - **OPÉRATIONNEL**
-- ✅ Qdrant Vector DB (Port 6333) - **OPÉRATIONNEL**
-- ✅ TimescaleDB (Port 5432) - **OPÉRATIONNEL**
+-  **10/10 containers ACTIFS** (pas 7/7 comme documenté)
+-  Backend (Rust Core, Port 8100) - **OPÉRATIONNEL**
+-  Interface (Python Bridges, Port 8005) - **OPÉRATIONNEL**
+-  Frontend React (Port 3000) - **OPÉRATIONNEL**
+-  Qdrant Vector DB (Port 6333) - **OPÉRATIONNEL**
+-  TimescaleDB (Port 5432) - **OPÉRATIONNEL**
 
 **PROBLÈME**: CLAUDE_PARAMS.md était OBSOLÈTE depuis 2025-01-17 (3 mois!)
 
@@ -40,24 +40,24 @@
 - Erreurs exposées, CORS config, Allocations boucle, Handlers mock, Pas audit logging
 
 **Secrets Exposés en Clair**:
-- 🚨 JARVIS_API_KEY (ligne 9)
-- 🚨 JWT_SECRET_KEY (ligne 20)
-- 🚨 POSTGRES_PASSWORD (ligne 28)
-- 🚨 HOME_ASSISTANT_TOKEN JWT complet (ligne 58) ← **TOKEN DOMOTIQUE COMPROMIS!**
-- 🚨 BRAVE_API_KEY, OPENWEATHER_API_KEY (lignes 85-86)
+-  JARVIS_API_KEY (ligne 9)
+-  JWT_SECRET_KEY (ligne 20)
+-  POSTGRES_PASSWORD (ligne 28)
+-  HOME_ASSISTANT_TOKEN JWT complet (ligne 58) ← **TOKEN DOMOTIQUE COMPROMIS!**
+-  BRAVE_API_KEY, OPENWEATHER_API_KEY (lignes 85-86)
 
-### 📝 Documentation Mise à Jour
+###  Documentation Mise à Jour
 
 #### Fichiers Créés
-- ✅ **SECURITY.md** (500+ lignes) - Guide complet remédiation sécurité
+-  **SECURITY.md** (500+ lignes) - Guide complet remédiation sécurité
 
 #### Fichiers Mis à Jour
-- ✅ **CLAUDE_PARAMS.md** - Infos architecture 10/10 containers + actions sécurité immédiates
-- ✅ **README.md** - Avertissement sécurité en haut + architecture réelle
-- ✅ **BUGS.md** - Section vulnérabilités sécurité avec tableau CVSS
-- ✅ **Cette entrée CHANGELOG**
+-  **CLAUDE_PARAMS.md** - Infos architecture 10/10 containers + actions sécurité immédiates
+-  **README.md** - Avertissement sécurité en haut + architecture réelle
+-  **BUGS.md** - Section vulnérabilités sécurité avec tableau CVSS
+-  **Cette entrée CHANGELOG**
 
-### ⚡ Actions Immédiates Requises
+###  Actions Immédiates Requises
 
 **CETTE SEMAINE (24-48h)**:
 1. **Rotation ALL secrets** - Home Assistant token, API keys, DB password
@@ -77,79 +77,79 @@
 11. **Security Testing** - bandit, cargo audit, OWASP ZAP
 12. **Monitoring Sécurité** - Alertes, dashboards
 
-### 📊 Score Audit
+###  Score Audit
 
 | Component | Score | Status |
 |-----------|-------|--------|
-| Architecture | 10/10 | ✅ Excellente |
-| Code Quality | 7/10 | ⚠️ Bon, besoin améliorations |
-| Security | 3/10 | 🚨 CRITIQUE - Pas production-ready |
-| Performance | 8/10 | ✅ Très bon |
-| Overall | 7/10 | ⚠️ Bon structure, sécurité absent |
+| Architecture | 10/10 |  Excellente |
+| Code Quality | 7/10 |  Bon, besoin améliorations |
+| Security | 3/10 |  CRITIQUE - Pas production-ready |
+| Performance | 8/10 |  Très bon |
+| Overall | 7/10 |  Bon structure, sécurité absent |
 
 **Recommendation**: DO NOT deploy to production without fixing C1-C6 vulnerabilities.
 
 ---
 
-## [v1.9.0] - 2025-01-25 - "Architecture Polyglotte Complète" 🚀
+## [v1.9.0] - 2025-01-25 - "Architecture Polyglotte Complète" 
 
-### 🏗️ Architecture Polyglotte (9 Phases)
+###  Architecture Polyglotte (9 Phases)
 
-**Phase 1 🦀 Rust Backend Core** (Port 8100)
+**Phase 1  Rust Backend Core** (Port 8100)
 - API REST haute performance Axum + Tokio
 - 30x plus rapide que FastAPI
 - WebSocket temps réel bidirectionnel
 - Type-safe SQL avec sqlx
 
-**Phase 2 ⚙️ C++ Audio Engine** (Port 8004)
+**Phase 2  C++ Audio Engine** (Port 8004)
 - DSP temps réel <1ms latence
 - 50x plus rapide que Python
 - Echo cancellation, AGC, High-pass filter
 - Zero-copy circular buffer
 
-**Phase 3 🐍 Python Bridges IA** (Port 8005)
+**Phase 3  Python Bridges IA** (Port 8005)
 - Ollama LLM client
 - Whisper STT multilingue
 - Piper TTS français
 - Sentence Transformers embeddings
 
-**Phase 4 🗄️ Rust DB Layer**
+**Phase 4  Rust DB Layer**
 - PostgreSQL type-safe (sqlx)
 - Tantivy full-text search
 - Redis cache distribué
 - Connection pooling + batch ops
 
-**Phase 5 🔌 MQTT Automations**
+**Phase 5  MQTT Automations**
 - Rumqttc MQTT client
 - Home Assistant intégration
 - Rule engine triggers/conditions/actions
 - Smart home automation
 
-**Phase 6 🐹 Go Monitoring** (Port 8006)
+**Phase 6  Go Monitoring** (Port 8006)
 - Watchdog pour tous les services
 - Prometheus metrics
 - Health checks Kubernetes
 - Auto-restart sur crash
 
-**Phase 7 🌐 Frontend TypeScript** (Port 3000)
+**Phase 7  Frontend TypeScript** (Port 3000)
 - React 19 + Next.js 14
 - Zustand state management
 - ShadCN UI components
 - Type-safe avec Zod validation
 
-**Phase 8 🧩 Lua Plugins**
+**Phase 8  Lua Plugins**
 - mlua sandbox sécurisé (no os/io/debug)
 - Hot-reload sans recompilation
 - System hooks (on_chat, on_command, filters)
 - Plugin metadata + lifecycle
 
-**Phase 9 ☁️ Elixir HA Clustering** (Port 8007)
+**Phase 9  Elixir HA Clustering** (Port 8007)
 - Multi-node clustering OTP
 - Horde registry + dynamic supervisor
 - Raft consensus state management
 - Broadway event processing
 
-### 📚 Documentation
+###  Documentation
 
 #### Nouvelles Documentation
 - **ARCHITECTURE.md** (535 lignes) - Vue d'ensemble complète 9 phases
@@ -167,7 +167,7 @@
 - **backend-rust-mqtt/README.md** - Phase 5 numérotation
 - Tous les autres phase README - Vérifiés et cohérents
 
-### 🔒 Sécurité
+###  Sécurité
 
 #### Vulnérabilités Identifiées (19 total, 7 critiques)
 1. **sqlx 0.7** - RUSTSEC-2024-0363 (UPDATE recommandé)
@@ -179,12 +179,12 @@
 7. **DB migrations** - Missing (deployment blocker)
 
 #### Fixes Appliqués
-- ✅ Identification complète vulnérabilités
-- ✅ Documentation détaillée impacts
-- ✅ Code snippets pour corrections
-- 🔄 Implémentation en cours (18h estimées)
+-  Identification complète vulnérabilités
+-  Documentation détaillée impacts
+-  Code snippets pour corrections
+-  Implémentation en cours (18h estimées)
 
-### ⚡ Performance Targets
+###  Performance Targets
 
 | Métrique | Target |
 |----------|--------|
@@ -196,7 +196,7 @@
 | CPU Usage | <20% |
 | Uptime | >99.5% |
 
-### 🚀 Gains de Performance (vs v1.2.0 Python)
+###  Gains de Performance (vs v1.2.0 Python)
 
 | Composant | Amélioration |
 |-----------|--------------|
@@ -206,7 +206,7 @@
 | Memory | 4x moins |
 | CPU | 80% moins |
 
-### 🔄 Déploiement
+###  Déploiement
 
 #### Docker Compose (Dev)
 ```bash
@@ -232,28 +232,28 @@ docker-compose up -d
 11434 - Ollama
 ```
 
-### 🧪 Validation
+###  Validation
 
-- ✅ Architecture 9 phases opérationnelle
-- ✅ Documentation cohérente et à jour
-- ✅ Tous ports correctement documentés
-- ✅ Audit sécurité complété
-- ✅ Performance benchmarks validés
-- 🔄 Sécurité fixes (en cours)
+-  Architecture 9 phases opérationnelle
+-  Documentation cohérente et à jour
+-  Tous ports correctement documentés
+-  Audit sécurité complété
+-  Performance benchmarks validés
+-  Sécurité fixes (en cours)
 
-### 🎯 Status
+###  Status
 
 **Production-ready avec corrections sécurité en cours**
-- Architecture: ✅ Complet
-- Documentation: ✅ Complet
-- Sécurité: 🔄 In progress (75% → 85% target)
-- Performance: ✅ Validé
+- Architecture:  Complet
+- Documentation:  Complet
+- Sécurité:  In progress (75% → 85% target)
+- Performance:  Validé
 
 ---
 
-## [v1.3.0] - 2025-01-17 - "Production Hardening" 🚀
+## [v1.3.0] - 2025-01-17 - "Production Hardening" 
 
-### ✨ Nouvelles fonctionnalités
+###  Nouvelles fonctionnalités
 - **Observabilité complète production-ready**
 - **Graceful shutdown WebSocket avec drain mode**
 - **Métriques Prometheus intégrées** (/metrics endpoint)
@@ -262,7 +262,7 @@ docker-compose up -d
 - **Middleware request tracing** (X-Request-ID headers)
 - **Configuration multi-environnements** (dev/prod)
 
-### 🔒 Sécurité
+###  Sécurité
 - **Scrubbing automatique des secrets** dans les logs (regex robustes)
 - **Headers sécurité Nginx** (CSP, HSTS, XSS Protection)
 - **Rate limiting différencié** par endpoint
@@ -270,7 +270,7 @@ docker-compose up -d
 - **Timeouts robustes** pour services externes
 - **Docker secrets management** avec Gitleaks scanning
 
-### ⚡ Performance & Reliability  
+###  Performance & Reliability  
 - **WSManager centralisé** pour connexions WebSocket
 - **Task cancellation propre** (pas de Event loop closed)
 - **Retry avec backoff exponentiel** pour LLM/services
@@ -278,7 +278,7 @@ docker-compose up -d
 - **Prometheus instrumentator** automatique
 - **Health vs Readiness probes** pour Kubernetes
 
-### 📊 Observabilité
+###  Observabilité
 - **Métriques WebSocket**: `ws_active_connections`, `ws_connections_total`
 - **Métriques Chat/LLM**: `chat_requests_total`, `llm_generate_seconds`
 - **Métriques Services**: `service_health_status`, `service_response_seconds`
@@ -286,63 +286,63 @@ docker-compose up -d
 - **Logs JSON avec correlation**: timestamp ISO, request_id, user_id, latence
 - **Contextvars isolation**: pas de fuite contexte entre requêtes
 
-### 🐛 Correctifs Critiques
+###  Correctifs Critiques
 - **PATCH 1**: Scrubbing secrets - regex robustes vs getattr() inefficace
 - **PATCH 2**: Reset user_id par message WebSocket - évite persistence
 - **PATCH 3**: Config logging avant création loggers - dictConfig correct  
 - **PATCH 4**: Gauge WebSocket synchronisée avec register/unregister
 
-### 🔧 Amélioration Technique
+###  Amélioration Technique
 - **Middleware production** avec contextvars pour isolation
 - **Configuration JSON logging** pour production (rotation + stdout)
 - **Nginx reverse proxy** avec TLS termination
 - **Docker Compose production** avec secrets et healthchecks
 - **Scripts validation automatisés** (tests + sanity checks)
 
-### 📁 Nouveaux fichiers
+###  Nouveaux fichiers
 ```
 prod/
-├── logs-config.json              # Config logging production (fichiers)
-├── logs-config-k8s.json         # Config logging Kubernetes (stdout)
-├── docker-compose.prod.yml      # Stack production complète
-├── docker-compose.logs.yml      # Stack avec observabilité
-├── nginx-security.conf          # Nginx sécurisé + rate limiting
-├── CHECKLIST_VALIDATION.md      # Procédures validation prod
-├── OBSERVABILITE.md             # Guide observabilité complet
-├── OBSERVABILITE_COMPLETE.md    # Documentation finale
-├── PATCHES_CRITIQUES.md         # Corrections critiques appliquées
-├── TESTS_VALIDATION.md          # Tests de validation détaillés
-├── test-logs.sh                 # Script validation observabilité
-├── test-patches.py              # Tests automatisés patches
-└── fluent-bit.conf              # Collecte logs pour ELK
+ logs-config.json              # Config logging production (fichiers)
+ logs-config-k8s.json         # Config logging Kubernetes (stdout)
+ docker-compose.prod.yml      # Stack production complète
+ docker-compose.logs.yml      # Stack avec observabilité
+ nginx-security.conf          # Nginx sécurisé + rate limiting
+ CHECKLIST_VALIDATION.md      # Procédures validation prod
+ OBSERVABILITE.md             # Guide observabilité complet
+ OBSERVABILITE_COMPLETE.md    # Documentation finale
+ PATCHES_CRITIQUES.md         # Corrections critiques appliquées
+ TESTS_VALIDATION.md          # Tests de validation détaillés
+ test-logs.sh                 # Script validation observabilité
+ test-patches.py              # Tests automatisés patches
+ fluent-bit.conf              # Collecte logs pour ELK
 
 backend/
-├── observability/
-│   └── metrics.py               # Métriques Prometheus personnalisées
-├── middleware/
-│   └── request_context.py       # Middleware correlation logs
-├── security/
-│   └── rate_limit.py            # Rate limiting en mémoire
-└── utils/
-    ├── ws_manager.py            # Gestionnaire WebSocket centralisé
-    └── logging.py               # JsonFormatter + contextvars
+ observability/
+    metrics.py               # Métriques Prometheus personnalisées
+ middleware/
+    request_context.py       # Middleware correlation logs
+ security/
+    rate_limit.py            # Rate limiting en mémoire
+ utils/
+     ws_manager.py            # Gestionnaire WebSocket centralisé
+     logging.py               # JsonFormatter + contextvars
 ```
 
-### 🧪 Tests & Validation
+###  Tests & Validation
 - **100% patches critiques validés** (4/4)
 - **Tests automatisés scrubbing, contextvars, métriques**
 - **Validation configs JSON** (syntaxe + structure)
 - **Scripts CI/CD ready** avec exit codes
 - **Tests concurrence WebSocket** (isolation contexts)
 
-### 📈 Métriques Production
+###  Métriques Production
 - **Overhead logging**: < 1ms par requête
 - **Isolation contextvars**: 100% sans fuites
 - **Graceful shutdown**: SIGTERM → drain → close clean
 - **Rate limiting**: 429 avec métriques automatiques
 - **Health checks**: 200ms timeout prêt Kubernetes
 
-### 🔄 Migrations
+###  Migrations
 - **Variables environnement**: `JARVIS_LOG_CONFIG` pour config JSON
 - **Volumes Docker**: `/var/log/jarvis` pour logs persistants  
 - **Headers requis**: X-Request-ID pour correlation (optionnel)
@@ -352,7 +352,7 @@ backend/
 
 ## [v1.2.0] - 2025-01-16 - "Refactoring Modulaire"
 
-### 🏗️ Refactoring Architecture
+###  Refactoring Architecture
 - **Séparation services** (LLM, Memory, Voice, Weather, HomeAssistant)
 - **Factory pattern** pour FastAPI (create_app)
 - **Injection de dépendances** via app.state
@@ -360,14 +360,14 @@ backend/
 - **Schemas Pydantic** pour validation
 - **Configuration centralisée** (Settings)
 
-### ⚡ Améliorations
+###  Améliorations
 - **Lifespan manager** pour startup/shutdown services
 - **Error handling** robuste avec HTTPException
 - **CORS configuré** pour frontend local
 - **API Key authentication** pour endpoints sécurisés
 - **Health checks** pour monitoring
 
-### 🔧 Technique  
+###  Technique  
 - **Import dynamique** des services pour éviter dépendances
 - **Logging structuré** avec get_logger
 - **Async/await** partout pour performance
@@ -378,7 +378,7 @@ backend/
 
 ## [v1.1.0] - 2025-01-15 - "Stabilisation"
 
-### 🔧 Corrections
+###  Corrections
 - **Gestion erreurs** améliorée
 - **Logging** plus détaillé  
 - **Performance** optimisée
@@ -388,7 +388,7 @@ backend/
 
 ## [v1.0.0] - 2025-01-10 - "Release Initiale"
 
-### 🎉 Fonctionnalités Initiales
+###  Fonctionnalités Initiales
 - **Assistant IA conversationnel** avec Ollama
 - **Mémoire neuromorphique** avec Qdrant  
 - **WebSocket temps réel** pour chat
@@ -396,7 +396,7 @@ backend/
 - **Services météo** et domotique
 - **Jeux intégrés** (pendu)
 
-### 🏗️ Architecture
+###  Architecture
 - **Backend FastAPI** Python
 - **Base vectorielle** Qdrant
 - **LLM local** Ollama (llama3.2:1b)
@@ -406,11 +406,11 @@ backend/
 ---
 
 **Légende**:
-- 🎉 Nouvelle fonctionnalité majeure
-- ✨ Amélioration fonctionnelle  
-- 🔒 Sécurité
-- ⚡ Performance
-- 📊 Observabilité
-- 🐛 Correctif
-- 🔧 Technique
-- 🧪 Tests
+-  Nouvelle fonctionnalité majeure
+-  Amélioration fonctionnelle  
+-  Sécurité
+-  Performance
+-  Observabilité
+-  Correctif
+-  Technique
+-  Tests

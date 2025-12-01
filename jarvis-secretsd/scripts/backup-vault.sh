@@ -9,10 +9,10 @@ BACKUP_DIR="${BACKUP_DIR:-/opt/jarvis/backups}"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/vault-backup-$TIMESTAMP.tar.gz.gpg"
 
-echo "🔐 Backing up jarvis-secretsd vault"
-echo "📁 Vault: $VAULT_PATH"
-echo "📝 Audit: $AUDIT_PATH"
-echo "💾 Backup: $BACKUP_FILE"
+echo " Backing up jarvis-secretsd vault"
+echo " Vault: $VAULT_PATH"
+echo " Audit: $AUDIT_PATH"
+echo " Backup: $BACKUP_FILE"
 echo ""
 
 # Create backup directory
@@ -41,8 +41,8 @@ EOF
 cd "$TMP_DIR"
 tar czf - . | gpg --symmetric --cipher-algo AES256 -o "$BACKUP_FILE"
 
-echo "✅ Backup created: $BACKUP_FILE"
-echo "🔑 Encrypted with AES256 (GPG)"
+echo " Backup created: $BACKUP_FILE"
+echo " Encrypted with AES256 (GPG)"
 echo ""
 echo "To restore:"
 echo "  gpg -d $BACKUP_FILE | tar xzf - -C /tmp/restore"

@@ -1,17 +1,32 @@
 use axum::{
-    extract::{State, Path},
+    extract::{Path, State},
     http::StatusCode,
     Json,
 };
 use chrono::Utc;
 use std::sync::Arc;
-use uuid::Uuid;
 use tracing::info;
+use uuid::Uuid;
 
+use crate::middleware::{
+    ChatMessageValidator, ConversationIdValidator, InputValidator, ValidatedJwt,
+};
 use crate::models::{AppState, ChatRequest, ChatResponse, Conversation};
-use crate::middleware::{ValidatedJwt, ChatMessageValidator, ConversationIdValidator, InputValidator};
 
-pub async fn send_message(
+/// Chat endpoint
+#[utoipa::path(
+    post,
+    path = "/chat",
+    request_body = ChatRequest,
+    responses(
+        (status = 200, description = "Chat response", body = ChatResponse),
+        (status = 400, description = "Invalid request")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn chat_endpoint(
     ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
     Json(req): Json<ChatRequest>,
@@ -23,18 +38,23 @@ pub async fn send_message(
     // Validate chat message content
     let message_validator = ChatMessageValidator::new(req.content.clone());
     if let Err(e) = message_validator.validate() {
-        tracing::warn!("🚨 CHAT VALIDATION FAILED: {} from user {}", e, claims.user_id);
-        return Err((
-            StatusCode::BAD_REQUEST,
-            format!("Invalid message: {}", e),
-        ));
+        tracing::warn!(
+            " CHAT VALIDATION FAILED: {} from user {}",
+            e,
+            claims.user_id
+        );
+        return Err((StatusCode::BAD_REQUEST, format!("Invalid message: {}", e)));
     }
 
     // Validate conversation ID if provided
     if let Some(ref conv_id) = req.conversation_id {
         let id_validator = ConversationIdValidator::new(conv_id.clone());
         if let Err(e) = id_validator.validate() {
-            tracing::warn!("🚨 CONVERSATION ID VALIDATION FAILED: {} from user {}", e, claims.user_id);
+            tracing::warn!(
+                " CONVERSATION ID VALIDATION FAILED: {} from user {}",
+                e,
+                claims.user_id
+            );
             return Err((
                 StatusCode::BAD_REQUEST,
                 format!("Invalid conversation ID: {}", e),
@@ -42,8 +62,10 @@ pub async fn send_message(
         }
     }
 
-    info!("💬 Chat message from user: {}", claims.user_id);
-    let conversation_id = req.conversation_id.unwrap_or_else(|| Uuid::new_v4().to_string());
+    info!(" Chat message from user: {}", claims.user_id);
+    let conversation_id = req
+        .conversation_id
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
     let message_id = Uuid::new_v4().to_string();
 
     // Sanitize message content for any XSS attempts
@@ -61,25 +83,49 @@ pub async fn send_message(
     Ok((StatusCode::OK, Json(response)))
 }
 
-pub async fn list_conversations(
+/// Get conversations list
+#[utoipa::path(
+    get,
+    path = "/chat/conversations",
+    responses(
+        (status = 200, description = "List of conversations", body = Vec<Conversation>)
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn get_conversations(
     ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
 ) -> (StatusCode, Json<Vec<Conversation>>) {
-    info!("📋 Listing conversations for user: {}", claims.user_id);
-    let conversations = vec![
-        Conversation {
-            id: Uuid::new_v4().to_string(),
-            title: "Conversation 1".to_string(),
-            summary: Some("Résumé de la conversation 1".to_string()),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            message_count: 5,
-        },
-    ];
+    info!(" Listing conversations for user: {}", claims.user_id);
+    let conversations = vec![Conversation {
+        id: Uuid::new_v4().to_string(),
+        title: "Conversation 1".to_string(),
+        summary: Some("Résumé de la conversation 1".to_string()),
+        created_at: Utc::now(),
+        updated_at: Utc::now(),
+        message_count: 5,
+    }];
 
     (StatusCode::OK, Json(conversations))
 }
 
+/// Get conversation history
+#[utoipa::path(
+    get,
+    path = "/chat/history/{id}",
+    params(
+        ("id" = String, Path, description = "Conversation ID")
+    ),
+    responses(
+        (status = 200, description = "Conversation history", body = Vec<ChatResponse>),
+        (status = 400, description = "Invalid conversation ID")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
 pub async fn get_history(
     ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
@@ -90,14 +136,18 @@ pub async fn get_history(
     // ============================================================================
     let id_validator = ConversationIdValidator::new(id.clone());
     if let Err(e) = id_validator.validate() {
-        tracing::warn!("🚨 HISTORY VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        tracing::warn!(
+            " HISTORY VALIDATION FAILED: {} from user {}",
+            e,
+            claims.user_id
+        );
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid conversation ID: {}", e),
         ));
     }
 
-    info!("📖 Getting history for user: {}", claims.user_id);
+    info!(" Getting history for user: {}", claims.user_id);
     let history = vec![
         ChatResponse {
             id: Uuid::new_v4().to_string(),
@@ -130,14 +180,18 @@ pub async fn delete_conversation(
     // ============================================================================
     let id_validator = ConversationIdValidator::new(id.clone());
     if let Err(e) = id_validator.validate() {
-        tracing::warn!("🚨 DELETE VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        tracing::warn!(
+            " DELETE VALIDATION FAILED: {} from user {}",
+            e,
+            claims.user_id
+        );
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid conversation ID: {}", e),
         ));
     }
 
-    info!("🗑️ Deleting conversation for user: {}", claims.user_id);
+    info!(" Deleting conversation for user: {}", claims.user_id);
     Ok(StatusCode::OK)
 }
 

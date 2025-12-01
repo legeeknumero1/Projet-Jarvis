@@ -1,8 +1,8 @@
-# 🔍 Checklist Validation Production Jarvis v1.3
+#  Checklist Validation Production Jarvis v1.3
 
 > Guide de test pour valider le graceful shutdown et la robustesse production
 
-## ✅ Tests SIGTERM / Graceful Shutdown
+##  Tests SIGTERM / Graceful Shutdown
 
 ### 1. Test Docker Compose Down
 ```bash
@@ -13,13 +13,13 @@ docker-compose -f docker-compose.prod.yml up
 docker-compose -f docker-compose.prod.yml down
 ```
 
-**✅ Logs attendus :**
+** Logs attendus :**
 ```
-🛑 [SHUTDOWN] Arrêt graceful services...
-🚫 [SHUTDOWN] Mode drain activé - nouvelles connexions refusées
-🔌 [WS_MGR] Fermeture de X connexions...
-✅ [WS_MGR] Fermeture terminée - Succès: X, Erreurs: 0
-✅ [SHUTDOWN] Services arrêtés proprement
+ [SHUTDOWN] Arrêt graceful services...
+ [SHUTDOWN] Mode drain activé - nouvelles connexions refusées
+ [WS_MGR] Fermeture de X connexions...
+ [WS_MGR] Fermeture terminée - Succès: X, Erreurs: 0
+ [SHUTDOWN] Services arrêtés proprement
 ```
 
 ### 2. Test Refus Nouvelles Connexions (Mode Drain)
@@ -35,7 +35,7 @@ websocat ws://localhost/ws
 # Attendu: Connexion fermée avec code 1013
 ```
 
-**✅ Comportement attendu :**
+** Comportement attendu :**
 - Connexions existantes : reçoivent code `1001` (Going Away)
 - Nouvelles connexions : reçoivent code `1013` (Try Again Later)
 
@@ -48,27 +48,27 @@ echo '{"message":"Écris un long poème de 500 mots sur l'IA","user_id":"test"}'
 docker-compose down
 ```
 
-**✅ Logs attendus :**
+** Logs attendus :**
 ```
-🚫 [WS] client_123 Annulation de 1 tâches actives...
-🚫 [WS] client_123 Tâche de traitement annulée  
-✅ [WS] client_123 Tâches annulées proprement
+ [WS] client_123 Annulation de 1 tâches actives...
+ [WS] client_123 Tâche de traitement annulée  
+ [WS] client_123 Tâches annulées proprement
 ```
 
-## 🚫 Anti-Patterns (ce qui NE doit PAS arriver)
+##  Anti-Patterns (ce qui NE doit PAS arriver)
 
-### ❌ Erreurs à éviter
+###  Erreurs à éviter
 - `RuntimeError: Event loop is closed`
 - `RuntimeError: cannot schedule new futures after shutdown`
 - `websocket.receive_text() after close`
 - `upstream prematurely closed connection` (Nginx)
 
-### ❌ Fuites mémoire
+###  Fuites mémoire
 - Compteur `ws_active_connections` reste > 0 après shutdown
 - Tâches `asyncio` non terminées
 - Connexions HTTP/TCP ouvertes (netstat/ss)
 
-## 🔍 Tests de Robustesse
+##  Tests de Robustesse
 
 ### 1. Test Rate Limiting
 ```bash
@@ -80,7 +80,7 @@ for i in {1..50}; do
 done
 ```
 
-**✅ Attendu :** Status `429` après 30 requêtes
+** Attendu :** Status `429` après 30 requêtes
 
 ### 2. Test Taille Messages
 ```bash
@@ -93,7 +93,7 @@ print(f'Status: {r.status_code}, Response: {r.text}')
 "
 ```
 
-**✅ Attendu :** Status `413` (Payload Too Large)
+** Attendu :** Status `413` (Payload Too Large)
 
 ### 3. Test Timeouts Services
 ```bash
@@ -106,16 +106,16 @@ curl -X POST http://localhost/chat \
   -d '{"message":"test avec ollama down","user_id":"test"}'
 ```
 
-**✅ Attendu :** Status `503` avec message explicite
+** Attendu :** Status `503` avec message explicite
 
-## 📊 Vérifications Métriques
+##  Vérifications Métriques
 
 ### 1. WebSocket Connections Gauge
 ```bash
 curl http://localhost/metrics | grep ws_active_connections
 ```
 
-**✅ Attendu :** Valeur correspond au nombre réel de connexions
+** Attendu :** Valeur correspond au nombre réel de connexions
 
 ### 2. Health vs Readiness
 ```bash
@@ -134,7 +134,7 @@ curl http://localhost/ready
 docker logs jarvis_proxy 2>&1 | grep "limiting requests"
 ```
 
-## 🐞 Debugging Tools
+##  Debugging Tools
 
 ### 1. Connexions actives
 ```bash
@@ -163,7 +163,7 @@ docker stats --no-stream jarvis_backend
 # → Mémoire ne doit pas augmenter indéfiniment
 ```
 
-## ✅ Checklist Finale
+##  Checklist Finale
 
 - [ ] **SIGTERM** : Logs `draining=true` → connexions `0` → services fermés
 - [ ] **WebSocket** : Code `1001` existants, `1013` nouvelles connexions
@@ -178,4 +178,4 @@ docker stats --no-stream jarvis_backend
 
 ---
 
-**Status** : ✅ PRODUCTION READY quand tous les points sont validés
+**Status** :  PRODUCTION READY quand tous les points sont validés

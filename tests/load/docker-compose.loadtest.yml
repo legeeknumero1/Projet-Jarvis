@@ -1,0 +1,91 @@
+version: '3.8'
+
+# Docker Compose configuration for running load tests in containers
+# This allows running K6/Locust without local installation
+
+services:
+  # K6 Load Testing Service
+  k6:
+    image: grafana/k6:latest
+    container_name: jarvis_k6_loadtest
+    networks:
+      - jarvis_network
+    volumes:
+      - ./k6:/scripts
+      - ./k6/results:/results
+    environment:
+      - API_URL=http://172.20.0.40:8100
+    command: run /scripts/chat-api.js
+    depends_on:
+      - backend
+
+  # Locust Load Testing Service (Master)
+  locust-master:
+    image: locustio/locust:latest
+    container_name: jarvis_locust_master
+    networks:
+      - jarvis_network
+    ports:
+      - "8089:8089"  # Locust Web UI
+    volumes:
+      - ./locust:/mnt/locust
+    environment:
+      - LOCUST_MODE=master
+    command: -f /mnt/locust/chat_api.py --host=http://172.20.0.40:8100
+
+  # Locust Load Testing Service (Worker 1)
+  locust-worker-1:
+    image: locustio/locust:latest
+    container_name: jarvis_locust_worker_1
+    networks:
+      - jarvis_network
+    volumes:
+      - ./locust:/mnt/locust
+    environment:
+      - LOCUST_MODE=worker
+      - LOCUST_MASTER_NODE_HOST=locust-master
+    command: -f /mnt/locust/chat_api.py --worker --master-host=locust-master
+    depends_on:
+      - locust-master
+
+  # Locust Load Testing Service (Worker 2)
+  locust-worker-2:
+    image: locustio/locust:latest
+    container_name: jarvis_locust_worker_2
+    networks:
+      - jarvis_network
+    volumes:
+      - ./locust:/mnt/locust
+    environment:
+      - LOCUST_MODE=worker
+      - LOCUST_MASTER_NODE_HOST=locust-master
+    command: -f /mnt/locust/chat_api.py --worker --master-host=locust-master
+    depends_on:
+      - locust-master
+
+  # InfluxDB for K6 metrics storage
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: jarvis_influxdb_loadtest
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.210
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=jarvis2025
+      - DOCKER_INFLUXDB_INIT_ORG=jarvis
+      - DOCKER_INFLUXDB_INIT_BUCKET=k6
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=jarvis-k6-token-2025
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+networks:
+  jarvis_network:
+    external: true
+
+volumes:
+  influxdb_data:
+    driver: local

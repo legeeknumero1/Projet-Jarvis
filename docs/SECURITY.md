@@ -1,15 +1,15 @@
-# 🔒 JARVIS AI - GUIDE DE SÉCURITÉ
+#  JARVIS AI - GUIDE DE SÉCURITÉ
 
-## 🚨 AVERTISSEMENT DE SÉCURITÉ
+##  AVERTISSEMENT DE SÉCURITÉ
 
 Ce projet utilise des **clés de chiffrement 512 bits** et des **mots de passe sécurisés**. 
 **JAMAIS** de données sensibles hardcodées dans le code !
 
 ---
 
-## 📋 CHECKLIST DE SÉCURITÉ
+##  CHECKLIST DE SÉCURITÉ
 
-### ✅ Configuration des Variables d'Environnement
+###  Configuration des Variables d'Environnement
 
 1. **Copiez le template** :
    ```bash
@@ -30,7 +30,7 @@ Ce projet utilise des **clés de chiffrement 512 bits** et des **mots de passe s
 
 3. **Remplissez le fichier `.env`** avec les vraies valeurs
 
-### ✅ Clés de Sécurité Requises
+###  Clés de Sécurité Requises
 
 | Variable | Taille minimale | Usage |
 |----------|----------------|--------|
@@ -40,17 +40,17 @@ Ce projet utilise des **clés de chiffrement 512 bits** et des **mots de passe s
 | `POSTGRES_PASSWORD` | 256 bits (64 hex) | Base de données principale |
 | `TIMESCALE_PASSWORD` | 256 bits (64 hex) | Base de données TimescaleDB |
 
-### ✅ Validation Automatique
+###  Validation Automatique
 
 Le système valide automatiquement :
-- ✅ Longueur minimale des clés de chiffrement
-- ✅ Absence de mots de passe faibles (`123`, `password`, `admin`, etc.)
-- ✅ Format des variables d'environnement
-- ✅ Présence des variables critiques
+-  Longueur minimale des clés de chiffrement
+-  Absence de mots de passe faibles (`123`, `password`, `admin`, etc.)
+-  Format des variables d'environnement
+-  Présence des variables critiques
 
 ---
 
-## 🛡️ SÉCURITÉ RÉSEAU
+##  SÉCURITÉ RÉSEAU
 
 ### Pare-feu et Ports
 
@@ -85,15 +85,15 @@ MAX_REQUEST_SIZE=10485760 # 10MB maximum
 
 ---
 
-## 🔐 CHIFFREMENT DES DONNÉES
+##  CHIFFREMENT DES DONNÉES
 
 ### Données Chiffrées
 
-- ✅ **Conversations utilisateur** : Chiffrées avec `JARVIS_ENCRYPTION_KEY`
-- ✅ **Mémoire contextuelle** : Chiffrée au repos
-- ✅ **Logs sensibles** : Chiffrés avec rotation automatique
-- ✅ **Sauvegardes** : Chiffrées avec `BACKUP_ENCRYPTION_KEY`
-- ✅ **Tokens JWT** : Signés avec `JWT_SECRET_KEY`
+-  **Conversations utilisateur** : Chiffrées avec `JARVIS_ENCRYPTION_KEY`
+-  **Mémoire contextuelle** : Chiffrée au repos
+-  **Logs sensibles** : Chiffrés avec rotation automatique
+-  **Sauvegardes** : Chiffrées avec `BACKUP_ENCRYPTION_KEY`
+-  **Tokens JWT** : Signés avec `JWT_SECRET_KEY`
 
 ### Algorithmes Utilisés
 
@@ -104,9 +104,9 @@ MAX_REQUEST_SIZE=10485760 # 10MB maximum
 
 ---
 
-## 🚫 DONNÉES INTERDITES
+##  DONNÉES INTERDITES
 
-### ❌ Ne JAMAIS stocker en clair :
+###  Ne JAMAIS stocker en clair :
 
 - Mots de passe
 - Clés API externes
@@ -114,7 +114,7 @@ MAX_REQUEST_SIZE=10485760 # 10MB maximum
 - Informations personnelles sensibles
 - Clés de chiffrement
 
-### ❌ Ne JAMAIS committer :
+###  Ne JAMAIS committer :
 
 - Fichier `.env`
 - Dossier `logs/` avec données personnelles
@@ -123,7 +123,7 @@ MAX_REQUEST_SIZE=10485760 # 10MB maximum
 
 ---
 
-## 🔄 ROTATION DES CLÉS
+##  ROTATION DES CLÉS
 
 ### Planification
 
@@ -152,7 +152,7 @@ docker-compose logs -f backend
 
 ---
 
-## 🛠️ OUTILS DE SÉCURITÉ
+##  OUTILS DE SÉCURITÉ
 
 ### Commandes Utiles
 
@@ -163,7 +163,7 @@ import os
 key = os.getenv('JARVIS_ENCRYPTION_KEY')
 print(f'Longueur clé: {len(key)} caractères')
 print(f'Entropie: {len(key) * 4} bits')
-print('✅ OK' if len(key) >= 128 else '❌ TROP COURTE')
+print(' OK' if len(key) >= 128 else ' TROP COURTE')
 "
 
 # Audit sécurité
@@ -185,7 +185,7 @@ docker logs jarvis_backend | grep -E "(ERROR|WARNING|SECURITY)"
 
 ---
 
-## 📞 CONTACTS SÉCURITÉ
+##  CONTACTS SÉCURITÉ
 
 En cas d'incident de sécurité :
 
@@ -200,14 +200,14 @@ En cas d'incident de sécurité :
 
 ---
 
-## 🎯 CONFORMITÉ
+##  CONFORMITÉ
 
 ### Standards Respectés
 
-- ✅ **OWASP Top 10** : Protection contre vulnérabilités courantes
-- ✅ **GDPR/RGPD** : Chiffrement et droit à l'oubli
-- ✅ **ISO 27001** : Gestion sécurité information
-- ✅ **NIST** : Framework cybersécurité
+-  **OWASP Top 10** : Protection contre vulnérabilités courantes
+-  **GDPR/RGPD** : Chiffrement et droit à l'oubli
+-  **ISO 27001** : Gestion sécurité information
+-  **NIST** : Framework cybersécurité
 
 ### Audits Recommandés
 

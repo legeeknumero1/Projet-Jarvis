@@ -27,15 +27,15 @@ class GoogleSearchMCP:
         self.client = None
         
         if not self.api_key or not self.search_engine_id:
-            logger.warning("⚠️  Google API key or Search Engine ID missing")
-            logger.info("📋 To setup: https://developers.google.com/custom-search/v1/introduction")
+            logger.warning("  Google API key or Search Engine ID missing")
+            logger.info(" To setup: https://developers.google.com/custom-search/v1/introduction")
             # Utiliser des valeurs demo pour les tests
             self.api_key = "demo_key"
             self.search_engine_id = "demo_cx"
         else:
-            logger.info("🔍 Google Custom Search MCP Server initialized")
-            logger.info(f"🔑 Using API key: {self.api_key[:10]}...")
-            logger.info(f"🔍 Search Engine ID: {self.search_engine_id[:10]}...")
+            logger.info(" Google Custom Search MCP Server initialized")
+            logger.info(f" Using API key: {self.api_key[:10]}...")
+            logger.info(f" Search Engine ID: {self.search_engine_id[:10]}...")
     
     async def _ensure_client(self):
         """Assurer la présence du client HTTP"""
@@ -61,27 +61,27 @@ class GoogleSearchMCP:
             response = await self.client.get(self.base_url, params=params)
             
             if response.status_code == 400:
-                logger.error("❌ Bad request - check API key and search engine ID")
+                logger.error(" Bad request - check API key and search engine ID")
                 raise Exception("Invalid Google API configuration")
             elif response.status_code == 403:
-                logger.error("❌ Quota exceeded or API key invalid")
+                logger.error(" Quota exceeded or API key invalid")
                 raise Exception("Google API quota exceeded")
                 
             response.raise_for_status()
             return response.json()
             
         except httpx.HTTPStatusError as e:
-            logger.error(f"❌ HTTP error {e.response.status_code}: {e.response.text}")
+            logger.error(f" HTTP error {e.response.status_code}: {e.response.text}")
             raise
         except Exception as e:
-            logger.error(f"❌ Request error: {e}")
+            logger.error(f" Request error: {e}")
             raise
     
     async def web_search(self, query: str, count: int = 10, language: str = "lang_fr",
                         country: str = "countryFR", safe_search: str = "active",
                         date_restrict: str = "", site_search: str = "") -> Dict[str, Any]:
         """Recherche web avec Google Custom Search API"""
-        logger.info(f"🔍 Google web search: '{query}' (count={count}, lang={language})")
+        logger.info(f" Google web search: '{query}' (count={count}, lang={language})")
         
         params = {
             "q": query,
@@ -134,11 +134,11 @@ class GoogleSearchMCP:
                     "source": "Google"
                 })
             
-            logger.info(f"✅ Found {len(formatted_results['results'])} Google results")
+            logger.info(f" Found {len(formatted_results['results'])} Google results")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Google search failed: {e}")
+            logger.error(f" Google search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -149,7 +149,7 @@ class GoogleSearchMCP:
     async def image_search(self, query: str, count: int = 10, image_size: str = "",
                           image_type: str = "", safe_search: str = "active") -> Dict[str, Any]:
         """Recherche d'images avec Google Custom Search"""
-        logger.info(f"🖼️ Google image search: '{query}' (count={count})")
+        logger.info(f" Google image search: '{query}' (count={count})")
         
         params = {
             "q": query,
@@ -192,11 +192,11 @@ class GoogleSearchMCP:
                     "mime_type": item.get("mime", "")
                 })
             
-            logger.info(f"✅ Found {formatted_results['total_images']} Google images")
+            logger.info(f" Found {formatted_results['total_images']} Google images")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Google image search failed: {e}")
+            logger.error(f" Google image search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -206,7 +206,7 @@ class GoogleSearchMCP:
     
     async def news_search(self, query: str, count: int = 10, sort_by: str = "date") -> Dict[str, Any]:
         """Recherche d'actualités via Google (site search sur sites news)"""
-        logger.info(f"📰 Google news search: '{query}' (count={count})")
+        logger.info(f" Google news search: '{query}' (count={count})")
         
         # Rechercher sur des sites d'actualités populaires
         news_sites = [
@@ -247,11 +247,11 @@ class GoogleSearchMCP:
                     "verified": True
                 })
             
-            logger.info(f"✅ Found {formatted_results['total_articles']} news articles")
+            logger.info(f" Found {formatted_results['total_articles']} news articles")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Google news search failed: {e}")
+            logger.error(f" Google news search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -261,7 +261,7 @@ class GoogleSearchMCP:
     
     async def site_search(self, query: str, site: str, count: int = 10) -> Dict[str, Any]:
         """Recherche sur un site spécifique"""
-        logger.info(f"🌐 Google site search: '{query}' on {site}")
+        logger.info(f" Google site search: '{query}' on {site}")
         
         params = {
             "q": query,
@@ -290,11 +290,11 @@ class GoogleSearchMCP:
                     "site_verified": True
                 })
             
-            logger.info(f"✅ Found {formatted_results['total_results']} results on {site}")
+            logger.info(f" Found {formatted_results['total_results']} results on {site}")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Site search failed: {e}")
+            logger.error(f" Site search failed: {e}")
             return {
                 "query": query,
                 "site": site,
@@ -307,7 +307,7 @@ class GoogleSearchMCP:
         """Fermer les connexions"""
         if self.client and not self.client.is_closed:
             await self.client.aclose()
-            logger.info("🔍 Google Search MCP client closed")
+            logger.info(" Google Search MCP client closed")
 
 # Point d'entrée principal
 async def main():
@@ -320,7 +320,7 @@ async def main():
         print("Test search result:", json.dumps(result, indent=2, ensure_ascii=False))
         
     except Exception as e:
-        logger.error(f"❌ MCP Server error: {e}")
+        logger.error(f" MCP Server error: {e}")
     finally:
         await google_mcp.close()
 

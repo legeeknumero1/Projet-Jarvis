@@ -42,7 +42,7 @@ class OllamaModelPuller:
     async def pull_model(self, model_name: str) -> bool:
         """Télécharge un modèle Ollama"""
         try:
-            logger.info(f"🤖 Début téléchargement modèle: {model_name}")
+            logger.info(f" Début téléchargement modèle: {model_name}")
             
             # Requête de téléchargement
             response = await self.client.post(
@@ -59,14 +59,14 @@ class OllamaModelPuller:
                             data = json.loads(line)
                             if "status" in data:
                                 if data["status"] == "success":
-                                    logger.info(f"✅ Modèle {model_name} téléchargé avec succès")
+                                    logger.info(f" Modèle {model_name} téléchargé avec succès")
                                     return True
                                 else:
-                                    logger.info(f"📥 {data['status']}")
+                                    logger.info(f" {data['status']}")
                         except json.JSONDecodeError:
                             continue
             
-            logger.error(f"❌ Échec téléchargement modèle {model_name}")
+            logger.error(f" Échec téléchargement modèle {model_name}")
             return False
             
         except Exception as e:
@@ -80,11 +80,11 @@ class OllamaModelPuller:
         installed_models = [m["name"] for m in models.get("models", [])]
         
         if model_name in installed_models:
-            logger.info(f"✅ Modèle {model_name} déjà installé")
+            logger.info(f" Modèle {model_name} déjà installé")
             return True
         
         # Télécharger le modèle
-        logger.info(f"📥 Modèle {model_name} non trouvé, téléchargement...")
+        logger.info(f" Modèle {model_name} non trouvé, téléchargement...")
         return await self.pull_model(model_name)
     
     async def close(self):
@@ -98,7 +98,7 @@ async def main():
     try:
         # Vérifier disponibilité Ollama
         if not await puller.check_ollama_availability():
-            logger.error("❌ Ollama n'est pas disponible. Vérifiez qu'il est démarré.")
+            logger.error(" Ollama n'est pas disponible. Vérifiez qu'il est démarré.")
             return
         
         # Modèles à télécharger
@@ -111,11 +111,11 @@ async def main():
         for model in models_to_pull:
             success = await puller.ensure_model_available(model)
             if success:
-                logger.info(f"✅ Modèle {model} prêt")
+                logger.info(f" Modèle {model} prêt")
             else:
-                logger.error(f"❌ Échec pour le modèle {model}")
+                logger.error(f" Échec pour le modèle {model}")
         
-        logger.info("🎉 Configuration Ollama terminée")
+        logger.info(" Configuration Ollama terminée")
         
     except Exception as e:
         logger.error(f"Erreur générale: {e}")

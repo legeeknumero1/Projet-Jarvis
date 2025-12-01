@@ -1,13 +1,13 @@
-# 🔍 Multi-Search MCP Integration - Documentation
+#  Multi-Search MCP Integration - Documentation
 
 ## Overview
 Système de recherche multi-providers intégré dans Jarvis via MCP (Model Context Protocol).
 
 ## Providers Disponibles
-- **Brave Search** ✅ - Recherche sans tracking avec API key
-- **DuckDuckGo** ⚠️  - Recherche privée (parfois bloquée)
-- **Tavily** ⭕ - Recherche optimisée AI (nécessite clé API)
-- **Google Custom Search** ⭕ - Google officiel (nécessite configuration)
+- **Brave Search**  - Recherche sans tracking avec API key
+- **DuckDuckGo**   - Recherche privée (parfois bloquée)
+- **Tavily**  - Recherche optimisée AI (nécessite clé API)
+- **Google Custom Search**  - Google officiel (nécessite configuration)
 
 ## API Endpoints
 
@@ -41,7 +41,7 @@ Statut des providers disponibles.
 
 ### Variables d'environnement requises:
 ```bash
-# Brave Search (Configuré ✅)
+# Brave Search (Configuré )
 BRAVE_API_KEY=BSAQwlfLLN...
 BRAVE_API_KEY_BACKUP=BSAt9z9JKc...
 
@@ -77,13 +77,13 @@ parallel_result = await mcp_client.search_parallel("Python", ["brave", "duckduck
 
 ## État de l'intégration
 
-✅ **Terminé:**
+ **Terminé:**
 - Configuration des clés API Brave
 - Système de fallback multi-provider
 - Endpoints API REST
 - Documentation complète
 
-⭕ **À faire:**
+ **À faire:**
 - Obtenir clés API Tavily et Google
 - Tests d'intégration complets
 - Monitoring des performances

@@ -49,11 +49,11 @@ pub fn rotate_if_due(
 
         match store.rotate_secret(&name, secret_type) {
             Ok(_) => {
-                info!("🔄 Rotated: {}", name);
+                info!(" Rotated: {}", name);
                 rotated.push(name);
             }
             Err(e) => {
-                warn!("⚠️  Failed to rotate {}: {}", name, e);
+                warn!("  Failed to rotate {}: {}", name, e);
             }
         }
     }
@@ -82,23 +82,23 @@ fn infer_secret_type(name: &str) -> &str {
 pub async fn start_rotation_scheduler(store: Arc<VaultStore>) {
     let mut tick = interval(Duration::from_secs(86400)); // 24 hours
 
-    info!("⏰ Rotation scheduler started (checking daily)");
+    info!(" Rotation scheduler started (checking daily)");
 
     loop {
         tick.tick().await;
 
-        info!("🔍 Checking for secrets due for rotation...");
+        info!(" Checking for secrets due for rotation...");
 
         match rotate_if_due(&store, None) {
             Ok(rotated) => {
                 if rotated.is_empty() {
-                    info!("✅ No secrets due for rotation");
+                    info!(" No secrets due for rotation");
                 } else {
-                    info!("✅ Rotated {} secrets: {:?}", rotated.len(), rotated);
+                    info!(" Rotated {} secrets: {:?}", rotated.len(), rotated);
                 }
             }
             Err(e) => {
-                warn!("⚠️  Rotation check failed: {}", e);
+                warn!("  Rotation check failed: {}", e);
             }
         }
     }

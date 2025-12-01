@@ -528,20 +528,20 @@ json = true
 ## Changelog
 
 ### v0.2.0 (2025-10-27)
-- ✅ Added Prometheus metrics endpoint
-- ✅ Created jarvis-secrets CLI tool
-- ✅ Added migration scripts
-- ✅ Kubernetes manifests
-- ✅ Backup/restore scripts
-- ✅ Comprehensive documentation
+-  Added Prometheus metrics endpoint
+-  Created jarvis-secrets CLI tool
+-  Added migration scripts
+-  Kubernetes manifests
+-  Backup/restore scripts
+-  Comprehensive documentation
 
 ### v0.1.0 (2025-10-26)
-- ✅ Initial implementation
-- ✅ AES-GCM-256 encryption
-- ✅ Ed25519 audit trail
-- ✅ RBAC policy enforcement
-- ✅ Secret rotation with grace period
-- ✅ Docker integration
+-  Initial implementation
+-  AES-GCM-256 encryption
+-  Ed25519 audit trail
+-  RBAC policy enforcement
+-  Secret rotation with grace period
+-  Docker integration
 
 ---
 
@@ -553,7 +553,7 @@ json = true
 
 ---
 
-**Deployment Status**: ✅ Production Ready
+**Deployment Status**:  Production Ready
 
 Last updated: 2025-10-27
 Version: 0.2.0

@@ -196,7 +196,7 @@ impl Config {
     /// Load configuration from TOML file
     pub fn load(path: &str) -> Result<Self> {
         if !Path::new(path).exists() {
-            tracing::warn!("⚠️  Config file not found: {}, using defaults", path);
+            tracing::warn!("  Config file not found: {}, using defaults", path);
             return Ok(Config::default());
         }
 

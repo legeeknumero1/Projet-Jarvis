@@ -18,21 +18,21 @@ from MCP.servers.brave_search_mcp import BraveSearchMCP
 async def test_brave_search():
     """Teste toutes les fonctionnalités de Brave Search MCP"""
     
-    print("🔍 Test Brave Search MCP pour Jarvis")
+    print(" Test Brave Search MCP pour Jarvis")
     print("=====================================")
     
     # Vérifier les clés API
     api_key = os.getenv("BRAVE_API_KEY")
     api_key_backup = os.getenv("BRAVE_API_KEY_BACKUP")
     
-    print(f"BRAVE_API_KEY: {'✅ Configuré' if api_key else '⚠️  Manquant'}")
-    print(f"BRAVE_API_KEY_BACKUP: {'✅ Configuré' if api_key_backup else '⚠️  Manquant'}")
+    print(f"BRAVE_API_KEY: {' Configuré' if api_key else '  Manquant'}")
+    print(f"BRAVE_API_KEY_BACKUP: {' Configuré' if api_key_backup else '  Manquant'}")
     
     if not api_key:
-        print("❌ Clé API Brave manquante. Configurez BRAVE_API_KEY dans .env")
+        print(" Clé API Brave manquante. Configurez BRAVE_API_KEY dans .env")
         return False
     
-    print(f"🔑 Using API key: {api_key[:10]}...")
+    print(f" Using API key: {api_key[:10]}...")
     print()
     
     try:
@@ -40,7 +40,7 @@ async def test_brave_search():
         brave_mcp = BraveSearchMCP()
         
         # Test 1: Recherche web
-        print("📋 Test 1: Recherche web")
+        print(" Test 1: Recherche web")
         print("------------------------")
         
         web_result = await brave_mcp.web_search(
@@ -57,7 +57,7 @@ async def test_brave_search():
         print()
         
         # Test 2: Recherche d'actualités
-        print("📋 Test 2: Recherche actualités")
+        print(" Test 2: Recherche actualités")
         print("-------------------------------")
         
         news_result = await brave_mcp.news_search(
@@ -74,7 +74,7 @@ async def test_brave_search():
         print()
         
         # Test 3: Recherche d'images
-        print("📋 Test 3: Recherche images")
+        print(" Test 3: Recherche images")
         print("---------------------------")
         
         image_result = await brave_mcp.image_search(
@@ -90,7 +90,7 @@ async def test_brave_search():
         print()
         
         # Test 4: Recherche de vidéos
-        print("📋 Test 4: Recherche vidéos")
+        print(" Test 4: Recherche vidéos")
         print("---------------------------")
         
         video_result = await brave_mcp.video_search(
@@ -108,23 +108,23 @@ async def test_brave_search():
         # Fermer les connexions
         await brave_mcp.close()
         
-        print("✅ Tous les tests Brave Search ont réussi!")
+        print(" Tous les tests Brave Search ont réussi!")
         return True
         
     except Exception as e:
-        print(f"❌ Erreur lors des tests: {e}")
+        print(f" Erreur lors des tests: {e}")
         return False
 
 async def test_api_key_rotation():
     """Teste la rotation des clés API"""
-    print("🔄 Test rotation clés API")
+    print(" Test rotation clés API")
     print("-------------------------")
     
     api_key = os.getenv("BRAVE_API_KEY")
     api_key_backup = os.getenv("BRAVE_API_KEY_BACKUP")
     
     if not api_key_backup:
-        print("⚠️  Pas de clé backup - test ignoré")
+        print("  Pas de clé backup - test ignoré")
         return True
         
     try:
@@ -142,16 +142,16 @@ async def test_api_key_rotation():
         os.environ["BRAVE_API_KEY"] = api_key
         
         if result['total_results'] > 0:
-            print("✅ Rotation des clés API fonctionne")
+            print(" Rotation des clés API fonctionne")
             return True
         else:
-            print("⚠️  Rotation testée mais résultats limités")
+            print("  Rotation testée mais résultats limités")
             return True
             
     except Exception as e:
         # Restaurer la clé originale
         os.environ["BRAVE_API_KEY"] = api_key
-        print(f"⚠️  Test rotation échoué: {e}")
+        print(f"  Test rotation échoué: {e}")
         return False
 
 def load_env_file():
@@ -159,7 +159,7 @@ def load_env_file():
     env_file = Path(__file__).parent.parent / ".env"
     
     if not env_file.exists():
-        print(f"❌ Fichier .env non trouvé: {env_file}")
+        print(f" Fichier .env non trouvé: {env_file}")
         return False
         
     with open(env_file, 'r') as f:
@@ -186,8 +186,8 @@ async def main():
         await test_api_key_rotation()
         
         print()
-        print("🎉 Configuration Brave Search MCP validée!")
-        print("🔍 Prêt à utiliser dans Jarvis:")
+        print(" Configuration Brave Search MCP validée!")
+        print(" Prêt à utiliser dans Jarvis:")
         print("  • Recherche web sans tracking")
         print("  • Actualités en temps réel") 
         print("  • Images et vidéos")
@@ -195,7 +195,7 @@ async def main():
         print("  • Rotation automatique des clés")
     else:
         print()
-        print("❌ Configuration incomplète")
+        print(" Configuration incomplète")
         print("Vérifiez vos clés API dans le fichier .env")
 
 if __name__ == "__main__":

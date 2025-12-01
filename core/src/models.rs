@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 pub mod entities;
 
@@ -9,15 +10,25 @@ pub struct AppState {
     pub audio_engine_url: String,
 }
 
+impl AppState {
+    pub fn audio_engine_url(&self) -> &String {
+        &self.audio_engine_url
+    }
+
+    pub fn python_bridges_url(&self) -> &String {
+        &self.python_bridges_url
+    }
+}
+
 // ============= Chat Models =============
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ChatRequest {
     pub content: String,
     pub conversation_id: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ChatResponse {
     pub id: String,
     pub conversation_id: String,
@@ -27,7 +38,7 @@ pub struct ChatResponse {
     pub tokens: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct Conversation {
     pub id: String,
     pub title: String,
@@ -39,13 +50,13 @@ pub struct Conversation {
 
 // ============= STT/TTS Models =============
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TranscribeRequest {
     pub audio_data: String,
     pub language: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TranscribeResponse {
     pub text: String,
     pub language: String,
@@ -53,14 +64,14 @@ pub struct TranscribeResponse {
     pub duration_ms: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SynthesizeRequest {
     pub text: String,
     pub voice: Option<String>,
     pub speed: Option<f32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SynthesizeResponse {
     pub audio_data: String,
     pub sample_rate: u32,
@@ -68,7 +79,7 @@ pub struct SynthesizeResponse {
     pub voice: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct VoiceInfo {
     pub id: String,
     pub name: String,
@@ -76,7 +87,7 @@ pub struct VoiceInfo {
     pub gender: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct LanguageInfo {
     pub code: String,
     pub name: String,
@@ -84,7 +95,7 @@ pub struct LanguageInfo {
 
 // ============= Memory Models =============
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct MemoryEntry {
     pub id: String,
     pub content: String,
@@ -93,19 +104,19 @@ pub struct MemoryEntry {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct AddMemoryRequest {
     pub content: String,
     pub importance: Option<f32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SearchMemoryRequest {
     pub query: String,
     pub limit: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SearchMemoryResponse {
     pub results: Vec<MemoryEntry>,
     pub total: i32,
@@ -113,7 +124,7 @@ pub struct SearchMemoryResponse {
 
 // ============= Health Models =============
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct HealthStatus {
     pub status: String,
     pub version: String,
@@ -121,14 +132,14 @@ pub struct HealthStatus {
     pub services: ServiceStatus,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(, derive(Debug, Serialize, Deserialize, ToSchema))]
 pub struct ServiceStatus {
     pub database: String,
     pub python_bridges: String,
     pub audio_engine: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct Metrics {
     pub requests_total: u64,
     pub chat_requests: u64,
@@ -140,13 +151,13 @@ pub struct Metrics {
 
 // ============= Authentication Models =============
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct LoginResponse {
     pub access_token: String,
     pub token_type: String,
@@ -155,9 +166,11 @@ pub struct LoginResponse {
     pub username: String,
 }
 
-// ============= Error Models =============
+/*
+============= Error Models =============
+*/
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ErrorResponse {
     pub error: String,
     pub details: Option<String>,

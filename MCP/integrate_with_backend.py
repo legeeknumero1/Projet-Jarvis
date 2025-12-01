@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 def update_mcp_client_config():
     """Met à jour la configuration du client MCP pour inclure les nouveaux providers"""
-    logger.info("🔧 Mise à jour de la configuration MCP client...")
+    logger.info(" Mise à jour de la configuration MCP client...")
     
     backend_path = Path("/home/enzo/Projet-Jarvis/backend")
     mcp_client_path = backend_path / "integration" / "mcp_client.py"
     
     if not mcp_client_path.exists():
-        logger.error(f"❌ MCP client non trouvé: {mcp_client_path}")
+        logger.error(f" MCP client non trouvé: {mcp_client_path}")
         return False
     
     # Lire le fichier existant
@@ -56,9 +56,9 @@ except ImportError as e:
             lines.insert(insert_line, search_import)
             content = '\n'.join(lines)
             
-            logger.info("✅ Import MultiSearchManagerMCP ajouté")
+            logger.info(" Import MultiSearchManagerMCP ajouté")
         else:
-            logger.warning("⚠️  Position d'insertion non trouvée")
+            logger.warning("  Position d'insertion non trouvée")
     
     # Ajouter méthode de recherche dans la classe MCPClient
     search_method = '''
@@ -146,29 +146,29 @@ except ImportError as e:
                 lines.insert(insert_position + j, method_line)
             
             content = '\n'.join(lines)
-            logger.info("✅ Méthodes de recherche ajoutées à MCPClient")
+            logger.info(" Méthodes de recherche ajoutées à MCPClient")
         else:
-            logger.warning("⚠️  Classe MCPClient non trouvée")
+            logger.warning("  Classe MCPClient non trouvée")
     
     # Sauvegarder le fichier mis à jour
     try:
         with open(mcp_client_path, 'w', encoding='utf-8') as f:
             f.write(content)
-        logger.info("✅ Configuration MCP client mise à jour")
+        logger.info(" Configuration MCP client mise à jour")
         return True
     except Exception as e:
-        logger.error(f"❌ Erreur sauvegarde: {e}")
+        logger.error(f" Erreur sauvegarde: {e}")
         return False
 
 def create_mcp_search_endpoint():
     """Crée un endpoint API pour la recherche via MCP"""
-    logger.info("🚀 Création des endpoints de recherche...")
+    logger.info(" Création des endpoints de recherche...")
     
     backend_path = Path("/home/enzo/Projet-Jarvis/backend")
     api_path = backend_path / "api"
     
     if not api_path.exists():
-        logger.error(f"❌ Dossier API non trouvé: {api_path}")
+        logger.error(f" Dossier API non trouvé: {api_path}")
         return False
     
     # Créer le fichier d'endpoint de recherche
@@ -272,21 +272,21 @@ async def get_search_providers():
     try:
         with open(search_endpoint_path, 'w', encoding='utf-8') as f:
             f.write(search_endpoint_content)
-        logger.info(f"✅ Endpoint de recherche créé: {search_endpoint_path}")
+        logger.info(f" Endpoint de recherche créé: {search_endpoint_path}")
         return True
     except Exception as e:
-        logger.error(f"❌ Erreur création endpoint: {e}")
+        logger.error(f" Erreur création endpoint: {e}")
         return False
 
 def update_main_api():
     """Met à jour le fichier principal de l'API pour inclure les endpoints de recherche"""
-    logger.info("🔧 Mise à jour de l'API principale...")
+    logger.info(" Mise à jour de l'API principale...")
     
     backend_path = Path("/home/enzo/Projet-Jarvis/backend")
     main_path = backend_path / "main.py"
     
     if not main_path.exists():
-        logger.error(f"❌ Fichier main.py non trouvé: {main_path}")
+        logger.error(f" Fichier main.py non trouvé: {main_path}")
         return False
     
     # Lire le fichier existant
@@ -307,7 +307,7 @@ def update_main_api():
                     lines.insert(i + 1, search_import)
                     break
             content = '\n'.join(lines)
-            logger.info("✅ Import search router ajouté")
+            logger.info(" Import search router ajouté")
     
     # Ajouter l'inclusion du router
     router_include = "app.include_router(search_router)"
@@ -325,33 +325,33 @@ def update_main_api():
             
             lines.insert(last_include_line + 1, router_include)
             content = '\n'.join(lines)
-            logger.info("✅ Search router inclus dans l'app")
+            logger.info(" Search router inclus dans l'app")
     
     # Sauvegarder
     try:
         with open(main_path, 'w', encoding='utf-8') as f:
             f.write(content)
-        logger.info("✅ API principale mise à jour")
+        logger.info(" API principale mise à jour")
         return True
     except Exception as e:
-        logger.error(f"❌ Erreur mise à jour API: {e}")
+        logger.error(f" Erreur mise à jour API: {e}")
         return False
 
 def create_integration_documentation():
     """Crée la documentation d'intégration"""
-    logger.info("📝 Création de la documentation d'intégration...")
+    logger.info(" Création de la documentation d'intégration...")
     
     mcp_path = Path("/home/enzo/Projet-Jarvis/MCP")
-    doc_content = '''# 🔍 Multi-Search MCP Integration - Documentation
+    doc_content = '''#  Multi-Search MCP Integration - Documentation
 
 ## Overview
 Système de recherche multi-providers intégré dans Jarvis via MCP (Model Context Protocol).
 
 ## Providers Disponibles
-- **Brave Search** ✅ - Recherche sans tracking avec API key
-- **DuckDuckGo** ⚠️  - Recherche privée (parfois bloquée)
-- **Tavily** ⭕ - Recherche optimisée AI (nécessite clé API)
-- **Google Custom Search** ⭕ - Google officiel (nécessite configuration)
+- **Brave Search**  - Recherche sans tracking avec API key
+- **DuckDuckGo**   - Recherche privée (parfois bloquée)
+- **Tavily**  - Recherche optimisée AI (nécessite clé API)
+- **Google Custom Search**  - Google officiel (nécessite configuration)
 
 ## API Endpoints
 
@@ -385,7 +385,7 @@ Statut des providers disponibles.
 
 ### Variables d'environnement requises:
 ```bash
-# Brave Search (Configuré ✅)
+# Brave Search (Configuré )
 BRAVE_API_KEY=BSAQwlfLLN...
 BRAVE_API_KEY_BACKUP=BSAt9z9JKc...
 
@@ -421,13 +421,13 @@ parallel_result = await mcp_client.search_parallel("Python", ["brave", "duckduck
 
 ## État de l'intégration
 
-✅ **Terminé:**
+ **Terminé:**
 - Configuration des clés API Brave
 - Système de fallback multi-provider
 - Endpoints API REST
 - Documentation complète
 
-⭕ **À faire:**
+ **À faire:**
 - Obtenir clés API Tavily et Google
 - Tests d'intégration complets
 - Monitoring des performances
@@ -452,15 +452,15 @@ parallel_result = await mcp_client.search_parallel("Python", ["brave", "duckduck
     try:
         with open(doc_path, 'w', encoding='utf-8') as f:
             f.write(doc_content)
-        logger.info(f"✅ Documentation créée: {doc_path}")
+        logger.info(f" Documentation créée: {doc_path}")
         return True
     except Exception as e:
-        logger.error(f"❌ Erreur création documentation: {e}")
+        logger.error(f" Erreur création documentation: {e}")
         return False
 
 def main():
     """Fonction principale d'intégration"""
-    print("🚀 JARVIS MCP MULTI-SEARCH INTEGRATION")
+    print(" JARVIS MCP MULTI-SEARCH INTEGRATION")
     print("=" * 50)
     
     success_count = 0
@@ -483,16 +483,16 @@ def main():
         success_count += 1
     
     print("\n" + "=" * 50)
-    print(f"✅ INTÉGRATION TERMINÉE: {success_count}/{total_steps} étapes réussies")
+    print(f" INTÉGRATION TERMINÉE: {success_count}/{total_steps} étapes réussies")
     
     if success_count == total_steps:
-        print("🎉 Intégration complète réussie!")
-        print("\n📋 Prochaines étapes:")
+        print(" Intégration complète réussie!")
+        print("\n Prochaines étapes:")
         print("1. Redémarrer le backend Jarvis")
         print("2. Tester les endpoints /search/web et /search/parallel")
         print("3. Configurer les clés API manquantes (Tavily, Google)")
     else:
-        print("⚠️  Intégration partielle - vérifier les erreurs ci-dessus")
+        print("  Intégration partielle - vérifier les erreurs ci-dessus")
     
     print("=" * 50)
 

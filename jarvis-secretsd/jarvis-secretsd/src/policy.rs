@@ -31,7 +31,7 @@ impl Policy {
     /// Load policy from YAML file
     pub fn load(path: &str) -> Result<Self> {
         if !Path::new(path).exists() {
-            warn!("⚠️  Policy file not found: {}, using default-deny", path);
+            warn!("  Policy file not found: {}, using default-deny", path);
             return Ok(Policy::default_deny());
         }
 
@@ -41,7 +41,7 @@ impl Policy {
         let policy: Policy = serde_yaml::from_str(&content)
             .with_context(|| format!("failed to parse policy YAML: {}", path))?;
 
-        info!("📋 Loaded policy with {} client rules", policy.clients.len());
+        info!(" Loaded policy with {} client rules", policy.clients.len());
 
         Ok(policy)
     }

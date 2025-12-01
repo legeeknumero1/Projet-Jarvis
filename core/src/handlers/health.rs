@@ -1,19 +1,21 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
-use std::sync::Arc;
+use axum::{extract::State, http::StatusCode, Json};
 use chrono::Utc;
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::models::{AppState, HealthStatus, ServiceStatus, Metrics};
+use crate::models::{AppState, HealthStatus, Metrics, ServiceStatus};
 
 static STARTUP_TIME: std::sync::OnceLock<SystemTime> = std::sync::OnceLock::new();
 
-pub async fn health_check(
-    State(_state): State<Arc<AppState>>,
-) -> (StatusCode, Json<HealthStatus>) {
+/// Health check endpoint
+#[utoipa::path(
+    get,
+    path = "/health",
+    responses(
+        (status = 200, description = "Service is healthy", body = HealthStatus)
+    )
+)]
+pub async fn health_check(State(_state): State<Arc<AppState>>) -> (StatusCode, Json<HealthStatus>) {
     let startup = STARTUP_TIME.get_or_init(SystemTime::now);
     let uptime = startup.elapsed().unwrap_or_default().as_secs();
 
@@ -31,6 +33,14 @@ pub async fn health_check(
     (StatusCode::OK, Json(health))
 }
 
+/// Readiness check endpoint
+#[utoipa::path(
+    get,
+    path = "/ready",
+    responses(
+        (status = 200, description = "Service is ready")
+    )
+)]
 pub async fn readiness_check() -> (StatusCode, Json<serde_json::Value>) {
     let response = serde_json::json!({
         "status": "ready",

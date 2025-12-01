@@ -7,30 +7,30 @@
 ## Vue d'Ensemble Global
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│         Frontend React/TypeScript v19/Next14            │
-│                  (Port 3000)                            │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┼────────────┬─────────────┐
-        │            │            │             │
-┌───────▼───────┐ ┌──▼───┐ ┌─────▼──┐ ┌──────▼───┐
-│  Rust Core    │ │Lua   │ │Python  │ │C++      │
-│  (8100)       │ │Plugins│ │Bridges │ │Audio    │
-│ Phase 1       │ │Phase 8│ │Phase 3 │ │Phase 2  │
-│ Axum+Tokio    │ │       │ │        │ │(8004)   │
-└───────┬───────┘ └──────┘ └────┬───┘ └─────┬───┘
-        │                       │           │
-   ┌────▼──────────┬────────────▼──┬────────▼──┐
-   │               │                │          │
-┌──▼──────┐  ┌─────▼──────┐  ┌─────▼───┐ ┌──▼──────┐
-│Rust DB  │  │MQTT        │  │Go       │ │Elixir  │
-│Tantivy  │  │Home        │  │Monitor  │ │HA      │
-│Redis    │  │Assistant   │  │(8006)   │ │(8007)  │
-│Phase 4-5│  │Automations │  │Phase 6  │ │Phase 9 │
-│         │  │Phase 5     │  │         │ │        │
-└─────────┘  └────────────┘  └─────────┘ └────────┘
-     │
+
+         Frontend React/TypeScript v19/Next14            
+                  (Port 3000)                            
+
+                     
+        
+                                             
+   
+  Rust Core     Lua    Python   C++      
+  (8100)        Plugins Bridges  Audio    
+ Phase 1        Phase 8 Phase 3  Phase 2  
+ Axum+Tokio                      (8004)   
+   
+                                          
+   
+                                            
+     
+Rust DB    MQTT          Go        Elixir  
+Tantivy    Home          Monitor   HA      
+Redis      Assistant     (8006)    (8007)  
+Phase 4-5  Automations   Phase 6   Phase 9 
+           Phase 5                         
+     
+     
   PostgreSQL + Redis + Ollama
 ```
 
@@ -43,11 +43,11 @@
 **Technologie:** Rust + Axum + Tokio
 
 **Responsabilités:**
-- ✅ API REST haute performance
-- ✅ WebSocket temps réel bidirectionnel
-- ✅ Orchestration des autres services
-- ✅ Gestion des conversations
-- ✅ Rate limiting + CORS
+-  API REST haute performance
+-  WebSocket temps réel bidirectionnel
+-  Orchestration des autres services
+-  Gestion des conversations
+-  Rate limiting + CORS
 
 **Endpoints Principaux:**
 ```
@@ -60,11 +60,11 @@ WS   /ws                       # Chat temps réel
 ```
 
 **Points de Connexion:**
-- ⬅️ Frontend (Port 3000)
-- ➡️ Phase 3: Python Bridges (8005)
-- ➡️ Phase 2: C++ Audio (8004)
-- ➡️ Phase 4-5: Rust Libs (DB, MQTT)
-- ➡️ Phase 8: Lua (interne)
+-  Frontend (Port 3000)
+-  Phase 3: Python Bridges (8005)
+-  Phase 2: C++ Audio (8004)
+-  Phase 4-5: Rust Libs (DB, MQTT)
+-  Phase 8: Lua (interne)
 
 ---
 
@@ -73,10 +73,10 @@ WS   /ws                       # Chat temps réel
 **Technologie:** C++17 + CMake + Boost
 
 **Responsabilités:**
-- ✅ DSP temps réel <1ms latence
-- ✅ Audio buffering circulaire zero-copy
-- ✅ High-pass filter + AGC
-- ✅ Echo cancellation
+-  DSP temps réel <1ms latence
+-  Audio buffering circulaire zero-copy
+-  High-pass filter + AGC
+-  Echo cancellation
 
 **Performance:**
 ```
@@ -87,8 +87,8 @@ CPU:        5% vs Python 25%
 ```
 
 **Points de Connexion:**
-- ⬅️ Phase 3: Whisper/Piper (Python)
-- ➡️ Phase 1: Rust Core
+-  Phase 3: Whisper/Piper (Python)
+-  Phase 1: Rust Core
 
 ---
 
@@ -97,10 +97,10 @@ CPU:        5% vs Python 25%
 **Technologie:** Python + Flask + Async
 
 **Services:**
-- 🤖 **Ollama Client** - LLM local (LLaMA 3.2:1b)
-- 🎤 **Whisper Client** - Speech-to-Text multilingue
-- 🔊 **Piper Client** - Text-to-Speech français
-- 🧠 **Embeddings** - Sentence Transformers
+-  **Ollama Client** - LLM local (LLaMA 3.2:1b)
+-  **Whisper Client** - Speech-to-Text multilingue
+-  **Piper Client** - Text-to-Speech français
+-  **Embeddings** - Sentence Transformers
 
 **Endpoints:**
 ```
@@ -152,10 +152,10 @@ MemoryEntry { id, user_id, content, vector, importance, ... }
 **Technologie:** Rust + rumqttc
 
 **Responsabilités:**
-- ✅ Automations Home Assistant
-- ✅ MQTT pub/sub
-- ✅ Triggers/Conditions/Actions
-- ✅ Smart home intégration
+-  Automations Home Assistant
+-  MQTT pub/sub
+-  Triggers/Conditions/Actions
+-  Smart home intégration
 
 **Automation Types:**
 ```
@@ -178,10 +178,10 @@ Actions:   TurnOn/Off Light, SetTemperature, SendNotification, PublishMQTT
 **Technologie:** Go + Prometheus
 
 **Services:**
-- 🔍 **Watchdog** - Supervise tous les services
-- 📊 **Metrics** - Prometheus format
-- ✅ **Health Checks** - Status agregé
-- 🔄 **Auto-Restart** - Services
+-  **Watchdog** - Supervise tous les services
+-  **Metrics** - Prometheus format
+-  **Health Checks** - Status agregé
+-  **Auto-Restart** - Services
 
 **Métriques:**
 ```
@@ -207,39 +207,39 @@ GET /ready         # Readiness
 **Architecture:**
 ```
 app/                          # Next.js App Router
-├── layout.tsx              # RootLayout
-├── page.tsx                # Page d'accueil
-├── login/                  # Auth pages
-├── chat/                   # Chat pages
-└── api/                    # API routes (optionnel)
+ layout.tsx              # RootLayout
+ page.tsx                # Page d'accueil
+ login/                  # Auth pages
+ chat/                   # Chat pages
+ api/                    # API routes (optionnel)
 
 components/                  # Composants réutilisables
-├── chat/
-│   ├── ChatLayout          # Layout principal
-│   ├── MessageList         # Affichage messages
-│   ├── MessageInput        # Textarea + send
-│   └── MessageItem         # Message individuel
-├── auth/
-│   ├── LoginForm
-│   └── RegisterForm
-└── layout/
-    ├── Header
-    ├── Sidebar
-    └── RootLayout
+ chat/
+    ChatLayout          # Layout principal
+    MessageList         # Affichage messages
+    MessageInput        # Textarea + send
+    MessageItem         # Message individuel
+ auth/
+    LoginForm
+    RegisterForm
+ layout/
+     Header
+     Sidebar
+     RootLayout
 
 hooks/
-├── useChat                 # Chat logic
-├── useWebSocket            # WS connection
-└── useForm                 # Form validation
+ useChat                 # Chat logic
+ useWebSocket            # WS connection
+ useForm                 # Form validation
 
 store/
-├── chatStore              # Zustand
-└── userStore              # Auth + prefs
+ chatStore              # Zustand
+ userStore              # Auth + prefs
 
 types/                      # TypeScript types
 lib/
-├── api.ts                 # Axios client
-└── utils/                 # Helpers
+ api.ts                 # Axios client
+ utils/                 # Helpers
 ```
 
 **Dépendances Clés:**
@@ -257,10 +257,10 @@ lib/
 **Technologie:** Rust + mlua
 
 **Système de Plugins:**
-- 🔒 Sandbox sécurisé (bloque os, io, load, debug)
-- 🔄 Hot-reload sans recompilation
-- 🪝 Hooks système extensibles
-- 📦 Gestion de métadata
+-  Sandbox sécurisé (bloque os, io, load, debug)
+-  Hot-reload sans recompilation
+-  Hooks système extensibles
+-  Gestion de métadata
 
 **Hooks Disponibles:**
 ```lua
@@ -294,7 +294,7 @@ jarvis.events.on(event, callback)
 
 function on_chat(message)
     if message.role == "user" then
-        jarvis.log("👋 User: " .. message.content)
+        jarvis.log(" User: " .. message.content)
     end
     return { ok = true }
 end
@@ -312,11 +312,11 @@ end
 **Technologie:** Elixir/Erlang + OTP
 
 **Features:**
-- 🔗 Clustering multi-nœuds
-- 📊 Horde Registry (service discovery)
-- 🎯 Horde DynamicSupervisor (distribution)
-- 🔄 Raft consensus (state)
-- 📡 Broadway (event processing)
+-  Clustering multi-nœuds
+-  Horde Registry (service discovery)
+-  Horde DynamicSupervisor (distribution)
+-  Raft consensus (state)
+-  Broadway (event processing)
 
 **Stratégies Clustering:**
 ```
@@ -326,11 +326,11 @@ EPMD:       Erlang Port Mapper Daemon
 ```
 
 **Services:**
-- 🔍 NodeMonitor - Santé du cluster
-- 📡 EventBus - Pub/Sub
-- 💾 StateManager - Raft state
-- ✅ HealthCheck - Endpoint 8007
-- 📊 MetricsServer - Prometheus
+-  NodeMonitor - Santé du cluster
+-  EventBus - Pub/Sub
+-  StateManager - Raft state
+-  HealthCheck - Endpoint 8007
+-  MetricsServer - Prometheus
 
 **Endpoints:**
 ```
@@ -365,63 +365,63 @@ Port 8123         - Home Assistant
 
 ```
 1. Frontend (3000)
-   └─→ POST /api/chat
+   → POST /api/chat
 
 2. Rust Core (8100)
-   ├─→ Phase 4: DB insert message
-   ├─→ Phase 4: Cache update
-   ├─→ Phase 5: Trigger automations
-   └─→ Phase 3: Python Bridges (LLM)
+   → Phase 4: DB insert message
+   → Phase 4: Cache update
+   → Phase 5: Trigger automations
+   → Phase 3: Python Bridges (LLM)
 
 3. Python Bridges (8005)
-   └─→ Ollama (11434): Generate response
+   → Ollama (11434): Generate response
 
 4. Rust Core (8100)
-   ├─→ Phase 4: DB insert response
-   ├─→ Phase 8: Lua filter_response
-   └─→ WebSocket broadcast
+   → Phase 4: DB insert response
+   → Phase 8: Lua filter_response
+   → WebSocket broadcast
 
 5. Frontend (3000)
-   └─→ Display message
+   → Display message
 ```
 
 ### Voice Processing
 
 ```
 1. Frontend: Record audio
-   └─→ POST /api/voice/transcribe (Phase 3)
+   → POST /api/voice/transcribe (Phase 3)
 
 2. Python Bridges (8005)
-   └─→ Whisper: STT
+   → Whisper: STT
 
 3. Result → Rust Core (8100)
-   └─→ Send as text message (same flow as chat)
+   → Send as text message (same flow as chat)
 
 Response Generation:
    Rust Core → Python Bridges (Ollama) → Response
 
 TTS:
    POST /api/voice/synthesize (Phase 3)
-   └─→ Python Bridges (Piper TTS)
-   └─→ Return audio stream
+   → Python Bridges (Piper TTS)
+   → Return audio stream
 ```
 
 ### Automation Trigger
 
 ```
 1. Event occurs (motion, door, time, etc)
-   └─→ Phase 5: MQTT/Home Assistant
+   → Phase 5: MQTT/Home Assistant
 
 2. Rust Core evaluates triggers/conditions
-   ├─→ Phase 4: Check state in DB
-   ├─→ Phase 8: Lua plugins for custom logic
-   └─→ Execute actions if matched
+   → Phase 4: Check state in DB
+   → Phase 8: Lua plugins for custom logic
+   → Execute actions if matched
 
 3. Actions executed
-   ├─→ Home Assistant API call
-   ├─→ MQTT publish
-   ├─→ Notification
-   └─→ Conversation update
+   → Home Assistant API call
+   → MQTT publish
+   → Notification
+   → Conversation update
 ```
 
 ---
@@ -530,6 +530,6 @@ NAMESPACE=default
 
 ---
 
-**Architecture moderne, distribué, résilient et haute performance 🚀**
+**Architecture moderne, distribué, résilient et haute performance **
 
 *Version: 1.9.0 | Phases: 9 complètes | Status: Production-ready*

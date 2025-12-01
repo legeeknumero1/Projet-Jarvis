@@ -47,7 +47,7 @@ function on_chat(message)
     greeting_count = greeting_count + 1
 
     if greeting_count == 1 then
-        jarvis.log("👋 First message from user!")
+        jarvis.log(" First message from user!")
         return {
             status = "success",
             action = "show_welcome"
@@ -80,7 +80,7 @@ function on_command(cmd)
     if cmd.name == "weather" then
         return {
             status = "success",
-            response = "It's sunny today! 🌞"
+            response = "It's sunny today! "
         }
     end
 
@@ -117,7 +117,7 @@ function on_automation(automation)
         status = "executed"
     })
 
-    jarvis.log("🔄 Automation executed: " .. automation.name)
+    jarvis.log(" Automation executed: " .. automation.name)
 
     return {
         status = "success",

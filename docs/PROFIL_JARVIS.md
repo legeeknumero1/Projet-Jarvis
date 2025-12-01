@@ -98,21 +98,21 @@ Créer un assistant vocal intelligent local, modulaire, avec des capacités de c
 
 ```
 /Backend
-├── config/
-│   └── config.go
-├── db/
-│   └── db.go
-├── memory/
-│   └── memory.go
-├── profile/
-│   ├── profile.go
-│   └── profile.txt
-├── integration/
-│   └── integration.go
-├── search/
-│   └── search.go
-├── main.go
-├── generate_embeddings.py
+ config/
+    config.go
+ db/
+    db.go
+ memory/
+    memory.go
+ profile/
+    profile.go
+    profile.txt
+ integration/
+    integration.go
+ search/
+    search.go
+ main.go
+ generate_embeddings.py
 ```
 
 ### Fonctionnalités codées :

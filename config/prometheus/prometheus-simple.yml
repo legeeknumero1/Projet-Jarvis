@@ -1,0 +1,47 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'jarvis-v1.9.0'
+    environment: 'development'
+
+scrape_configs:
+  # Jarvis Core Backend
+  - job_name: 'jarvis-core'
+    static_configs:
+      - targets: ['172.20.0.40:8100']
+        labels:
+          service: 'backend'
+          language: 'rust'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['172.20.0.203:9187']
+        labels:
+          service: 'database'
+    scrape_interval: 30s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['172.20.0.202:9121']
+        labels:
+          service: 'cache'
+    scrape_interval: 30s
+
+  # System Metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['172.20.0.204:9100']
+        labels:
+          service: 'system'
+    scrape_interval: 30s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s

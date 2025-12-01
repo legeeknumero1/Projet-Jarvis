@@ -180,16 +180,27 @@ dmypy.json
 .pyre/
 
 # CRITICAL: Security Files - NEVER commit these
-# Secrets and credentials
+# Secrets and credentials - ALL .env files in ALL directories
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.template
+.env
 .env*
-!.env.example
-!.env.template
+.env.local
 .env.*.local
 .env.*.secret
 .env.production
 .env.staging
 .env.development
 .env.test
+.env.backup
+environments/
+core/.env
+backend-*/.env
+services/**/.env
+MCP/.env
+jarvis-secretsd/.env
 secrets.json
 credentials.json
 *.key
@@ -200,6 +211,9 @@ credentials.json
 *.pfx
 .aws/
 .ssh/
+jarvis-secretsd/run/master.key
+jarvis-secretsd/run/secrets/
+jarvis-secretsd/run/audit/
 
 # API Keys and Tokens
 MCP/configs/*.json
@@ -258,8 +272,50 @@ Thumbs.db
 # Cargo and Rust build artifacts
 Cargo.lock
 /target/
+**/target/
+backend-*/target/
+core/target/
+jarvis-secretsd/target/
 
 # Node modules
 node_modules/
 package-lock.json
 yarn.lock
+
+# Files temporaires et inutiles
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*~
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Dossiers de build et cache
+build/
+dist/
+.cache/
+htmlcov/
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+
+# Fichiers de logs et debug
+*.log
+logs/
+test_output.txt
+build_log.txt
+
+# Base de données locales
+*.db
+*.sqlite
+*.sqlite3
+context.db*
+secrets_list.json
+
+# Dossier ReadMe externe (lien symbolique)
+/home/legeek/Documents/ReadMe/

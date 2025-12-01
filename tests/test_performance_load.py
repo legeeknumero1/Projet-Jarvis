@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-⚡ Tests de Performance et Charge - Système Mémoire Neuromorphique Jarvis
+ Tests de Performance et Charge - Système Mémoire Neuromorphique Jarvis
 Tests exhaustifs de performance, charge et robustesse
 """
 
@@ -89,7 +89,7 @@ class TestLimbicSystemPerformance:
         assert len(results) == 500
         assert all(isinstance(r, EmotionalContext) for r in results)
         
-        print(f"🧠 Analyse émotionnelle - 500 textes en {perf_stats['duration']:.2f}s")
+        print(f" Analyse émotionnelle - 500 textes en {perf_stats['duration']:.2f}s")
         print(f"   Vitesse: {len(test_texts)/perf_stats['duration']:.1f} analyses/seconde")
         print(f"   Mémoire pic: {perf_stats['memory_peak_mb']:.1f} MB")
     
@@ -116,7 +116,7 @@ class TestLimbicSystemPerformance:
         assert len(weights) == 1000
         assert all(0.0 <= w <= 1.0 for w in weights)
         
-        print(f"🎯 Pondération émotionnelle - 1000 calculs en {perf_stats['duration']:.3f}s")
+        print(f" Pondération émotionnelle - 1000 calculs en {perf_stats['duration']:.3f}s")
 
 class TestPrefrontalCortexPerformance:
     """Tests de performance du cortex préfrontal"""
@@ -154,7 +154,7 @@ class TestPrefrontalCortexPerformance:
         assert len(scores) == 100
         assert all(0.0 <= s <= 1.0 for s in scores)
         
-        print(f"🧮 Scoring importance - 100 mémoires en {perf_stats['duration']:.2f}s")
+        print(f" Scoring importance - 100 mémoires en {perf_stats['duration']:.2f}s")
 
 class TestHippocampusPerformance:
     """Tests de performance de l'hippocampe"""
@@ -194,7 +194,7 @@ class TestHippocampusPerformance:
         assert perf_stats['duration'] < 30.0  # Moins de 30 secondes
         assert result['total_processed'] == 1000
         
-        print(f"🏛️ Consolidation - 1000 mémoires en {perf_stats['duration']:.2f}s")
+        print(f" Consolidation - 1000 mémoires en {perf_stats['duration']:.2f}s")
         print(f"   Consolidées: {result['consolidated_count']}")
 
 class TestBrainMemorySystemLoad:
@@ -239,7 +239,7 @@ class TestBrainMemorySystemLoad:
         assert all(result for result in results)
         assert perf_stats['duration'] < 60.0  # Moins d'1 minute
         
-        print(f"🚀 Charge système - 500 interactions en {perf_stats['duration']:.2f}s")
+        print(f" Charge système - 500 interactions en {perf_stats['duration']:.2f}s")
         print(f"   Débit: {len(results)/perf_stats['duration']:.1f} interactions/seconde")
     
     async def test_memory_search_performance(self):
@@ -282,7 +282,7 @@ class TestBrainMemorySystemLoad:
         assert len(results) == 100
         assert perf_stats['duration'] < 20.0  # Moins de 20 secondes
         
-        print(f"🔍 Recherche mémoire - 100 requêtes en {perf_stats['duration']:.2f}s")
+        print(f" Recherche mémoire - 100 requêtes en {perf_stats['duration']:.2f}s")
         print(f"   Vitesse: {len(queries)/perf_stats['duration']:.1f} recherches/seconde")
 
 class TestMemoryLeaksAndStability:
@@ -325,7 +325,7 @@ class TestMemoryLeaksAndStability:
         final_memory = psutil.Process().memory_info().rss / 1024 / 1024
         memory_growth = final_memory - initial_memory
         
-        print(f"💾 Test fuite mémoire:")
+        print(f" Test fuite mémoire:")
         print(f"   Mémoire initiale: {initial_memory:.1f} MB")
         print(f"   Mémoire finale: {final_memory:.1f} MB")
         print(f"   Croissance: {memory_growth:.1f} MB")
@@ -366,7 +366,7 @@ class TestMemoryLeaksAndStability:
             except Exception:
                 failed_operations += 1
         
-        print(f"🛡️ Résilience erreurs:")
+        print(f" Résilience erreurs:")
         print(f"   Opérations réussies: {successful_operations}")
         print(f"   Opérations échouées: {failed_operations}")
         
@@ -375,7 +375,7 @@ class TestMemoryLeaksAndStability:
 
 async def run_performance_tests():
     """Exécute tous les tests de performance"""
-    print("⚡ LANCEMENT TESTS DE PERFORMANCE ET CHARGE")
+    print(" LANCEMENT TESTS DE PERFORMANCE ET CHARGE")
     print("=" * 70)
     
     test_classes = [
@@ -390,7 +390,7 @@ async def run_performance_tests():
     
     for test_class in test_classes:
         class_name = test_class.__class__.__name__
-        print(f"\n🔥 {class_name}")
+        print(f"\n {class_name}")
         print("-" * 50)
         
         # Exécuter tous les tests de la classe
@@ -404,15 +404,15 @@ async def run_performance_tests():
                         test_class.setup_method()
                     
                     await test_method()
-                    print(f"   ✅ {method_name} - SUCCÈS")
+                    print(f"    {method_name} - SUCCÈS")
                     
                 except Exception as e:
-                    print(f"   ❌ {method_name} - ÉCHEC: {e}")
+                    print(f"    {method_name} - ÉCHEC: {e}")
                     import traceback
                     traceback.print_exc()
     
     total_duration = time.time() - total_start
-    print(f"\n🎯 TESTS DE PERFORMANCE TERMINÉS en {total_duration:.2f}s")
+    print(f"\n TESTS DE PERFORMANCE TERMINÉS en {total_duration:.2f}s")
 
 if __name__ == "__main__":
     asyncio.run(run_performance_tests())

@@ -29,7 +29,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 static JWT_SECRET: Lazy<String> = Lazy::new(|| {
     std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| {
-            tracing::warn!("🚨 JWT_SECRET not set, using insecure default for development only!");
+            tracing::warn!(" JWT_SECRET not set, using insecure default for development only!");
             "dev-secret-key-change-in-production".to_string()
         })
 });

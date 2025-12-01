@@ -72,7 +72,7 @@ impl CertificateLoader {
             return Err("No certificates found in file".to_string());
         }
 
-        info!("✅ Loaded {} certificate(s) from {}", certs.len(), path);
+        info!(" Loaded {} certificate(s) from {}", certs.len(), path);
         Ok(certs)
     }
 
@@ -87,7 +87,7 @@ impl CertificateLoader {
         for key_result in pemfile::pkcs8_private_keys(&mut reader) {
             match key_result {
                 Ok(key) => {
-                    info!("✅ Loaded PKCS8 private key from {}", path);
+                    info!(" Loaded PKCS8 private key from {}", path);
                     return Ok(rustls::pki_types::PrivateKeyDer::Pkcs8(key));
                 }
                 Err(e) => {
@@ -104,7 +104,7 @@ impl CertificateLoader {
         for key_result in pemfile::rsa_private_keys(&mut reader) {
             match key_result {
                 Ok(key) => {
-                    info!("✅ Loaded RSA private key from {}", path);
+                    info!(" Loaded RSA private key from {}", path);
                     return Ok(rustls::pki_types::PrivateKeyDer::Pkcs1(key));
                 }
                 Err(e) => {
@@ -131,14 +131,14 @@ impl CertificateLoader {
         // Configure TLS versions and cipher suites
         config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
-        info!("✅ TLS/HTTPS configured (TLS 1.2+)");
+        info!(" TLS/HTTPS configured (TLS 1.2+)");
         Ok(Arc::new(config))
     }
 
     /// Validate certificate file existence and readability
     pub fn validate_certificates(config: &TlsConfig) -> Result<(), String> {
         if !config.enable_https {
-            warn!("⚠️  HTTPS is disabled - communication will be unencrypted!");
+            warn!("  HTTPS is disabled - communication will be unencrypted!");
             return Ok(());
         }
 
@@ -162,7 +162,7 @@ impl CertificateLoader {
         Self::load_certs(&config.cert_path)?;
         Self::load_key(&config.key_path)?;
 
-        info!("✅ TLS certificates validated");
+        info!(" TLS certificates validated");
         Ok(())
     }
 }
@@ -177,7 +177,7 @@ impl CertificateGenerator {
     /// Print certificate generation instructions
     pub fn print_instructions() {
         eprintln!("\n{}", "=".repeat(80));
-        eprintln!("🔐 JARVIS TLS/HTTPS - CERTIFICATE SETUP REQUIRED");
+        eprintln!(" JARVIS TLS/HTTPS - CERTIFICATE SETUP REQUIRED");
         eprintln!("{}\n", "=".repeat(80));
 
         eprintln!("SELF-SIGNED CERTIFICATE (Development/Testing):");

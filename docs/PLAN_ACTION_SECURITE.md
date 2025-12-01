@@ -1,15 +1,15 @@
-# 🚨 PLAN D'ACTION SÉCURITÉ JARVIS - 2025
+#  PLAN D'ACTION SÉCURITÉ JARVIS - 2025
 
-## 📋 RÉSUMÉ EXÉCUTIF
+##  RÉSUMÉ EXÉCUTIF
 
 **Date** : 2025-08-20
 **Audit** : CRITIQUE - 350+ valeurs hardcodées identifiées  
 **Priorité** : **URGENTE** - Sécurisation requise avant production  
 
-### 🎯 OBJECTIF PRINCIPAL
+###  OBJECTIF PRINCIPAL
 Transformer Jarvis d'un prototype local hardcodé en système de production sécurisé, configurable et scalable.
 
-### ⚠️ RISQUES ACTUELS CRITIQUES
+###  RISQUES ACTUELS CRITIQUES
 - **Déploiement impossible** sur autres infrastructures
 - **API publique non sécurisée** sans authentification  
 - **Vulnérabilité DoS** par absence de rate limiting
@@ -17,11 +17,11 @@ Transformer Jarvis d'un prototype local hardcodé en système de production séc
 
 ---
 
-## 🚨 PHASE 1: SÉCURITÉ CRITIQUE (3 JOURS)
+##  PHASE 1: SÉCURITÉ CRITIQUE (3 JOURS)
 
 ### **JOUR 1: CONFIGURATION RÉSEAU DYNAMIQUE**
 
-#### **🔧 Variables d'environnement - Toutes les IPs**
+#### ** Variables d'environnement - Toutes les IPs**
 ```bash
 # /home/enzo/Projet-Jarvis/.env - Ajouter section réseau
 cat >> .env << 'EOF'
@@ -58,7 +58,7 @@ QDRANT_GRPC_PORT=6334
 EOF
 ```
 
-#### **🐳 Docker Compose - Variables partout**
+#### ** Docker Compose - Variables partout**
 ```bash
 # Sauvegarde
 cp docker-compose.yml docker-compose.yml.backup
@@ -86,7 +86,7 @@ sed -i 's/"3000:8000"/"${INTERFACE_PORT}:8000"/g' docker-compose.yml
 sed -i 's/"11434:11434"/"${OLLAMA_PORT}:11434"/g' docker-compose.yml
 ```
 
-#### **📝 Scripts shell - Variables partout**
+#### ** Scripts shell - Variables partout**
 ```bash
 # Identifier tous les scripts avec IPs hardcodées
 grep -r "172\.20\.0\." scripts/ | cut -d: -f1 | sort -u
@@ -103,7 +103,7 @@ for script in scripts/*.sh; do
 done
 ```
 
-#### **🧪 Tests configuration dynamique**
+#### ** Tests configuration dynamique**
 ```bash
 # Test avec configuration alternative
 export DOCKER_SUBNET=192.168.100.0/24
@@ -119,7 +119,7 @@ docker-compose config | grep -E "192\.168\.100|9000"
 
 ### **JOUR 2: AUTHENTIFICATION OAUTH 2.1**
 
-#### **📦 Dépendances sécurité**
+#### ** Dépendances sécurité**
 ```bash
 # backend/requirements.txt - Ajouter
 cat >> backend/requirements.txt << 'EOF'
@@ -134,7 +134,7 @@ EOF
 cd backend && pip install -r requirements.txt
 ```
 
-#### **🔐 Module authentification**
+#### ** Module authentification**
 ```bash
 mkdir -p backend/auth
 ```
@@ -205,7 +205,7 @@ fastapi_users = FastAPIUsers[UserRead, uuid.UUID](
 current_active_user = fastapi_users.current_user(active=True)
 ```
 
-#### **🛡️ Sécurisation API principale**
+#### ** Sécurisation API principale**
 ```python
 # backend/main.py - Modifications sécurité
 from fastapi.security import HTTPBearer
@@ -249,7 +249,7 @@ async def chat_endpoint(
 
 ### **JOUR 3: VALIDATION ET TESTS SÉCURITÉ**
 
-#### **✅ Tests authentification**
+#### ** Tests authentification**
 ```bash
 # Test login/logout
 curl -X POST http://localhost:8100/auth/jwt/login \
@@ -263,7 +263,7 @@ curl -X POST http://localhost:8100/chat \
   -d '{"message": "Test sécurisé"}'
 ```
 
-#### **🔒 CORS sécurisé**
+#### ** CORS sécurisé**
 ```python
 # backend/main.py - CORS strict
 app.add_middleware(
@@ -272,14 +272,14 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         os.getenv("FRONTEND_URL", "http://localhost:3000")
-    ],  # ❌ Plus de ["*"]
+    ],  #  Plus de ["*"]
     allow_credentials=True,
     allow_methods=["GET", "POST"],  # Méthodes spécifiques
     allow_headers=["Authorization", "Content-Type"],  # Headers spécifiques
 )
 ```
 
-#### **📊 Monitoring sécurité basique**
+#### ** Monitoring sécurité basique**
 ```python
 # backend/security/monitoring.py
 import logging
@@ -304,11 +304,11 @@ def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
 
 ---
 
-## ⚡ PHASE 2: MONITORING ET ROBUSTESSE (1 SEMAINE)
+##  PHASE 2: MONITORING ET ROBUSTESSE (1 SEMAINE)
 
 ### **JOUR 4-5: MONITORING AVANCÉ**
 
-#### **📊 Stack Prometheus + Grafana**
+#### ** Stack Prometheus + Grafana**
 ```yaml
 # docker-compose.monitoring.yml
 version: '3.8'
@@ -342,7 +342,7 @@ volumes:
   grafana_data:
 ```
 
-#### **📈 Métriques backend**
+#### ** Métriques backend**
 ```python
 # backend/monitoring/metrics.py
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
@@ -386,7 +386,7 @@ async def chat_endpoint(...):
 
 ### **JOUR 6-7: LOGGING ET ALERTING**
 
-#### **📝 Logging centralisé**
+#### ** Logging centralisé**
 ```python
 # backend/logging_config.py - Amélioration
 import structlog
@@ -435,7 +435,7 @@ LOGGING_CONFIG = {
 logging.config.dictConfig(LOGGING_CONFIG)
 ```
 
-#### **🚨 Alerting automatique**
+#### ** Alerting automatique**
 ```python
 # backend/alerting/alerts.py
 import smtplib
@@ -452,7 +452,7 @@ class AlertManager:
     async def send_security_alert(self, event_type: str, details: dict):
         """Envoi alerte sécurité critique"""
         if event_type in ["RATE_LIMIT_EXCEEDED", "UNAUTHORIZED_ACCESS", "SYSTEM_ERROR"]:
-            subject = f"🚨 [JARVIS] Alerte sécurité: {event_type}"
+            subject = f" [JARVIS] Alerte sécurité: {event_type}"
             body = f"""
             Événement sécurité détecté:
             Type: {event_type}
@@ -482,11 +482,11 @@ class AlertManager:
 
 ---
 
-## 🚀 PHASE 3: SCALABILITÉ ET CI/CD (1 MOIS)
+##  PHASE 3: SCALABILITÉ ET CI/CD (1 MOIS)
 
 ### **SEMAINE 1-2: KUBERNETES PRODUCTION**
 
-#### **☸️ Manifests K8s améliorés**
+#### ** Manifests K8s améliorés**
 ```yaml
 # k8s/02-configmap-secrets.yaml - Remplacer hardcoded
 apiVersion: v1
@@ -512,7 +512,7 @@ data:
   BROWSERBASE_API_KEY: <base64-encoded>
 ```
 
-#### **🔄 Auto-scaling HPA**
+#### ** Auto-scaling HPA**
 ```yaml
 # k8s/14-autoscaling.yaml - Nouveau
 apiVersion: autoscaling/v2
@@ -544,7 +544,7 @@ spec:
 
 ### **SEMAINE 3-4: CI/CD SÉCURISÉ**
 
-#### **🔄 Pipeline GitHub Actions**
+#### ** Pipeline GitHub Actions**
 ```yaml
 # .github/workflows/security-deploy.yml
 name: Jarvis Security & Deploy
@@ -635,31 +635,31 @@ jobs:
 
 ---
 
-## 📊 MÉTRIQUES DE SUCCÈS
+##  MÉTRIQUES DE SUCCÈS
 
-### **🎯 Objectifs Phase 1 (3 jours)**
-- ✅ **0 valeur hardcodée** dans docker-compose.yml
-- ✅ **Authentification OAuth** sur tous endpoints sensibles  
-- ✅ **Rate limiting** 10 req/min configuré
-- ✅ **Tests déploiement** sur 2 environnements différents
+### ** Objectifs Phase 1 (3 jours)**
+-  **0 valeur hardcodée** dans docker-compose.yml
+-  **Authentification OAuth** sur tous endpoints sensibles  
+-  **Rate limiting** 10 req/min configuré
+-  **Tests déploiement** sur 2 environnements différents
 
-### **📈 Objectifs Phase 2 (1 semaine)**
-- ✅ **Monitoring** Prometheus + Grafana opérationnel
-- ✅ **Alerting** automatique sur événements critiques
-- ✅ **Logs centralisés** avec rotation automatique
-- ✅ **Tests** coverage > 85% backend
+### ** Objectifs Phase 2 (1 semaine)**
+-  **Monitoring** Prometheus + Grafana opérationnel
+-  **Alerting** automatique sur événements critiques
+-  **Logs centralisés** avec rotation automatique
+-  **Tests** coverage > 85% backend
 
-### **🚀 Objectifs Phase 3 (1 mois)**  
-- ✅ **K8s production** avec auto-scaling
-- ✅ **Pipeline CI/CD** avec security scans
-- ✅ **Zéro-downtime** déploiements
-- ✅ **Monitoring business** métriques utilisateur
+### ** Objectifs Phase 3 (1 mois)**  
+-  **K8s production** avec auto-scaling
+-  **Pipeline CI/CD** avec security scans
+-  **Zéro-downtime** déploiements
+-  **Monitoring business** métriques utilisateur
 
 ---
 
-## 🚨 CHECKLIST VALIDATION
+##  CHECKLIST VALIDATION
 
-### **✅ Sécurité Critique Résolue**
+### ** Sécurité Critique Résolue**
 - [ ] Toutes IPs configurables via variables env
 - [ ] Tous ports configurables via variables env  
 - [ ] OAuth 2.1 + JWT sur endpoints sensibles
@@ -668,14 +668,14 @@ jobs:
 - [ ] Secrets management avec rotation
 - [ ] Monitoring sécurité + alerting
 
-### **✅ Déploiement Multi-Environnement**
+### ** Déploiement Multi-Environnement**
 - [ ] Test déploiement dev (192.168.x.x)
 - [ ] Test déploiement staging (10.x.x.x)  
 - [ ] Test déploiement production (différent)
 - [ ] Rollback automatique si échec
 - [ ] Health checks optimisés (60s intervals)
 
-### **✅ Qualité et Robustesse**
+### ** Qualité et Robustesse**
 - [ ] Tests unitaires coverage > 90%
 - [ ] Tests intégration E2E automatisés
 - [ ] Monitoring Prometheus opérationnel
@@ -685,26 +685,26 @@ jobs:
 
 ---
 
-## 🎯 RÉSULTAT ATTENDU
+##  RÉSULTAT ATTENDU
 
 ### **AVANT (État Actuel)**
 ```yaml
-❌ 350+ valeurs hardcodées
-❌ API publique non sécurisée  
-❌ Déploiement sur 1 seul environnement
-❌ Aucun monitoring/alerting
-❌ Configuration manuelle complète
+ 350+ valeurs hardcodées
+ API publique non sécurisée  
+ Déploiement sur 1 seul environnement
+ Aucun monitoring/alerting
+ Configuration manuelle complète
 ```
 
 ### **APRÈS (Objectif 1 Mois)**
 ```yaml
-✅ 0 valeur hardcodée - Configuration 100% dynamique
-✅ API sécurisée OAuth 2.1 + rate limiting
-✅ Déploiement multi-environnement automatisé  
-✅ Monitoring complet + alerting temps réel
-✅ CI/CD sécurisé avec tests automatisés
-✅ Auto-scaling K8s production-ready
-✅ Jarvis prêt pour production industrielle
+ 0 valeur hardcodée - Configuration 100% dynamique
+ API sécurisée OAuth 2.1 + rate limiting
+ Déploiement multi-environnement automatisé  
+ Monitoring complet + alerting temps réel
+ CI/CD sécurisé avec tests automatisés
+ Auto-scaling K8s production-ready
+ Jarvis prêt pour production industrielle
 ```
 
 ---

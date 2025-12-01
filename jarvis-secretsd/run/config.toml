@@ -1,0 +1,26 @@
+# Jarvis Secrets Daemon Configuration (Local Run)
+
+[server]
+bind_addr = "127.0.0.1:8081"
+allow_unix_socket = true
+
+[paths]
+vault_path = "/home/legeek/Documents/Projet-Jarvis/jarvis-secretsd/run/secrets/vault.json"
+audit_path = "/home/legeek/Documents/Projet-Jarvis/jarvis-secretsd/run/audit/audit.jsonl"
+master_key_path = "/home/legeek/Documents/Projet-Jarvis/jarvis-secretsd/run/master.key"
+
+[security]
+rotation_days = 90
+grace_days = 14
+require_client_id_header = true
+deny_network_remote = true
+rbac_policy_path = "/home/legeek/Documents/Projet-Jarvis/jarvis-secretsd/run/policy.yaml"
+
+[crypto]
+aead = "aes-gcm-256"
+jwt_sign_algo = "ed25519"
+kdf = "argon2id"
+
+[logging]
+level = "info"
+json = false

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🔬 SUITE COMPLÈTE DE TESTS - Système Mémoire Neuromorphique Jarvis
+ SUITE COMPLÈTE DE TESTS - Système Mémoire Neuromorphique Jarvis
 Script maître pour exécuter tous les tests et générer un rapport détaillé
 """
 
@@ -362,9 +362,9 @@ async def run_performance_tests():
 
 async def main():
     """Fonction principale - Exécuter tous les tests"""
-    print("🔬 SUITE COMPLÈTE DE TESTS - SYSTÈME MÉMOIRE NEUROMORPHIQUE JARVIS")
+    print(" SUITE COMPLÈTE DE TESTS - SYSTÈME MÉMOIRE NEUROMORPHIQUE JARVIS")
     print("=" * 80)
-    print(f"📅 Début des tests: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" Début des tests: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
     reporter = TestReporter()
@@ -383,7 +383,7 @@ async def main():
     ]
     
     for test_name, test_func in tests:
-        print(f"🔍 Exécution: {test_name}")
+        print(f" Exécution: {test_name}")
         print("-" * 50)
         
         start_time = time.time()
@@ -397,13 +397,13 @@ async def main():
             duration = time.time() - start_time
             
             if result['success']:
-                print(f"✅ {test_name} - SUCCÈS ({duration:.2f}s)")
+                print(f" {test_name} - SUCCÈS ({duration:.2f}s)")
                 if 'details' in result:
                     for key, value in result.items():
                         if key not in ['success', 'details']:
                             print(f"   {key}: {value}")
             else:
-                print(f"❌ {test_name} - ÉCHEC ({duration:.2f}s)")
+                print(f" {test_name} - ÉCHEC ({duration:.2f}s)")
                 if 'error' in result:
                     print(f"   Erreur: {result['error']}")
                 for key, value in result.items():
@@ -414,7 +414,7 @@ async def main():
             
         except Exception as e:
             duration = time.time() - start_time
-            print(f"💥 {test_name} - ERREUR CRITIQUE ({duration:.2f}s)")
+            print(f" {test_name} - ERREUR CRITIQUE ({duration:.2f}s)")
             print(f"   Exception: {e}")
             traceback.print_exc()
             
@@ -423,34 +423,34 @@ async def main():
         print()
     
     # Générer rapport final
-    print("📊 GÉNÉRATION DU RAPPORT FINAL")
+    print(" GÉNÉRATION DU RAPPORT FINAL")
     print("=" * 50)
     
     report = reporter.generate_report()
     report_path = reporter.save_report()
     
     summary = report['summary']
-    print(f"📈 Résultats des tests:")
+    print(f" Résultats des tests:")
     print(f"   Tests totaux: {summary['total_tests']}")
     print(f"   Tests réussis: {summary['successful_tests']}")
     print(f"   Tests échoués: {summary['failed_tests']}")
     print(f"   Taux de réussite: {summary['success_rate']:.1f}%")
     print(f"   Durée totale: {summary['total_duration']:.2f}s")
-    print(f"📄 Rapport sauvegardé: {report_path}")
+    print(f" Rapport sauvegardé: {report_path}")
     
     # Verdict final
     print("\n" + "=" * 80)
     if summary['success_rate'] >= 90:
-        print("🎉 SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS EXCELLENTS!")
-        print("✅ Le système est prêt pour le déploiement")
+        print(" SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS EXCELLENTS!")
+        print(" Le système est prêt pour le déploiement")
     elif summary['success_rate'] >= 70:
-        print("⚠️ SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS SATISFAISANTS")
-        print("🔧 Quelques ajustements recommandés")
+        print(" SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS SATISFAISANTS")
+        print(" Quelques ajustements recommandés")
     else:
-        print("❌ SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS INSUFFISANTS")
-        print("🚫 Corrections majeures requises avant déploiement")
+        print(" SYSTÈME MÉMOIRE NEUROMORPHIQUE - TESTS INSUFFISANTS")
+        print(" Corrections majeures requises avant déploiement")
     
-    print(f"📅 Fin des tests: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" Fin des tests: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     return summary['success_rate'] >= 70
 

@@ -13,7 +13,7 @@ pub struct DatabaseService {
 impl DatabaseService {
     /// Créer nouvelle connexion PostgreSQL
     pub async fn new(database_url: &str) -> DbResult<Self> {
-        info!("🗄️ Connecting to PostgreSQL: {}", database_url);
+        info!(" Connecting to PostgreSQL: {}", database_url);
 
         let pool = PgPoolOptions::new()
             .max_connections(20)
@@ -24,7 +24,7 @@ impl DatabaseService {
         // Créer les tables si nécessaire
         Self::init_schema(&pool).await?;
 
-        info!("✅ PostgreSQL connected");
+        info!(" PostgreSQL connected");
 
         Ok(Self { pool })
     }
@@ -75,7 +75,7 @@ impl DatabaseService {
         .await
         .map_err(|e| DbError::Database(e.to_string()))?;
 
-        info!("✅ Database schema initialized");
+        info!(" Database schema initialized");
         Ok(())
     }
 
@@ -108,7 +108,7 @@ impl DatabaseService {
         .execute(&self.pool)
         .await?;
 
-        info!("✅ Conversation created: {}", conversation.id);
+        info!(" Conversation created: {}", conversation.id);
         Ok(conversation)
     }
 
@@ -149,7 +149,7 @@ impl DatabaseService {
             .execute(&self.pool)
             .await?;
 
-        info!("✅ Conversation archived: {}", id);
+        info!(" Conversation archived: {}", id);
         Ok(())
     }
 
@@ -183,7 +183,7 @@ impl DatabaseService {
         .execute(&self.pool)
         .await?;
 
-        info!("✅ Message created: {}", message.id);
+        info!(" Message created: {}", message.id);
         Ok(message)
     }
 

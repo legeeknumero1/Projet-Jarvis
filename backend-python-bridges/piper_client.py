@@ -47,7 +47,7 @@ class PiperClient:
         self.piper_binary = os.getenv("PIPER_BINARY", piper_binary)
         self.sample_rate = 22050
 
-        logger.info(f"🔊 Piper Client initialized: {voice}")
+        logger.info(f" Piper Client initialized: {voice}")
         self.check_available_voices()
 
     def check_available_voices(self) -> List[str]:
@@ -59,13 +59,13 @@ class PiperClient:
                 timeout=5
             )
             if result.returncode == 0:
-                logger.info("✅ Piper TTS available")
+                logger.info(" Piper TTS available")
                 return list(self.FRENCH_VOICES.keys())
             else:
-                logger.error("❌ Piper TTS not found")
+                logger.error(" Piper TTS not found")
                 return []
         except Exception as e:
-            logger.error(f"❌ Error checking Piper: {e}")
+            logger.error(f" Error checking Piper: {e}")
             return []
 
     def synthesize(
@@ -103,7 +103,7 @@ class PiperClient:
             import time
             start_time = time.time()
 
-            logger.debug(f"🔊 Synthesizing: {text[:50]}...")
+            logger.debug(f" Synthesizing: {text[:50]}...")
 
             # Créer fichier temporaire pour sortie audio
             import tempfile
@@ -129,7 +129,7 @@ class PiperClient:
                 stdout, stderr = process.communicate(input=text.encode())
 
                 if process.returncode != 0:
-                    logger.error(f"❌ Piper error: {stderr.decode()}")
+                    logger.error(f" Piper error: {stderr.decode()}")
                     return PiperResult(
                         audio_samples=np.array([], dtype=np.float32),
                         sample_rate=22050,
@@ -143,13 +143,13 @@ class PiperClient:
                     audio, sr = sf.read(tmp_path, dtype='float32')
                 except ImportError:
                     # Fallback sans soundfile
-                    logger.warning("⚠️ soundfile not available, using placeholder")
+                    logger.warning(" soundfile not available, using placeholder")
                     audio = np.zeros(22050, dtype=np.float32)
                     sr = 22050
 
                 duration_ms = (time.time() - start_time) * 1000
 
-                logger.info(f"✅ Synthesis done in {duration_ms:.0f}ms: {len(audio) / sr:.1f}s audio")
+                logger.info(f" Synthesis done in {duration_ms:.0f}ms: {len(audio) / sr:.1f}s audio")
 
                 return PiperResult(
                     audio_samples=audio,
@@ -166,7 +166,7 @@ class PiperClient:
                     pass
 
         except subprocess.TimeoutExpired:
-            logger.error("⏱️ Piper synthesis timeout")
+            logger.error(" Piper synthesis timeout")
             return PiperResult(
                 audio_samples=np.array([], dtype=np.float32),
                 sample_rate=22050,
@@ -174,7 +174,7 @@ class PiperClient:
                 voice=selected_voice
             )
         except Exception as e:
-            logger.error(f"❌ Synthesis error: {e}")
+            logger.error(f" Synthesis error: {e}")
             return PiperResult(
                 audio_samples=np.array([], dtype=np.float32),
                 sample_rate=22050,
@@ -186,9 +186,9 @@ class PiperClient:
         """Changer la voix"""
         if voice in self.FRENCH_VOICES:
             self.voice = voice
-            logger.info(f"🔄 Piper voice changed to: {voice}")
+            logger.info(f" Piper voice changed to: {voice}")
         else:
-            logger.warning(f"⚠️ Unknown voice: {voice}")
+            logger.warning(f" Unknown voice: {voice}")
 
     def list_voices(self) -> Dict[str, str]:
         """Lister les voix disponibles"""

@@ -86,7 +86,7 @@ func (w *Watchdog) CheckHealth() {
 		go func(svc, u string) {
 			resp, err := http.Get(u)
 			if err != nil {
-				log.Printf("❌ Service %s unavailable: %v", svc, err)
+				log.Printf(" Service %s unavailable: %v", svc, err)
 				serviceStatus.WithLabelValues(svc).Set(0)
 				return
 			}
@@ -94,10 +94,10 @@ func (w *Watchdog) CheckHealth() {
 
 			if resp.StatusCode == http.StatusOK {
 				serviceStatus.WithLabelValues(svc).Set(1)
-				log.Printf("✅ Service %s is healthy", svc)
+				log.Printf(" Service %s is healthy", svc)
 			} else {
 				serviceStatus.WithLabelValues(svc).Set(0)
-				log.Printf("⚠️ Service %s returned status %d", svc, resp.StatusCode)
+				log.Printf(" Service %s returned status %d", svc, resp.StatusCode)
 			}
 		}(service, url)
 	}
@@ -111,7 +111,7 @@ func (w *Watchdog) Start(interval time.Duration) {
 			w.CheckHealth()
 		}
 	}()
-	log.Printf("🔍 Watchdog started (interval: %v)", interval)
+	log.Printf(" Watchdog started (interval: %v)", interval)
 }
 
 func main() {
@@ -168,19 +168,19 @@ func main() {
 </head>
 <body>
 	<div class="header">
-		<h1>🔍 Jarvis Monitoring Dashboard (Phase 6)</h1>
+		<h1> Jarvis Monitoring Dashboard (Phase 6)</h1>
 		<p>Go Monitoring Service - Port 9090 - Prometheus + HTTP Watchdog</p>
 	</div>
 
 	<div class="metrics">
-		<h2>📊 Metrics Endpoints</h2>
+		<h2> Metrics Endpoints</h2>
 		<div class="metric-item"><span class="label">Prometheus:</span> <a href="/metrics">/metrics</a></div>
 		<div class="metric-item"><span class="label">Health:</span> <a href="/health">/health</a></div>
 		<div class="metric-item"><span class="label">Status:</span> <a href="/status">/status</a></div>
 	</div>
 
 	<div class="metrics">
-		<h2>🚀 Jarvis Services</h2>
+		<h2> Jarvis Services</h2>
 		<div class="metric-item">• Core Backend (8100) - Rust with Axum</div>
 		<div class="metric-item">• Audio Engine (8004) - C++ DSP</div>
 		<div class="metric-item">• Python Bridges (8005) - Whisper/Piper/Ollama</div>
@@ -189,7 +189,7 @@ func main() {
 	</div>
 
 	<div class="metrics">
-		<h2>📈 Monitoring Capabilities</h2>
+		<h2> Monitoring Capabilities</h2>
 		<ul>
 			<li>Service uptime tracking</li>
 			<li>API latency histograms</li>
@@ -204,8 +204,8 @@ func main() {
 		w.Write([]byte(html))
 	})
 
-	log.Printf("🚀 Jarvis Monitoring (Phase 6) starting on port %s", port)
+	log.Printf(" Jarvis Monitoring (Phase 6) starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalf("❌ Server error: %v", err)
+		log.Fatalf(" Server error: %v", err)
 	}
 }

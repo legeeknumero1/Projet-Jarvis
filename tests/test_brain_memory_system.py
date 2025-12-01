@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🧠 Tests Unitaires Complets - Système de Mémoire Neuromorphique Jarvis
+ Tests Unitaires Complets - Système de Mémoire Neuromorphique Jarvis
 Tests exhaustifs pour tous les composants du système mémoire inspiré du cerveau humain
 """
 
@@ -458,7 +458,7 @@ class TestBrainMemorySystemIntegration:
 
 def run_all_tests():
     """Exécute tous les tests unitaires"""
-    print("🧠 LANCEMENT TESTS UNITAIRES SYSTÈME MÉMOIRE NEUROMORPHIQUE")
+    print(" LANCEMENT TESTS UNITAIRES SYSTÈME MÉMOIRE NEUROMORPHIQUE")
     print("=" * 70)
     
     # Configuration pytest
@@ -473,12 +473,12 @@ def run_all_tests():
     try:
         result = pytest.main(test_args)
         if result == 0:
-            print("\n✅ TOUS LES TESTS UNITAIRES PASSÉS AVEC SUCCÈS !")
+            print("\n TOUS LES TESTS UNITAIRES PASSÉS AVEC SUCCÈS !")
         else:
-            print(f"\n❌ TESTS ÉCHOUÉS (Code: {result})")
+            print(f"\n TESTS ÉCHOUÉS (Code: {result})")
         return result
     except Exception as e:
-        print(f"\n💥 ERREUR LORS DE L'EXÉCUTION DES TESTS: {e}")
+        print(f"\n ERREUR LORS DE L'EXÉCUTION DES TESTS: {e}")
         return -1
 
 if __name__ == "__main__":

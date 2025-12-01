@@ -21,17 +21,17 @@ impl VaultStore {
         let path_buf = PathBuf::from(path);
 
         let vault = if path_buf.exists() {
-            info!("📂 Loading existing vault from {}", path);
+            info!(" Loading existing vault from {}", path);
             let content = fs::read_to_string(&path_buf)
                 .context("failed to read vault file")?;
 
             let v: Vault = serde_json::from_str(&content)
                 .context("failed to parse vault JSON")?;
 
-            info!("✅ Loaded vault with {} secrets", v.secrets.len());
+            info!(" Loaded vault with {} secrets", v.secrets.len());
             v
         } else {
-            info!("🆕 Creating new vault at {}", path);
+            info!(" Creating new vault at {}", path);
 
             // Ensure directory exists
             if let Some(parent) = path_buf.parent() {
@@ -148,7 +148,7 @@ impl VaultStore {
 
         self.set_secret(name, &value, None)?;
 
-        info!("🔑 Generated new secret: {}", name);
+        info!(" Generated new secret: {}", name);
         Ok(())
     }
 
@@ -171,7 +171,7 @@ impl VaultStore {
 
         self.set_secret(name, &new_value, Some(new_meta))?;
 
-        info!("🔄 Rotated secret: {} (old kid: {})", name, old_meta.kid);
+        info!(" Rotated secret: {} (old kid: {})", name, old_meta.kid);
         Ok(())
     }
 

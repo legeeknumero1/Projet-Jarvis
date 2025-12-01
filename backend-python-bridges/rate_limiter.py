@@ -66,7 +66,7 @@ def create_limiter(app) -> Limiter:
         in_memory_fallback_enabled=True  # Fallback if storage fails
     )
 
-    logger.info("✅ Flask-Limiter initialized")
+    logger.info(" Flask-Limiter initialized")
     return limiter
 
 
@@ -257,7 +257,7 @@ class RateLimitMonitor:
             user_id: Optional user ID
         """
         logger.warning(
-            f"🚨 RATE LIMIT VIOLATION: endpoint={endpoint}, key={key}, limit={limit}",
+            f" RATE LIMIT VIOLATION: endpoint={endpoint}, key={key}, limit={limit}",
             extra={
                 "endpoint": endpoint,
                 "key": key,
@@ -279,7 +279,7 @@ class RateLimitMonitor:
         """
         # Only log at debug level to avoid log spam
         logger.debug(
-            f"✅ Rate limit check passed: endpoint={endpoint}, key={key}",
+            f" Rate limit check passed: endpoint={endpoint}, key={key}",
             extra={
                 "endpoint": endpoint,
                 "key": key,
@@ -304,7 +304,7 @@ def handle_rate_limit_exceeded(limiter: Limiter, app):
     def rate_limit_exceeded(e):
         """Handle rate limit exceeded errors"""
         logger.warning(
-            f"❌ Rate limit exceeded: {e.description}",
+            f" Rate limit exceeded: {e.description}",
             extra={
                 "error": str(e),
                 "remote_addr": get_remote_address(),

@@ -61,10 +61,10 @@ class MCPManager:
                     capabilities=config.get("capabilities", [])
                 )
                 
-                self.logger.info(f"📡 [MCP] Serveur trouvé: {server_name} ({status})")
+                self.logger.info(f" [MCP] Serveur trouvé: {server_name} ({status})")
                 
             except Exception as e:
-                self.logger.error(f"❌ [MCP] Erreur lecture config {server_name}: {e}")
+                self.logger.error(f" [MCP] Erreur lecture config {server_name}: {e}")
     
     def check_server_status(self, server_name: str, config: Dict[str, Any]) -> str:
         """Vérifie le statut d'un serveur MCP"""
@@ -90,7 +90,7 @@ class MCPManager:
             return "configured"
             
         except Exception as e:
-            self.logger.error(f"❌ [MCP] Erreur vérification statut {server_name}: {e}")
+            self.logger.error(f" [MCP] Erreur vérification statut {server_name}: {e}")
             return "error"
     
     def list_servers(self) -> Dict[str, Dict[str, Any]]:
@@ -118,19 +118,19 @@ class MCPManager:
             with open(config_path, 'r') as f:
                 return json.load(f)
         except Exception as e:
-            self.logger.error(f"❌ [MCP] Erreur lecture config {server_name}: {e}")
+            self.logger.error(f" [MCP] Erreur lecture config {server_name}: {e}")
             return None
     
     def install_server(self, server_name: str) -> bool:
         """Installe un serveur MCP"""
         if server_name not in self.available_servers:
-            self.logger.error(f"❌ [MCP] Serveur {server_name} non trouvé")
+            self.logger.error(f" [MCP] Serveur {server_name} non trouvé")
             return False
         
         server = self.available_servers[server_name]
         
         if not server.install_script.exists():
-            self.logger.error(f"❌ [MCP] Script d'installation manquant: {server.install_script}")
+            self.logger.error(f" [MCP] Script d'installation manquant: {server.install_script}")
             return False
         
         try:
@@ -138,18 +138,18 @@ class MCPManager:
             result = subprocess.run([str(server.install_script)], 
                                   capture_output=True, text=True, check=True)
             
-            self.logger.info(f"✅ [MCP] Installation {server_name} réussie")
-            self.logger.info(f"📋 [MCP] Sortie: {result.stdout}")
+            self.logger.info(f" [MCP] Installation {server_name} réussie")
+            self.logger.info(f" [MCP] Sortie: {result.stdout}")
             
             # Re-scanner pour mettre à jour le statut
             self.scan_available_servers()
             return True
             
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"❌ [MCP] Erreur installation {server_name}: {e.stderr}")
+            self.logger.error(f" [MCP] Erreur installation {server_name}: {e.stderr}")
             return False
         except Exception as e:
-            self.logger.error(f"❌ [MCP] Erreur installation {server_name}: {e}")
+            self.logger.error(f" [MCP] Erreur installation {server_name}: {e}")
             return False
     
     def add_new_server_template(self, server_name: str, description: str, capabilities: List[str]) -> bool:
@@ -186,11 +186,11 @@ class MCPManager:
 
 set -e
 
-echo "🔌 Installation du serveur MCP {server_name}..."
+echo " Installation du serveur MCP {server_name}..."
 
 # TODO: Ajouter les étapes d'installation spécifiques
 
-echo "✅ Serveur MCP {server_name} installé avec succès"
+echo " Serveur MCP {server_name} installé avec succès"
 """
             
             install_script = self.scripts_dir / f"install_{server_name}.sh"
@@ -199,12 +199,12 @@ echo "✅ Serveur MCP {server_name} installé avec succès"
             
             install_script.chmod(0o755)
             
-            self.logger.info(f"✅ [MCP] Template créé pour {server_name}")
+            self.logger.info(f" [MCP] Template créé pour {server_name}")
             self.scan_available_servers()
             return True
             
         except Exception as e:
-            self.logger.error(f"❌ [MCP] Erreur création template {server_name}: {e}")
+            self.logger.error(f" [MCP] Erreur création template {server_name}: {e}")
             return False
 
 if __name__ == "__main__":
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     manager = MCPManager()
     
-    print("🔌 Serveurs MCP disponibles:")
+    print(" Serveurs MCP disponibles:")
     servers = manager.list_servers()
     
     for name, info in servers.items():

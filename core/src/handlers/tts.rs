@@ -1,14 +1,23 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, Json};
 use std::sync::Arc;
 use tracing::info;
 
+use crate::middleware::{InputValidator, TTSValidator, ValidatedJwt};
 use crate::models::{AppState, SynthesizeRequest, SynthesizeResponse, VoiceInfo};
-use crate::middleware::{ValidatedJwt, TTSValidator, InputValidator};
 
+/// Synthesize speech
+#[utoipa::path(
+    post,
+    path = "/tts",
+    request_body = SynthesizeRequest,
+    responses(
+        (status = 200, description = "Synthesis result", body = SynthesizeResponse),
+        (status = 400, description = "Invalid request")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
 pub async fn synthesize(
     ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
@@ -19,14 +28,18 @@ pub async fn synthesize(
     // ============================================================================
     let validator = TTSValidator::new(req.text.clone(), req.voice.clone(), req.speed);
     if let Err(e) = validator.validate() {
-        tracing::warn!("🚨 TTS VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        tracing::warn!(
+            " TTS VALIDATION FAILED: {} from user {}",
+            e,
+            claims.user_id
+        );
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid TTS request: {}", e),
         ));
     }
 
-    info!("🔊 Synthesis request from user: {}", claims.user_id);
+    info!(" Synthesis request from user: {}", claims.user_id);
     let voice = req.voice.unwrap_or_else(|| "fr_FR-upmc-medium".to_string());
     let _speed = req.speed.unwrap_or(1.0);
 

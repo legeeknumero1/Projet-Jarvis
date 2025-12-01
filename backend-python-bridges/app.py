@@ -142,14 +142,14 @@ def health():
             "service": "python-bridges",
             "version": "1.3.0",
             "services": {
-                "ollama_llm": "✅" if ollama_ok else "❌",
-                "whisper_stt": "✅" if whisper_ok else "❌",
-                "piper_tts": "✅" if piper_ok else "❌",
-                "embeddings": "✅" if embeddings_ok else "❌"
+                "ollama_llm": "" if ollama_ok else "",
+                "whisper_stt": "" if whisper_ok else "",
+                "piper_tts": "" if piper_ok else "",
+                "embeddings": "" if embeddings_ok else ""
             }
         })
     except Exception as e:
-        logger.error(f"❌ Health check error: {e}")
+        logger.error(f" Health check error: {e}")
         return jsonify({"status": "error", "error": str(e)}), 500
 
 
@@ -182,7 +182,7 @@ def login():
         validator = LoginValidator(username, password)
         is_valid, error_msg = validator.validate()
         if not is_valid:
-            logger.warning(f"❌ LOGIN VALIDATION FAILED: {error_msg} from {request.remote_addr}")
+            logger.warning(f" LOGIN VALIDATION FAILED: {error_msg} from {request.remote_addr}")
             return jsonify({"error": "Invalid credentials"}), 400
 
         # TODO: In production, validate against real user database
@@ -190,7 +190,7 @@ def login():
         user_id = f"user-{username}"
         token = generate_token(user_id, username)
 
-        logger.info(f"🔐 Login successful for user: {username}")
+        logger.info(f" Login successful for user: {username}")
 
         return jsonify({
             "access_token": token,
@@ -201,7 +201,7 @@ def login():
         }), 200
 
     except Exception as e:
-        logger.error(f"❌ Login error: {e}")
+        logger.error(f" Login error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -211,7 +211,7 @@ def login():
 def verify():
     """Vérifier la validité d'un token JWT - SECURITY FIX C14 (Rate Limiting)"""
     try:
-        logger.info(f"✅ Token verified for user: {request.user.get('username')}")
+        logger.info(f" Token verified for user: {request.user.get('username')}")
         return jsonify({
             "valid": True,
             "user_id": request.user.get("user_id"),
@@ -219,7 +219,7 @@ def verify():
             "permissions": request.user.get("permissions"),
         }), 200
     except Exception as e:
-        logger.error(f"❌ Token verification error: {e}")
+        logger.error(f" Token verification error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -244,7 +244,7 @@ def llm_generate():
                                    temperature=temperature, max_tokens=max_tokens)
         is_valid, error_msg = validator.validate()
         if not is_valid:
-            logger.warning(f"❌ LLM VALIDATION FAILED: {error_msg}")
+            logger.warning(f" LLM VALIDATION FAILED: {error_msg}")
             return jsonify({"error": error_msg}), 400
 
         client = get_ollama_client()
@@ -264,7 +264,7 @@ def llm_generate():
         })
 
     except Exception as e:
-        logger.error(f"❌ LLM generation error: {e}\n{traceback.format_exc()}")
+        logger.error(f" LLM generation error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -277,7 +277,7 @@ def llm_models():
         models = client.list_models()
         return jsonify({"models": models})
     except Exception as e:
-        logger.error(f"❌ Error listing models: {e}")
+        logger.error(f" Error listing models: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -299,7 +299,7 @@ def stt_transcribe():
         validator = STTValidator(audio_b64, language=language)
         is_valid, error_msg = validator.validate()
         if not is_valid:
-            logger.warning(f"❌ STT VALIDATION FAILED: {error_msg}")
+            logger.warning(f" STT VALIDATION FAILED: {error_msg}")
             return jsonify({"error": error_msg}), 400
 
         # Décoder audio base64
@@ -322,7 +322,7 @@ def stt_transcribe():
         })
 
     except Exception as e:
-        logger.error(f"❌ Transcription error: {e}\n{traceback.format_exc()}")
+        logger.error(f" Transcription error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -345,7 +345,7 @@ def tts_synthesize():
         validator = TTSValidator(text, voice=voice, speed=speed)
         is_valid, error_msg = validator.validate()
         if not is_valid:
-            logger.warning(f"❌ TTS VALIDATION FAILED: {error_msg}")
+            logger.warning(f" TTS VALIDATION FAILED: {error_msg}")
             return jsonify({"error": error_msg}), 400
 
         # Sanitize text to remove XSS attempts - SECURITY FIX C8
@@ -382,7 +382,7 @@ def tts_synthesize():
         })
 
     except Exception as e:
-        logger.error(f"❌ Synthesis error: {e}\n{traceback.format_exc()}")
+        logger.error(f" Synthesis error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -395,7 +395,7 @@ def tts_voices():
         voices = client.list_voices()
         return jsonify({"voices": voices})
     except Exception as e:
-        logger.error(f"❌ Error listing voices: {e}")
+        logger.error(f" Error listing voices: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -416,7 +416,7 @@ def embed_text():
         validator = EmbeddingsValidator(text)
         is_valid, error_msg = validator.validate()
         if not is_valid:
-            logger.warning(f"❌ EMBEDDINGS VALIDATION FAILED: {error_msg}")
+            logger.warning(f" EMBEDDINGS VALIDATION FAILED: {error_msg}")
             return jsonify({"error": error_msg}), 400
 
         service = get_embeddings_service()
@@ -433,7 +433,7 @@ def embed_text():
         })
 
     except Exception as e:
-        logger.error(f"❌ Embedding error: {e}\n{traceback.format_exc()}")
+        logger.error(f" Embedding error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -455,7 +455,7 @@ def embed_batch():
             validator = EmbeddingsValidator(text)
             is_valid, error_msg = validator.validate()
             if not is_valid:
-                logger.warning(f"❌ BATCH EMBEDDINGS VALIDATION FAILED: {error_msg}")
+                logger.warning(f" BATCH EMBEDDINGS VALIDATION FAILED: {error_msg}")
                 return jsonify({"error": f"Batch validation failed: {error_msg}"}), 400
 
         service = get_embeddings_service()
@@ -477,7 +477,7 @@ def embed_batch():
         })
 
     except Exception as e:
-        logger.error(f"❌ Batch embedding error: {e}\n{traceback.format_exc()}")
+        logger.error(f" Batch embedding error: {e}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -492,7 +492,7 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    logger.error(f"❌ Internal server error: {error}")
+    logger.error(f" Internal server error: {error}")
     return jsonify({"error": "internal server error"}), 500
 
 
@@ -501,8 +501,8 @@ def internal_error(error):
 # ============================================================================
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting Python Bridges API v1.3.0")
-    logger.info("📡 Services: Ollama LLM, Whisper STT, Piper TTS, Embeddings")
+    logger.info(" Starting Python Bridges API v1.3.0")
+    logger.info(" Services: Ollama LLM, Whisper STT, Piper TTS, Embeddings")
 
     app.run(
         host="0.0.0.0",

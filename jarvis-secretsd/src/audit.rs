@@ -47,7 +47,7 @@ impl AuditLog {
 
         let writer = BufWriter::new(file);
 
-        info!("📝 Audit log initialized: {}", path);
+        info!(" Audit log initialized: {}", path);
 
         Ok(Self {
             path: path_buf,
@@ -83,7 +83,7 @@ impl AuditLog {
                 std::fs::set_permissions(&key_path, perms)?;
             }
 
-            info!("🔑 Generated new audit signing key");
+            info!(" Generated new audit signing key");
             Ok(sk)
         }
     }
@@ -134,14 +134,14 @@ impl AuditLog {
     /// Log error (convenience)
     pub fn log_error(&self, event: &str, client: Option<&str>, error: &str) {
         if let Err(e) = self.log(event, client, None, &format!("error: {}", error)) {
-            error!("❌ Failed to write audit log: {}", e);
+            error!(" Failed to write audit log: {}", e);
         }
     }
 
     /// Log success (convenience)
     pub fn log_success(&self, event: &str, client: Option<&str>, secret: Option<&str>) {
         if let Err(e) = self.log(event, client, secret, "success") {
-            error!("❌ Failed to write audit log: {}", e);
+            error!(" Failed to write audit log: {}", e);
         }
     }
 }

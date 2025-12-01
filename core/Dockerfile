@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM rust:1.90 as builder
+FROM rust:1.90 AS builder
 
 WORKDIR /app
 
@@ -17,6 +17,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

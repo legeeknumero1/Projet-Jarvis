@@ -105,8 +105,8 @@ User Input (Frontend)
 Rust Backend (8100)
     ↓ Lua Plugin Filter
 Python Bridges (8005)
-    ├→ Ollama (LLM)
-    └→ S-BERT (Embeddings)
+    → Ollama (LLM)
+    → S-BERT (Embeddings)
     ↓
 PostgreSQL + Redis + Tantivy
     ↓

@@ -1,5 +1,5 @@
+use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::OpenApi;
-use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, HttpBuilder};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -18,7 +18,7 @@ use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, HttpBuilder};
     ),
     paths(
         crate::handlers::health::health_check,
-        crate::handlers::health::ready_check,
+        crate::handlers::health::readiness_check,
         crate::handlers::chat::chat_endpoint,
         crate::handlers::chat::get_conversations,
         crate::handlers::chat::get_history,
@@ -31,11 +31,11 @@ use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, HttpBuilder};
         schemas(
             crate::models::ChatRequest,
             crate::models::ChatResponse,
-            crate::models::HealthResponse,
-            crate::models::TTSRequest,
-            crate::models::TTSResponse,
-            crate::models::STTRequest,
-            crate::models::STTResponse,
+            crate::models::HealthStatus,
+            crate::models::SynthesizeRequest,
+            crate::models::SynthesizeResponse,
+            crate::models::TranscribeRequest,
+            crate::models::TranscribeResponse,
             crate::models::LoginRequest,
             crate::models::LoginResponse,
         )
@@ -61,7 +61,7 @@ impl utoipa::Modify for SecurityAddon {
                     HttpBuilder::new()
                         .scheme(HttpAuthScheme::Bearer)
                         .bearer_format("JWT")
-                        .build()
+                        .build(),
                 ),
             )
         }

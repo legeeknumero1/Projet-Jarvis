@@ -11,7 +11,7 @@ defmodule JarvisHA.NodeMonitor do
     # Subscribe to node events
     :net_kernel.monitor_nodes(true)
 
-    Logger.info("🔍 Node Monitor started")
+    Logger.info(" Node Monitor started")
 
     {:ok,
      %{
@@ -23,7 +23,7 @@ defmodule JarvisHA.NodeMonitor do
 
   @impl true
   def handle_info({:nodeup, node}, state) do
-    Logger.info("✅ Node joined cluster: #{node}")
+    Logger.info(" Node joined cluster: #{node}")
 
     new_state = %{
       state
@@ -36,7 +36,7 @@ defmodule JarvisHA.NodeMonitor do
   end
 
   def handle_info({:nodedown, node}, state) do
-    Logger.warn("❌ Node left cluster: #{node}")
+    Logger.warn(" Node left cluster: #{node}")
 
     new_state = %{
       state
@@ -55,7 +55,7 @@ defmodule JarvisHA.NodeMonitor do
   def handle_info({:recovery_check, node}, state) do
     case Node.ping(node) do
       :pong ->
-        Logger.info("🔄 Node recovered: #{node}")
+        Logger.info(" Node recovered: #{node}")
 
         new_state = %{
           state

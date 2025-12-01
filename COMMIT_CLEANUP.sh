@@ -1,23 +1,23 @@
 #!/bin/bash
 # Script pour commiter le nettoyage de la documentation
 
-echo "🧹 Nettoyage documentation Jarvis - Commit automatique"
+echo " Nettoyage documentation Jarvis - Commit automatique"
 echo ""
 
 # Vérifier qu'on est dans un repo git
 if [ ! -d .git ]; then
-    echo "❌ Erreur: Pas dans un dépôt git"
+    echo " Erreur: Pas dans un dépôt git"
     exit 1
 fi
 
-echo "📋 Fichiers modifiés:"
+echo " Fichiers modifiés:"
 git status --short
 
 echo ""
 read -p "Continuer avec le commit? (y/N) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "❌ Annulé"
+    echo " Annulé"
     exit 1
 fi
 
@@ -47,9 +47,9 @@ Impact:
 Refs: #linguist #documentation #cleanup"
 
 echo ""
-echo "✅ Commit créé avec succès!"
+echo " Commit créé avec succès!"
 echo ""
-echo "📊 Pour pousser sur GitHub:"
+echo " Pour pousser sur GitHub:"
 echo "   git push origin main"
 echo ""
-echo "⏳ Les stats GitHub se mettront à jour dans 1-2 heures"
+echo " Les stats GitHub se mettront à jour dans 1-2 heures"

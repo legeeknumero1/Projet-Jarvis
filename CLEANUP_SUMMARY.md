@@ -1,9 +1,9 @@
-# 🧹 NETTOYAGE DOCUMENTATION - RÉSUMÉ
+#  NETTOYAGE DOCUMENTATION - RÉSUMÉ
 
 **Date**: 2025-11-30  
 **Objectif**: Corriger les stats GitHub linguist (76% Markdown → cible <10%)
 
-## ✅ Actions réalisées
+##  Actions réalisées
 
 ### 1. Création `.gitattributes`
 
@@ -37,10 +37,10 @@ frontend/node_modules/** linguist-vendored
 
 ### 4. Mise à jour `.gitignore`
 
-- ✅ Ne plus ignorer `AUDIT*.md` (besoin de versionner les audits)
-- ✅ Ignorer les rapports temporaires (`RAPPORT_AUDIT_*.md`)
+-  Ne plus ignorer `AUDIT*.md` (besoin de versionner les audits)
+-  Ignorer les rapports temporaires (`RAPPORT_AUDIT_*.md`)
 
-## 📊 Résultats attendus
+##  Résultats attendus
 
 ### Avant
 ```
@@ -60,14 +60,14 @@ Shell:              ~4%
 Markdown:           <5% (exclu des stats)
 ```
 
-## 🎯 Impact
+##  Impact
 
 1. **Stats GitHub**: Refléteront le vrai code (pas la doc)
 2. **Maintenance**: Documentation mieux organisée
 3. **Taille repo**: -250KB documentation obsolète
 4. **Clarté**: Index complet dans `docs/README.md`
 
-## 📝 Prochaines étapes
+##  Prochaines étapes
 
 1. Commit ces changements:
    ```bash
@@ -80,7 +80,7 @@ Markdown:           <5% (exclu des stats)
 
 3. Vérifier les nouvelles stats sur le repo GitHub
 
-## 🔗 Références
+##  Références
 
 - [GitHub Linguist Overrides](https://github.com/github-linguist/linguist/blob/main/docs/overrides.md)
 - [Understanding .gitattributes](https://compiledthoughts.pages.dev/blog/understanding-gitattributes-for-better-language-detection/)

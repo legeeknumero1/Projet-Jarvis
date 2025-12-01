@@ -1,14 +1,14 @@
-# 🤖 Configuration Multi-Instances Claude - Projet Jarvis
+#  Configuration Multi-Instances Claude - Projet Jarvis
 
-## ⚠️ FICHIER DE CONFIGURATION PRINCIPAL ⚠️
+##  FICHIER DE CONFIGURATION PRINCIPAL 
 
 **Ce fichier contient TOUS les paramètres de configuration pour les instances Claude Code du projet Jarvis.**
 
 ---
 
-## 🎯 Profil du projet - RÉFÉRENCE OBLIGATOIRE
+##  Profil du projet - RÉFÉRENCE OBLIGATOIRE
 
-### 📋 Contexte Enzo & Jarvis (depuis Profil Jarvis Complet.md)
+###  Contexte Enzo & Jarvis (depuis Profil Jarvis Complet.md)
 
 **Développeur :** Enzo, 21 ans, Perpignan  
 **Objectif :** Assistant vocal intelligent local avec domotique  
@@ -24,9 +24,9 @@
 
 ---
 
-## 🔢 Système d'attribution des numéros d'instances
+##  Système d'attribution des numéros d'instances
 
-### 📊 Instances actives actuelles
+###  Instances actives actuelles
 ```
 Instance #1: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #2: TERMINÉE - Toutes tâches transférées à Instance #12
@@ -40,19 +40,19 @@ Instance #9: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #10: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #11: TERMINÉE - Toutes tâches transférées à Instance #12
 Instance #12: FERMÉE - Tâches transférées à Instance #13  
-Instance #13: FERMÉE - Mission K8s terminée avec succès - Script deploy-jarvis-complete.sh livré (2025-07-21) ✅
-Instance #14: FERMÉE - Audit complet terminé (2025-07-22 17:05) ✅
+Instance #13: FERMÉE - Mission K8s terminée avec succès - Script deploy-jarvis-complete.sh livré (2025-07-21) 
+Instance #14: FERMÉE - Audit complet terminé (2025-07-22 17:05) 
 Instance #15: FERMÉE - Toutes tâches transférées à Instance #16
-Instance #16: ACTIVE - Initialisation automatique (2025-07-23 10:05) ✅
-Instance #17: FERMÉE - Corrections Phase 1 terminées (2025-07-23 20:02) ✅
+Instance #16: ACTIVE - Initialisation automatique (2025-07-23 10:05) 
+Instance #17: FERMÉE - Corrections Phase 1 terminées (2025-07-23 20:02) 
 Instance #18: FERMÉE - Toutes tâches transférées à Instance #20
-Instance #19: FERMÉE - Audit exhaustif terminé (2025-07-24 10:15) ✅  
-Instance #20: ACTIVE - Initialisation automatique (2025-07-24 10:25) ✅
-Instance #21: FERMÉE - Mission documentation migration Docker terminée (2025-07-31 16:05) ✅
-Instance #22: ACTIVE - Initialisation automatique (2025-08-09 19:15) ✅
+Instance #19: FERMÉE - Audit exhaustif terminé (2025-07-24 10:15)   
+Instance #20: ACTIVE - Initialisation automatique (2025-07-24 10:25) 
+Instance #21: FERMÉE - Mission documentation migration Docker terminée (2025-07-31 16:05) 
+Instance #22: ACTIVE - Initialisation automatique (2025-08-09 19:15) 
 ```
 
-### 🆔 Attribution automatique
+###  Attribution automatique
 **RÈGLE :** Chaque nouvelle instance doit :
 1. Lire ce fichier CLAUDE_CONFIG.md EN PREMIER
 2. Identifier les instances actives dans la liste ci-dessus
@@ -60,7 +60,7 @@ Instance #22: ACTIVE - Initialisation automatique (2025-08-09 19:15) ✅
 4. Mettre à jour son statut à ACTIVE avec heure et tâche
 5. Commencer à logguer dans CLAUDE_UPDATES.md
 
-### 🔄 Algorithme d'attribution
+###  Algorithme d'attribution
 ```
 POUR chaque nouveau démarrage d'instance :
   LIRE CLAUDE_CONFIG.md
@@ -73,9 +73,9 @@ POUR chaque nouveau démarrage d'instance :
 
 ---
 
-## 📋 Configuration obligatoire pour CHAQUE instance
+##  Configuration obligatoire pour CHAQUE instance
 
-### 🔴 INITIALISATION OBLIGATOIRE - ORDRE STRICT
+###  INITIALISATION OBLIGATOIRE - ORDRE STRICT
 
 **CHAQUE instance DOIT exécuter cette séquence :**
 
@@ -111,14 +111,14 @@ POUR chaque nouveau démarrage d'instance :
 4. **PREMIÈRE ENTRÉE DANS CLAUDE_UPDATES.md**
    ```
    [18:XX] Instance #X - INITIALISATION
-   - Lecture complète de tous les fichiers .md ✅
+   - Lecture complète de tous les fichiers .md 
    - Attribution numéro d'instance : #X
-   - Vérification anti-conflit : ✅
+   - Vérification anti-conflit : 
    - Statut : PRÊT À TRAVAILLER
    - Contexte Enzo/Jarvis : ASSIMILÉ
    ```
 
-### 🎯 Paramètres comportementaux pour TOUTES les instances
+###  Paramètres comportementaux pour TOUTES les instances
 
 ```yaml
 COMPORTEMENT_INSTANCE:
@@ -142,7 +142,7 @@ SYNCHRONISATION_OBLIGATOIRE:
   demande_enzo_si_rien: OBLIGATOIRE
 ```
 
-### 🔄 Mise à jour obligatoire CLAUDE_UPDATES.md
+###  Mise à jour obligatoire CLAUDE_UPDATES.md
 
 **CHAQUE action/pensée/décision DOIT être loggée :**
 
@@ -171,9 +171,9 @@ SYNCHRONISATION_OBLIGATOIRE:
 
 ---
 
-## 📁 Architecture fichiers .md - LECTURE OBLIGATOIRE
+##  Architecture fichiers .md - LECTURE OBLIGATOIRE
 
-### 🚨 Ordre de lecture STRICT pour chaque instance
+###  Ordre de lecture STRICT pour chaque instance
 
 1. **CLAUDE_PARAMS.md** - Règles absolues non négociables
 2. **CLAUDE_CONFIG.md** - Configuration instances (ce fichier)
@@ -187,7 +187,7 @@ SYNCHRONISATION_OBLIGATOIRE:
 10. **Profil Jarvis Complet.md** - Contexte Enzo/Jarvis
 11. **DOCUMENTATION.md** - Point d'entrée général
 
-### 🔄 Fréquence de lecture
+###  Fréquence de lecture
 
 - **CLAUDE_UPDATES.md** : Toutes les 10 minutes minimum
 - **CLAUDE_INSTANCES.md** : Avant chaque nouvelle tâche
@@ -196,9 +196,9 @@ SYNCHRONISATION_OBLIGATOIRE:
 
 ---
 
-## 🎯 Tâches disponibles - Attribution automatique
+##  Tâches disponibles - Attribution automatique
 
-### 🔴 PRIORITÉ CRITIQUE
+###  PRIORITÉ CRITIQUE
 ```
 [LIBRE] Reconnaissance vocale Whisper - Estimation: 45min
 [LIBRE] Synthèse vocale Piper - Estimation: 30min  
@@ -206,7 +206,7 @@ SYNCHRONISATION_OBLIGATOIRE:
 [LIBRE] Connexion Home Assistant - Estimation: 90min
 ```
 
-### 🟠 PRIORITÉ HAUTE
+###  PRIORITÉ HAUTE
 ```
 [LIBRE] Interface domotique frontend - Estimation: 120min
 [LIBRE] Système mémoire contextuelle - Estimation: 90min
@@ -214,7 +214,7 @@ SYNCHRONISATION_OBLIGATOIRE:
 [LIBRE] Documentation complète - Estimation: 45min
 ```
 
-### 🟡 PRIORITÉ NORMALE
+###  PRIORITÉ NORMALE
 ```
 [LIBRE] Optimisations performance - Estimation: 60min
 [LIBRE] Sécurité et authentification - Estimation: 90min
@@ -224,9 +224,9 @@ SYNCHRONISATION_OBLIGATOIRE:
 
 ---
 
-## 🔧 Configuration technique
+##  Configuration technique
 
-### 🖥️ Environnement de développement
+###  Environnement de développement
 ```yaml
 OS: Arch Linux + Hyprland
 Terminal: Kitty
@@ -238,7 +238,7 @@ Database: PostgreSQL
 AI: Ollama (LLaMA 3.1)
 ```
 
-### 📂 Chemins importants
+###  Chemins importants
 ```yaml
 PROJECT_ROOT: "./Projet Jarvis"
 BACKEND: "./backend/"
@@ -249,7 +249,7 @@ DATA: "./data/"
 MODELS: "./models/"
 ```
 
-### 🔑 Commandes de test
+###  Commandes de test
 ```bash
 # Backend
 cd backend && source venv/bin/activate && python -m uvicorn main:app --reload
@@ -269,9 +269,9 @@ git status && git add . && git commit -m "Instance #X: [description]"
 
 ---
 
-## 🚨 Règles de coordination STRICTES
+##  Règles de coordination STRICTES
 
-### 🔒 Avant toute action
+###  Avant toute action
 1. **LECTURE COMPLÈTE** : Lire TOUS les .md (liste ci-dessus)
 2. **SCAN CONFLITS** : Vérifier marquages EN_COURS dans le code
 3. **VÉRIFICATION RÉFLEXIONS** : Checker CLAUDE_THOUGHTS.md pour doublons
@@ -279,21 +279,21 @@ git status && git add . && git commit -m "Instance #X: [description]"
 5. **MARQUAGE CODE** : Marquer "EN_COURS" si modification code
 6. **SI CONFLIT DÉTECTÉ** : SKIP automatiquement et chercher autre tâche
 
-### 🔄 Pendant le travail
+###  Pendant le travail
 1. Logger toutes les 15 minutes dans CLAUDE_UPDATES.md
 2. Maintenir marquage "EN_COURS" dans le code
 3. Partager réflexions importantes dans CLAUDE_THOUGHTS.md
 4. Documenter blocages immédiatement
 5. Demander aide si nécessaire avec marquage "BESOIN_AIDE"
 
-### ✅ Après le travail
+###  Après le travail
 1. **MARQUER "FINI"** dans le code
 2. Logger résultat final dans CLAUDE_UPDATES.md
 3. Libérer réservation dans CLAUDE_INSTANCES.md
 4. Mettre à jour documentation concernée
 5. Partager solutions dans CLAUDE_THOUGHTS.md
 
-### ❓ Si rien à faire
+###  Si rien à faire
 1. **SCANNER** tous les .md pour nouvelles tâches
 2. **VÉRIFIER** s'il y a des "BESOIN_AIDE" à traiter
 3. **CHERCHER** tâches "FINI" à améliorer
@@ -301,9 +301,9 @@ git status && git add . && git commit -m "Instance #X: [description]"
 
 ---
 
-## 🔄 Format de communication standardisé
+##  Format de communication standardisé
 
-### 📝 Template CLAUDE_UPDATES.md
+###  Template CLAUDE_UPDATES.md
 ```
 [HH:MM] Instance #X - TYPE_ACTION
 - Action : [description précise de l'action]
@@ -318,9 +318,9 @@ git status && git add . && git commit -m "Instance #X: [description]"
 - Notes : [informations importantes]
 ```
 
-### 🆘 Template urgence/blocage
+###  Template urgence/blocage
 ```
-🚨 [HH:MM] Instance #X - BLOCAGE
+ [HH:MM] Instance #X - BLOCAGE
 - Problème : [description du blocage]
 - Contexte : [ce qui était en cours]
 - Fichiers : [fichiers concernés]
@@ -332,14 +332,14 @@ git status && git add . && git commit -m "Instance #X: [description]"
 
 ---
 
-## 🔄 Dernière mise à jour
+##  Dernière mise à jour
 **Date** : 2025-01-17 - 18:12
 **Par** : Instance #2 (Claude)
 **Action** : Ajout synchronisation automatique complète - Lecture tous .md avant chaque réponse + marquage code obligatoire
 
 ---
 
-## 📝 Notes importantes
+##  Notes importantes
 
 - **CE FICHIER EST LA SOURCE DE VÉRITÉ** pour la configuration
 - **Mise à jour OBLIGATOIRE** du statut des instances

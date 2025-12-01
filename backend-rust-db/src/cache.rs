@@ -13,7 +13,7 @@ pub struct CacheService {
 impl CacheService {
     /// Créer nouvelle connexion Redis
     pub async fn new(redis_url: &str) -> DbResult<Self> {
-        info!("🔴 Connecting to Redis: {}", redis_url);
+        info!(" Connecting to Redis: {}", redis_url);
 
         let client = redis::Client::open(redis_url)
             .map_err(|e| DbError::Cache(e.to_string()))?;
@@ -22,7 +22,7 @@ impl CacheService {
             .await
             .map_err(|e| DbError::Cache(e.to_string()))?;
 
-        info!("✅ Redis connected");
+        info!(" Redis connected");
 
         Ok(Self {
             client: connection_manager,
@@ -114,7 +114,7 @@ impl CacheService {
             .await
             .map_err(|e| DbError::Cache(e.to_string()))?;
 
-        info!("✅ Invalidated {} keys matching pattern: {}", count, pattern);
+        info!(" Invalidated {} keys matching pattern: {}", count, pattern);
         Ok(count)
     }
 

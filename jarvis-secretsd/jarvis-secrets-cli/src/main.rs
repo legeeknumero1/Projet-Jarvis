@@ -196,7 +196,7 @@ fn main() -> Result<()> {
                 anyhow::bail!("Request failed: {}", response.status());
             }
 
-            println!("✓ Secret '{}' created/updated successfully", name);
+            println!(" Secret '{}' created/updated successfully", name);
         }
 
         Commands::Rotate { names } => {
@@ -217,7 +217,7 @@ fn main() -> Result<()> {
 
             let result: RotateResponse = response.json().context("Failed to parse response")?;
 
-            println!("✓ Rotated {} secret(s):", result.rotated_count);
+            println!(" Rotated {} secret(s):", result.rotated_count);
             for name in result.rotated {
                 println!("  - {}", name);
             }

@@ -15,7 +15,7 @@ pub struct MqttService {
 impl MqttService {
     /// Créer nouveau client MQTT
     pub async fn new(broker_url: &str) -> MqttResult<Self> {
-        info!("🔌 Connecting to MQTT broker: {}", broker_url);
+        info!(" Connecting to MQTT broker: {}", broker_url);
 
         // Parser URL (format: mqtt://host:port)
         let url_parts: Vec<&str> = broker_url.trim_start_matches("mqtt://").split(':').collect();
@@ -33,7 +33,7 @@ impl MqttService {
         // Créer client
         let (client, _) = AsyncClient::new(options, 100);
 
-        info!("✅ MQTT client initialized");
+        info!(" MQTT client initialized");
 
         Ok(Self {
             client: Arc::new(Mutex::new(client)),
@@ -63,7 +63,7 @@ impl MqttService {
             .await
             .map_err(|e| MqttError::Publish(e.to_string()))?;
 
-        info!("✅ Published to {}", topic);
+        info!(" Published to {}", topic);
         Ok(())
     }
 
@@ -82,7 +82,7 @@ impl MqttService {
             .await
             .map_err(|e| MqttError::Subscribe(e.to_string()))?;
 
-        info!("✅ Subscribed to {}", topic);
+        info!(" Subscribed to {}", topic);
         Ok(())
     }
 

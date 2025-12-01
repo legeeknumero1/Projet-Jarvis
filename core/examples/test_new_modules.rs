@@ -12,24 +12,24 @@ async fn main() -> Result<()> {
     // Test 1: Redis Cache
     println!("1. Testing Redis Cache...");
     match test_redis().await {
-        Ok(_) => println!("   ✅ Redis cache working!"),
-        Err(e) => println!("   ❌ Redis error: {}", e),
+        Ok(_) => println!("    Redis cache working!"),
+        Err(e) => println!("    Redis error: {}", e),
     }
     println!();
 
     // Test 2: Tantivy Search
     println!("2. Testing Tantivy Full-Text Search...");
     match test_tantivy().await {
-        Ok(_) => println!("   ✅ Tantivy search working!"),
-        Err(e) => println!("   ❌ Tantivy error: {}", e),
+        Ok(_) => println!("    Tantivy search working!"),
+        Err(e) => println!("    Tantivy error: {}", e),
     }
     println!();
 
     // Test 3: SeaORM Database
     println!("3. Testing SeaORM Database...");
     match test_seaorm().await {
-        Ok(_) => println!("   ✅ SeaORM database working!"),
-        Err(e) => println!("   ❌ SeaORM error: {}", e),
+        Ok(_) => println!("    SeaORM database working!"),
+        Err(e) => println!("    SeaORM error: {}", e),
     }
     println!();
 

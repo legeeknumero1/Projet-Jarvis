@@ -178,7 +178,7 @@ async fn rotate_handler(
 
     state.audit.log_success("rotate", Some(&client), None);
 
-    info!("🔄 Rotated {} secrets via API", rotated.len());
+    info!(" Rotated {} secrets via API", rotated.len());
 
     Ok(Json(RotateResponse {
         rotated_count: rotated.len(),

@@ -1,12 +1,12 @@
-# 🧪 Tests de Validation - Observabilité v1.3
+#  Tests de Validation - Observabilité v1.3
 
-## ✅ Checklist Rapide
+##  Checklist Rapide
 
 ### 1. Configuration Logs JSON
 ```bash
 # Validation syntaxe JSON
 jq . prod/logs-config.json >/dev/null
-echo "✅ Config logs valide"
+echo " Config logs valide"
 
 # Test avec backend
 JARVIS_LOG_CONFIG=prod/logs-config.json uvicorn backend.app:app
@@ -52,7 +52,7 @@ websocat ws://localhost:8000/ws
 # Chaque message WS doit avoir même request_id
 ```
 
-## 🔍 Tests Détaillés
+##  Tests Détaillés
 
 ### Test 1: Middleware HTTP
 
@@ -164,12 +164,12 @@ async def concurrent_requests():
             actual_id = resp.headers.get("x-request-id")
             assert actual_id == expected_id, f"ID mismatch: {actual_id} != {expected_id}"
         
-        print("✅ Isolation contextvars OK")
+        print(" Isolation contextvars OK")
 
 asyncio.run(concurrent_requests())
 ```
 
-## 🚀 Tests Automatisés
+##  Tests Automatisés
 
 ### Script global
 ```bash
@@ -203,7 +203,7 @@ chmod +x prod/test-logs.sh
     grep -q '"request_id"' /tmp/app.jsonl
 ```
 
-## 📊 Métriques de Validation
+##  Métriques de Validation
 
 ### KPIs attendus
 - **Logs JSON**: 100% des requêtes HTTP loggées
@@ -224,14 +224,14 @@ while read line; do echo "$line" | jq empty >/dev/null 2>&1 || echo "BAD: $line"
 
 ---
 
-## 🎯 Validation OK si:
+##  Validation OK si:
 
-✅ **Tous les logs JSON sont valides**  
-✅ **100% des requêtes ont request-id**  
-✅ **WebSocket garde correlation**  
-✅ **Pas d'erreurs de contextvars**  
-✅ **Performance acceptable (< 1ms overhead)**  
+ **Tous les logs JSON sont valides**  
+ **100% des requêtes ont request-id**  
+ **WebSocket garde correlation**  
+ **Pas d'erreurs de contextvars**  
+ **Performance acceptable (< 1ms overhead)**  
 
 ---
 
-L'observabilité v1.3 est prête pour production ! 🚀
+L'observabilité v1.3 est prête pour production ! 

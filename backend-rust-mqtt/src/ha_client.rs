@@ -14,7 +14,7 @@ pub struct HomeAssistantClient {
 impl HomeAssistantClient {
     /// Créer nouveau client Home Assistant
     pub fn new(base_url: String, token: String) -> Self {
-        info!("🏠 Home Assistant client initialized: {}", base_url);
+        info!(" Home Assistant client initialized: {}", base_url);
 
         Self {
             base_url: base_url.trim_end_matches('/').to_string(),
@@ -92,7 +92,7 @@ impl HomeAssistantClient {
             )));
         }
 
-        info!("✅ Service called: {}.{}", domain, service);
+        info!(" Service called: {}.{}", domain, service);
         Ok(())
     }
 

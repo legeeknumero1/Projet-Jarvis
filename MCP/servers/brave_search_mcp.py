@@ -30,8 +30,8 @@ class BraveSearchMCP:
         if not self.api_key:
             raise ValueError("BRAVE_API_KEY not found in environment variables")
             
-        logger.info("🔍 Brave Search MCP Server initialized")
-        logger.info(f"📊 Using API key: {self.api_key[:10]}...")
+        logger.info(" Brave Search MCP Server initialized")
+        logger.info(f" Using API key: {self.api_key[:10]}...")
         
     async def _ensure_client(self):
         """Assurer la présence du client HTTP"""
@@ -55,7 +55,7 @@ class BraveSearchMCP:
             
             if response.status_code == 401 and self.api_key_backup:
                 # Fallback vers clé backup si erreur auth
-                logger.warning("🔄 Switching to backup API key")
+                logger.warning(" Switching to backup API key")
                 self.current_api_key = self.api_key_backup
                 self.client.headers["X-Subscription-Token"] = self.current_api_key
                 response = await self.client.get(f"{self.base_url}/{endpoint}", params=params)
@@ -64,17 +64,17 @@ class BraveSearchMCP:
             return response.json()
             
         except httpx.HTTPStatusError as e:
-            logger.error(f"❌ HTTP error {e.response.status_code}: {e.response.text}")
+            logger.error(f" HTTP error {e.response.status_code}: {e.response.text}")
             raise
         except Exception as e:
-            logger.error(f"❌ Request error: {e}")
+            logger.error(f" Request error: {e}")
             raise
     
     async def web_search(self, query: str, count: int = 10, search_lang: str = "fr", 
                         country: str = "FR", safesearch: str = "moderate", 
                         freshness: str = "") -> Dict[str, Any]:
         """Recherche web avec Brave Search API"""
-        logger.info(f"🔍 Web search: '{query}' (count={count}, lang={search_lang})")
+        logger.info(f" Web search: '{query}' (count={count}, lang={search_lang})")
         
         params = {
             "q": query,
@@ -108,11 +108,11 @@ class BraveSearchMCP:
                     "source_domain": item.get("url", "").split("/")[2] if item.get("url") else ""
                 })
                 
-            logger.info(f"✅ Found {formatted_results['total_results']} web results")
+            logger.info(f" Found {formatted_results['total_results']} web results")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Web search failed: {e}")
+            logger.error(f" Web search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -123,7 +123,7 @@ class BraveSearchMCP:
     async def news_search(self, query: str, count: int = 10, country: str = "FR", 
                          search_lang: str = "fr", spellcheck: bool = True) -> Dict[str, Any]:
         """Recherche d'actualités avec Brave Search API"""
-        logger.info(f"📰 News search: '{query}' (count={count}, country={country})")
+        logger.info(f" News search: '{query}' (count={count}, country={country})")
         
         params = {
             "q": query,
@@ -154,11 +154,11 @@ class BraveSearchMCP:
                     "language": search_lang
                 })
                 
-            logger.info(f"✅ Found {formatted_results['total_articles']} news articles")
+            logger.info(f" Found {formatted_results['total_articles']} news articles")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ News search failed: {e}")
+            logger.error(f" News search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -169,7 +169,7 @@ class BraveSearchMCP:
     async def image_search(self, query: str, count: int = 10, search_lang: str = "fr",
                           country: str = "FR", safesearch: str = "strict") -> Dict[str, Any]:
         """Recherche d'images avec Brave Search API"""
-        logger.info(f"🖼️ Image search: '{query}' (count={count}, safesearch={safesearch})")
+        logger.info(f" Image search: '{query}' (count={count}, safesearch={safesearch})")
         
         params = {
             "q": query,
@@ -201,11 +201,11 @@ class BraveSearchMCP:
                     "source_domain": image.get("source", "").split("/")[2] if image.get("source") else ""
                 })
                 
-            logger.info(f"✅ Found {formatted_results['total_images']} images")
+            logger.info(f" Found {formatted_results['total_images']} images")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Image search failed: {e}")
+            logger.error(f" Image search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -216,7 +216,7 @@ class BraveSearchMCP:
     async def video_search(self, query: str, count: int = 10, search_lang: str = "fr",
                           country: str = "FR", safesearch: str = "moderate") -> Dict[str, Any]:
         """Recherche de vidéos avec Brave Search API"""
-        logger.info(f"🎥 Video search: '{query}' (count={count})")
+        logger.info(f" Video search: '{query}' (count={count})")
         
         params = {
             "q": query,
@@ -249,11 +249,11 @@ class BraveSearchMCP:
                     "platform": self._detect_video_platform(video.get("url", ""))
                 })
                 
-            logger.info(f"✅ Found {formatted_results['total_videos']} videos")
+            logger.info(f" Found {formatted_results['total_videos']} videos")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Video search failed: {e}")
+            logger.error(f" Video search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -278,7 +278,7 @@ class BraveSearchMCP:
         """Fermer les connexions"""
         if self.client and not self.client.is_closed:
             await self.client.aclose()
-            logger.info("🔍 Brave Search MCP client closed")
+            logger.info(" Brave Search MCP client closed")
 
 # Point d'entrée principal
 async def main():
@@ -291,7 +291,7 @@ async def main():
         print("Test search result:", json.dumps(result, indent=2, ensure_ascii=False))
         
     except Exception as e:
-        logger.error(f"❌ MCP Server error: {e}")
+        logger.error(f" MCP Server error: {e}")
     finally:
         await brave_mcp.close()
 

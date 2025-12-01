@@ -114,7 +114,7 @@
           "refId": "D"
         }
       ],
-      "title": "🤖 Jarvis - Requêtes Totales",
+      "title": " Jarvis - Requêtes Totales",
       "type": "timeseries"
     },
     {
@@ -213,7 +213,7 @@
           "refId": "D"
         }
       ],
-      "title": "⚡ Temps de Réponse",
+      "title": " Temps de Réponse",
       "type": "timeseries"
     },
     {
@@ -276,7 +276,7 @@
           "refId": "A"
         }
       ],
-      "title": "🔧 Backend Status",
+      "title": " Backend Status",
       "type": "stat"
     },
     {
@@ -339,7 +339,7 @@
           "refId": "A"
         }
       ],
-      "title": "🎤 STT Status",
+      "title": " STT Status",
       "type": "stat"
     },
     {
@@ -402,7 +402,7 @@
           "refId": "A"
         }
       ],
-      "title": "🔊 TTS Status",
+      "title": " TTS Status",
       "type": "stat"
     },
     {
@@ -465,7 +465,7 @@
           "refId": "A"
         }
       ],
-      "title": "💻 Interface Status",
+      "title": " Interface Status",
       "type": "stat"
     }
   ],
@@ -485,7 +485,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "🤖 Jarvis - Overview Dashboard",
+  "title": " Jarvis - Overview Dashboard",
   "uid": "jarvis-overview",
   "version": 1
 }

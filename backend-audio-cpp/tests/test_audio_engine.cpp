@@ -143,7 +143,7 @@ int main() {
         test_latency_measurement();
 
         std::cout << "\n==============================================================" << std::endl;
-        std::cout << "  ALL TESTS PASSED! ✅" << std::endl;
+        std::cout << "  ALL TESTS PASSED! " << std::endl;
         std::cout << "==============================================================" << std::endl;
 
         return 0;

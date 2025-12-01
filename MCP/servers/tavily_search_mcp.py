@@ -28,10 +28,10 @@ class TavilySearchMCP:
         if not self.api_key:
             # Utiliser une clé demo pour les tests
             self.api_key = "demo_key"
-            logger.warning("⚠️  Using demo key - limited functionality")
+            logger.warning("  Using demo key - limited functionality")
         else:
-            logger.info("🔍 Tavily Search MCP Server initialized")
-            logger.info(f"🔑 Using API key: {self.api_key[:10]}...")
+            logger.info(" Tavily Search MCP Server initialized")
+            logger.info(f" Using API key: {self.api_key[:10]}...")
     
     async def _ensure_client(self):
         """Assurer la présence du client HTTP"""
@@ -58,27 +58,27 @@ class TavilySearchMCP:
             )
             
             if response.status_code == 401:
-                logger.error("❌ Invalid or missing API key")
+                logger.error(" Invalid or missing API key")
                 raise Exception("Invalid Tavily API key")
             elif response.status_code == 429:
-                logger.warning("⚠️  Rate limit exceeded")
+                logger.warning("  Rate limit exceeded")
                 raise Exception("Rate limit exceeded")
                 
             response.raise_for_status()
             return response.json()
             
         except httpx.HTTPStatusError as e:
-            logger.error(f"❌ HTTP error {e.response.status_code}: {e.response.text}")
+            logger.error(f" HTTP error {e.response.status_code}: {e.response.text}")
             raise
         except Exception as e:
-            logger.error(f"❌ Request error: {e}")
+            logger.error(f" Request error: {e}")
             raise
     
     async def web_search(self, query: str, count: int = 10, search_depth: str = "advanced",
                         include_domains: List[str] = None, exclude_domains: List[str] = None,
                         include_answer: bool = True, include_raw_content: bool = False) -> Dict[str, Any]:
         """Recherche web avec Tavily Search API"""
-        logger.info(f"🔍 Tavily web search: '{query}' (count={count}, depth={search_depth})")
+        logger.info(f" Tavily web search: '{query}' (count={count}, depth={search_depth})")
         
         payload = {
             "query": query,
@@ -121,11 +121,11 @@ class TavilySearchMCP:
                     "citations": True
                 })
             
-            logger.info(f"✅ Found {formatted_results['total_results']} results with AI answer")
+            logger.info(f" Found {formatted_results['total_results']} results with AI answer")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Tavily search failed: {e}")
+            logger.error(f" Tavily search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -135,7 +135,7 @@ class TavilySearchMCP:
     
     async def qna_search(self, query: str) -> Dict[str, Any]:
         """Recherche question-réponse optimisée"""
-        logger.info(f"❓ Tavily Q&A search: '{query}'")
+        logger.info(f" Tavily Q&A search: '{query}'")
         
         payload = {
             "query": query,
@@ -165,11 +165,11 @@ class TavilySearchMCP:
                     "relevance_score": item.get("score", 0)
                 })
             
-            logger.info(f"✅ Q&A answer generated with {len(formatted_result['sources'])} sources")
+            logger.info(f" Q&A answer generated with {len(formatted_result['sources'])} sources")
             return formatted_result
             
         except Exception as e:
-            logger.error(f"❌ Q&A search failed: {e}")
+            logger.error(f" Q&A search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -179,7 +179,7 @@ class TavilySearchMCP:
     
     async def news_search(self, query: str, count: int = 10, days: int = 7) -> Dict[str, Any]:
         """Recherche d'actualités récentes"""
-        logger.info(f"📰 Tavily news search: '{query}' (last {days} days)")
+        logger.info(f" Tavily news search: '{query}' (last {days} days)")
         
         # Ajouter contexte temporel à la requête
         time_query = f"{query} news recent {days} days"
@@ -221,11 +221,11 @@ class TavilySearchMCP:
                     "citations": True
                 })
             
-            logger.info(f"✅ Found {formatted_results['total_articles']} news articles")
+            logger.info(f" Found {formatted_results['total_articles']} news articles")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ News search failed: {e}")
+            logger.error(f" News search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -235,7 +235,7 @@ class TavilySearchMCP:
     
     async def research_search(self, topic: str, max_results: int = 15) -> Dict[str, Any]:
         """Recherche approfondie pour research"""
-        logger.info(f"🔬 Tavily research: '{topic}'")
+        logger.info(f" Tavily research: '{topic}'")
         
         payload = {
             "query": topic,
@@ -271,11 +271,11 @@ class TavilySearchMCP:
                     "verified": True
                 })
             
-            logger.info(f"✅ Research completed with {formatted_results['total_sources']} sources")
+            logger.info(f" Research completed with {formatted_results['total_sources']} sources")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Research search failed: {e}")
+            logger.error(f" Research search failed: {e}")
             return {
                 "topic": topic,
                 "error": str(e),
@@ -287,7 +287,7 @@ class TavilySearchMCP:
         """Fermer les connexions"""
         if self.client and not self.client.is_closed:
             await self.client.aclose()
-            logger.info("🔍 Tavily Search MCP client closed")
+            logger.info(" Tavily Search MCP client closed")
 
 # Point d'entrée principal
 async def main():
@@ -300,7 +300,7 @@ async def main():
         print("Test search result:", json.dumps(result, indent=2, ensure_ascii=False))
         
     except Exception as e:
-        logger.error(f"❌ MCP Server error: {e}")
+        logger.error(f" MCP Server error: {e}")
     finally:
         await tavily_mcp.close()
 

@@ -1,21 +1,21 @@
 use axum::{
+    http::HeaderValue,
     routing::{get, post},
     Router,
-    http::HeaderValue,
 };
 use std::sync::Arc;
 use std::time::Duration;
-use tower_http::cors::{CorsLayer, AllowOrigin};
-use tracing::{info, error, warn};
+use tower_http::cors::{AllowOrigin, CorsLayer};
+use tracing::{error, info, warn};
 
 mod handlers;
 mod middleware;
 mod models;
-mod services;
 mod openapi;
+mod services;
 
 use handlers::{auth, chat, health, memory, stt, tts};
-use middleware::{SecretsValidator, EnvironmentChecklist, TlsConfig, CertificateLoader};
+use middleware::{CertificateLoader, EnvironmentChecklist, SecretsValidator, TlsConfig};
 use models::AppState;
 use openapi::ApiDoc;
 use utoipa::OpenApi;
@@ -29,18 +29,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load environment variables from .env file
     dotenv::dotenv().ok();
 
-    info!("🦀 Jarvis Rust Backend v1.9.0 starting...");
+    info!(" Jarvis Rust Backend v1.9.0 starting...");
 
     // ============================================================================
     // SECURITY FIX C6: Validate all secrets before starting server
     // ============================================================================
     match SecretsValidator::validate_all() {
         Ok(()) => {
-            info!("✅ All secrets validated - proceeding with startup");
+            info!(" All secrets validated - proceeding with startup");
         }
         Err(e) => {
-            error!("🚨 SECURITY ERROR: Secret validation failed - {}", e);
-            error!("⚠️  Application will NOT start without proper secrets configuration");
+            error!(" SECURITY ERROR: Secret validation failed - {}", e);
+            error!("  Application will NOT start without proper secrets configuration");
             EnvironmentChecklist::print_requirements();
             panic!("Secret validation failed: {}", e);
         }
@@ -57,10 +57,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Try to validate certificates, provide helpful message if missing
     match CertificateLoader::validate_certificates(&tls_config) {
         Ok(()) => {
-            info!("✅ TLS certificates validated - HTTPS will be enabled");
+            info!(" TLS certificates validated - HTTPS will be enabled");
         }
         Err(e) => {
-            warn!("⚠️  SECURITY WARNING: {}", e);
+            warn!("  SECURITY WARNING: {}", e);
             warn!("    For development, generate a self-signed certificate:");
             warn!("    $ mkdir -p certs");
             warn!("    $ openssl req -x509 -newkey rsa:4096 -keyout certs/server.key \\");
@@ -73,13 +73,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configuration depuis les variables d'environnement
     let host = std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("PORT").unwrap_or_else(|_| "8100".to_string());
-    let python_bridges_url = std::env::var("PYTHON_BRIDGES_URL")
-        .unwrap_or_else(|_| "http://localhost:8005".to_string());
-    let audio_engine_url = std::env::var("AUDIO_ENGINE_URL")
-        .unwrap_or_else(|_| "http://localhost:8004".to_string());
-    let cors_origins = std::env::var("CORS_ORIGINS")
-        .unwrap_or_else(|_| "http://localhost:3000".to_string());
-    info!("📋 Configuration:");
+    let python_bridges_url =
+        std::env::var("PYTHON_BRIDGES_URL").unwrap_or_else(|_| "http://localhost:8005".to_string());
+    let audio_engine_url =
+        std::env::var("AUDIO_ENGINE_URL").unwrap_or_else(|_| "http://localhost:8004".to_string());
+    let cors_origins =
+        std::env::var("CORS_ORIGINS").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    info!(" Configuration:");
     info!("  - Server: {}:{}", host, port);
     info!("  - Python Bridges: {}", python_bridges_url);
     info!("  - Audio Engine: {}", audio_engine_url);
@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ============================================================================
     // SECURITY FIX C5: Rate Limiting Initialized (lazy static)
     // ============================================================================
-    info!("🔒 Rate limiting initialized - protecting against DoS attacks");
+    info!(" Rate limiting initialized - protecting against DoS attacks");
 
     // Build CORS layer with restricted origins (SECURITY FIX C2)
     let allowed_origins: Vec<HeaderValue> = cors_origins
@@ -111,7 +111,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // CRITICAL FIX: Panic if no valid origins (prevents AllowOrigin::any())
     if allowed_origins.is_empty() {
-        panic!("🚨 SECURITY ERROR: CORS_ORIGINS must contain at least one valid origin!");
+        panic!(" SECURITY ERROR: CORS_ORIGINS must contain at least one valid origin!");
     }
 
     let cors = CorsLayer::new()
@@ -137,44 +137,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // ============================================================================
         // PUBLIC ENDPOINTS (no authentication required)
         // ============================================================================
-
         // Health endpoints
         .route("/health", get(health::health_check))
         .route("/ready", get(health::readiness_check))
         .route("/metrics", get(|| async move { metric_handle.render() }))
-
         // OpenAPI/Swagger UI
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-
         // Auth endpoints
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/verify", post(auth::verify_token))
         .route("/api/auth/whoami", get(auth::whoami))
-
         // ============================================================================
         // PROTECTED ENDPOINTS (JWT authentication required)
         // ============================================================================
-
         // Chat endpoints
-        .route("/api/chat", post(chat::send_message))
-        .route("/api/chat/conversations", get(chat::list_conversations))
+        .route("/api/chat", post(chat::chat_endpoint))
+        .route("/api/chat/conversations", get(chat::get_conversations))
         .route("/api/chat/history/:id", get(chat::get_history))
-        .route("/api/chat/conversation/:id", axum::routing::delete(chat::delete_conversation))
-
+        .route(
+            "/api/chat/conversation/:id",
+            axum::routing::delete(chat::delete_conversation),
+        )
         // STT/TTS endpoints
         .route("/api/voice/transcribe", post(stt::transcribe))
         .route("/api/voice/synthesize", post(tts::synthesize))
         .route("/api/voice/voices", get(tts::list_voices))
         .route("/api/voice/languages", get(stt::list_languages))
-
         // Memory endpoints
         .route("/api/memory/add", post(memory::add_memory))
         .route("/api/memory/search", post(memory::search_memory))
         .route("/api/memory/list", get(memory::list_memories))
-
         // WebSocket
         .route("/ws", axum::routing::get(chat::websocket_handler))
-
         // Security layers
         .layer(cors)
         .layer(prometheus_layer)
@@ -192,24 +186,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // config creation are implemented in tls.rs and ready for integration.
 
     if CertificateLoader::validate_certificates(&tls_config).is_ok() {
-        info!("🔒 TLS certificates are valid - ready for HTTPS deployment via reverse proxy");
+        info!(" TLS certificates are valid - ready for HTTPS deployment via reverse proxy");
         info!("   Set up nginx with TLS or use actix-web for direct HTTPS support");
     } else {
-        info!("⚠️  TLS certificates not configured - running HTTP-only (development mode)");
+        info!("  TLS certificates not configured - running HTTP-only (development mode)");
     }
 
     match tokio::net::TcpListener::bind(&addr).await {
         Ok(listener) => {
-            info!("✅ Server listening on http://{}", addr);
-            info!("📊 Health check: http://{}/health", addr);
-            info!("💬 Chat API: POST http://{}/api/chat", addr);
-            info!("🎤 STT API: POST http://{}/api/voice/transcribe", addr);
-            info!("🔊 TTS API: POST http://{}/api/voice/synthesize", addr);
+            info!(" Server listening on http://{}", addr);
+            info!(" Health check: http://{}/health", addr);
+            info!(" Chat API: POST http://{}/api/chat", addr);
+            info!(" STT API: POST http://{}/api/voice/transcribe", addr);
+            info!(" TTS API: POST http://{}/api/voice/synthesize", addr);
 
             axum::serve(listener, app).await?;
         }
         Err(e) => {
-            error!("❌ Erreur liaison au serveur {}: {}", addr, e);
+            error!(" Erreur liaison au serveur {}: {}", addr, e);
             return Err(e.into());
         }
     }

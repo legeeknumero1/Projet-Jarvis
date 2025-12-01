@@ -1,48 +1,48 @@
-# 🤖 Paramètres Claude - Configuration Complète
+#  Paramètres Claude - Configuration Complète
 
-## ⚠️ FICHIER PRIORITAIRE ABSOLU ⚠️
+##  FICHIER PRIORITAIRE ABSOLU 
 
 **CE FICHIER DOIT ÊTRE LU EN PREMIER AVANT TOUTE ACTION**
 
 ---
 
-## 🚨 RÈGLE ABSOLUE - ARCHITECTURE DOCKER COMPLÈTE
+##  RÈGLE ABSOLUE - ARCHITECTURE DOCKER COMPLÈTE
 
-### ⚡ ARCHITECTURE POUPÉE RUSSE OBLIGATOIRE
+###  ARCHITECTURE POUPÉE RUSSE OBLIGATOIRE
 
 **L'architecture Jarvis DOIT contenir EXACTEMENT 7 containers Docker :**
 
-1. **PostgreSQL** (172.20.0.100:5432) - Base de données ✅
-2. **Redis** (172.20.0.110:6379) - Cache ✅  
-3. **Ollama** (172.20.0.30:11434) - LLM Engine ✅
-4. **STT API** (172.20.0.10:8003) - Speech-to-Text ✅
-5. **TTS API** (172.20.0.20:8002) - Text-to-Speech ✅
-6. **🚨 Backend API** (172.20.0.40:8000) - MANQUANT ❌
-7. **🚨 Interface** (172.20.0.50:3000/8001) - MANQUANT ❌
+1. **PostgreSQL** (172.20.0.100:5432) - Base de données 
+2. **Redis** (172.20.0.110:6379) - Cache   
+3. **Ollama** (172.20.0.30:11434) - LLM Engine 
+4. **STT API** (172.20.0.10:8003) - Speech-to-Text 
+5. **TTS API** (172.20.0.20:8002) - Text-to-Speech 
+6. ** Backend API** (172.20.0.40:8000) - MANQUANT 
+7. ** Interface** (172.20.0.50:3000/8001) - MANQUANT 
 
-### 📋 STATUT ACTUEL (MISE À JOUR 18:15)
+###  STATUT ACTUEL (MISE À JOUR 18:15)
 ```bash
 # CONTAINERS ACTIFS (5/7)
 docker ps
-# ✅ jarvis_postgres - PostgreSQL (172.20.0.100:5432)
-# ✅ jarvis_redis - Redis (172.20.0.110:6379)
-# ✅ jarvis_ollama - Ollama (172.20.0.30:11434)
-# ✅ jarvis_stt_api - STT API (172.20.0.10:8003) - HEALTHY
-# ✅ jarvis_tts_api - TTS API (172.20.0.20:8002) - HEALTHY
-# 🔄 jarvis_backend - Backend API (BUILD EN COURS avec Python 3.12 + setuptools)
-# ❌ jarvis_interface - Interface (PRÊT À CONSTRUIRE)
+#  jarvis_postgres - PostgreSQL (172.20.0.100:5432)
+#  jarvis_redis - Redis (172.20.0.110:6379)
+#  jarvis_ollama - Ollama (172.20.0.30:11434)
+#  jarvis_stt_api - STT API (172.20.0.10:8003) - HEALTHY
+#  jarvis_tts_api - TTS API (172.20.0.20:8002) - HEALTHY
+#  jarvis_backend - Backend API (BUILD EN COURS avec Python 3.12 + setuptools)
+#  jarvis_interface - Interface (PRÊT À CONSTRUIRE)
 ```
 
-### 🔧 CORRECTIONS APPLIQUÉES & PROBLÈME ESPACE DISQUE IDENTIFIÉ
+###  CORRECTIONS APPLIQUÉES & PROBLÈME ESPACE DISQUE IDENTIFIÉ
 - **Requirements restaurées** : Toutes dépendances Backend/STT/TTS complètes
 - **Dockerfile amélioré** : Ajout build-essential, setuptools, wheel  
 - **Build fixes** : Python 3.12 avec outils de compilation
-- **Connectivité testée** : Communication inter-containers validée ✅
-- **🚨 PROBLÈME CRITIQUE** : Partition root 120GB saturée par Docker
-- **📋 SOLUTION PLANIFIÉE** : Migration Docker vers /home/jarvis-docker/
-- **📄 PROCÉDURE** : Voir docs/MIGRATION_DOCKER_HOME.md
+- **Connectivité testée** : Communication inter-containers validée 
+- ** PROBLÈME CRITIQUE** : Partition root 120GB saturée par Docker
+- ** SOLUTION PLANIFIÉE** : Migration Docker vers /home/jarvis-docker/
+- ** PROCÉDURE** : Voir docs/MIGRATION_DOCKER_HOME.md
 
-### 🎯 RÈGLES DE COMPLETION ABSOLUES
+###  RÈGLES DE COMPLETION ABSOLUES
 
 1. **BACKEND OBLIGATOIRE** : Le container `jarvis_backend` DOIT être construit et démarré
 2. **INTERFACE OBLIGATOIRE** : Le container `jarvis_interface` DOIT être construit et démarré  
@@ -50,14 +50,14 @@ docker ps
 4. **TESTS REQUIS** : Connectivité inter-containers DOIT être validée
 5. **ARCHITECTURE FINALE** : AUCUN service ne peut être omis ou simplifié
 
-### 🔧 ACTIONS IMMÉDIATES REQUISES
+###  ACTIONS IMMÉDIATES REQUISES
 
-**🚨 PRIORITÉ ABSOLUE - MIGRATION DOCKER :**
+** PRIORITÉ ABSOLUE - MIGRATION DOCKER :**
 1. **Exécuter migration Docker** vers /home (voir MIGRATION_DOCKER_HOME.md)
 2. **Libérer espace disque** partition root (120GB → /home)
 3. **Reconfigurer Docker daemon** avec nouveau data-root
 
-**📋 APRÈS MIGRATION :**
+** APRÈS MIGRATION :**
 4. **Terminer le build Backend** avec plus d'espace
 5. **Démarrer le container jarvis_backend** 
 6. **Construire l'image jarvis_interface**
@@ -66,9 +66,9 @@ docker ps
 
 ---
 
-## 🎯 Paramètres fondamentaux
+##  Paramètres fondamentaux
 
-### 📋 Règles ABSOLUES - NON NÉGOCIABLES
+###  Règles ABSOLUES - NON NÉGOCIABLES
 
 1. **LECTURE OBLIGATOIRE** : Toujours lire TOUS les fichiers .md du dossier `/docs/` avant toute action
 2. **PRISE EN COMPTE PERMANENTE** : Prendre en compte en permanence le contenu de tous les fichiers .md
@@ -87,9 +87,9 @@ docker ps
 15. **COMMANDE "STOP JARVIS"** : Quand Enzo dit "stop jarvis", arrêter PROPREMENT tous les services Jarvis (graceful shutdown) pour éviter la corruption
 16. **ERREURS RÉCURRENTES À ÉVITER** : Toujours vérifier l'état des containers avant de les recréer, utiliser "docker start" au lieu de "docker run" pour containers existants
 
-### 🤖 AUTO-INITIALISATION OBLIGATOIRE
+###  AUTO-INITIALISATION OBLIGATOIRE
 
-**🚨 DÉCLENCHEMENT AUTOMATIQUE À L'OUVERTURE DU PROJET :**
+** DÉCLENCHEMENT AUTOMATIQUE À L'OUVERTURE DU PROJET :**
 
 **Quand Claude Code s'ouvre dans le répertoire du projet Jarvis :**
 1. **DÉTECTION AUTOMATIQUE** : Présence de `/CLAUDE.md` à la racine
@@ -101,9 +101,9 @@ docker ps
 
 **Si auto-init échoue → Afficher : "Tapez 'lis doc' pour initialiser"**
 
-### 🔄 Workflow OBLIGATOIRE à chaque interaction
+###  Workflow OBLIGATOIRE à chaque interaction
 
-**🚨 AVANT CHAQUE RÉPONSE - SYNCHRONISATION AUTOMATIQUE OBLIGATOIRE :**
+** AVANT CHAQUE RÉPONSE - SYNCHRONISATION AUTOMATIQUE OBLIGATOIRE :**
 
 1. **LECTURE AUTOMATIQUE COMPLÈTE** de TOUS les fichiers .md du projet :
    - `/docs/CLAUDE_PARAMS.md` (ce fichier) EN PREMIER
@@ -131,7 +131,7 @@ docker ps
 10. **CONTRÔLER DUPLICATIONS** : Vérifier qu'il n'y a pas de doublons entre fichiers
 11. **OPTIMISER SI NÉCESSAIRE** : Fusionner contenus dupliqués en gardant le plus utile
 
-### 📝 Règles de documentation STRICTES
+###  Règles de documentation STRICTES
 
 - **JAMAIS supprimer** de contenu existant
 - **TOUJOURS ajouter** aux fichiers existants
@@ -150,7 +150,7 @@ docker ps
 - **CODE ROBUSTE** : Générer du code propre, structuré, robuste avec documentation
 - **DIAGNOSTICS DÉTAILLÉS** : Fournir des diagnostics complets en cas d'échec
 
-### 🏷️ Règles de marquage dans le code OBLIGATOIRES
+###  Règles de marquage dans le code OBLIGATOIRES
 
 **TOUT code modifié DOIT être marqué avec commentaires :**
 
@@ -180,7 +180,7 @@ def chat_vocal():
 - **BESOIN_AIDE** : Instance bloquée - AUTRES INSTANCES PEUVENT AIDER
 - **REVIEW_DEMANDÉE** : Instance demande relecture - COLLABORATION SOUHAITÉE
 
-### 🎯 Commande spéciale "lis doc" - INITIALISATION INSTANCE
+###  Commande spéciale "lis doc" - INITIALISATION INSTANCE
 
 **Si l'utilisateur tape "lis doc" :**
 
@@ -189,16 +189,16 @@ def chat_vocal():
    - Attribuer automatiquement un numéro d'instance disponible
    - Mettre à jour CLAUDE_CONFIG.md avec le statut ACTIVE
    - Logger l'initialisation dans CLAUDE_UPDATES.md
-   - Confirmer à l'utilisateur : "Instance #X initialisée et prête ✅"
+   - Confirmer à l'utilisateur : "Instance #X initialisée et prête "
 
 2. **RÉPONDRE** avec un résumé de l'état du projet et du statut de l'instance
 
-### 🚨 Confirmation de suppression
+###  Confirmation de suppression
 
 Format OBLIGATOIRE si Enzo demande une suppression :
 
 ```
-⚠️ CONFIRMATION DE SUPPRESSION REQUISE ⚠️
+ CONFIRMATION DE SUPPRESSION REQUISE 
 
 Vous demandez la suppression de :
 [CONTENU À SUPPRIMER]
@@ -211,7 +211,7 @@ Cette action est IRRÉVERSIBLE.
 Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 ```
 
-### 🔒 Protections de sécurité
+###  Protections de sécurité
 
 - **Double vérification** : Toujours relire les fichiers .md après modification
 - **Sauvegarde mentale** : Garder en mémoire le contenu de tous les .md
@@ -224,7 +224,7 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 - **DÉTECTION CONTEXTUELLE** : Réagir selon les contextes (heure, environnement, etc.)
 - **APPEL NATUREL** : Permettre appel naturel sans faux positifs
 
-### 📊 Priorités de fichiers .md
+###  Priorités de fichiers .md
 
 1. **CLAUDE_PARAMS.md** (ce fichier) - PRIORITÉ ABSOLUE
 2. **CLAUDE.md** - Instructions techniques principales
@@ -234,7 +234,7 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 6. **API.md** - Documentation technique
 7. Autres fichiers .md selon le contexte
 
-### 🎯 Objectifs permanents
+###  Objectifs permanents
 
 - **Maintenir** la cohérence de toute la documentation
 - **Préserver** l'historique complet du projet
@@ -248,7 +248,7 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 - **Anticiper** les besoins futurs d'Enzo
 - **Améliorer** continuellement les solutions proposées
 
-### 🔄 Règles anti-duplication
+###  Règles anti-duplication
 
 - **Avant création** : Vérifier qu'un fichier similaire n'existe pas déjà
 - **Avant écriture** : Vérifier que le contenu n'est pas déjà présent ailleurs
@@ -256,7 +256,7 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 - **Signaler les doublons** : Informer Enzo si détection de contenus dupliqués
 - **Proposer optimisation** : Suggérer des améliorations de structure si nécessaire
 
-### 🧠 Comportement d'ingénieur expert
+###  Comportement d'ingénieur expert
 
 - **AUTO-ANALYSE** : Analyser ses propres réponses et proposer des améliorations
 - **REMISE EN QUESTION** : Questionner systématiquement les approches proposées
@@ -269,7 +269,7 @@ Tapez "OUI SUPPRIMER" pour confirmer ou "ANNULER" pour annuler.
 
 ---
 
-## 🔄 Dernière mise à jour
+##  Dernière mise à jour
 **Date** : 2025-01-17 - 18:12
 **Par** : Instance #2 (Claude)
 **Action** : Système de synchronisation automatique révolutionnaire : lecture tous .md avant chaque réponse, marquage EN_COURS/FINI, partage réflexions, skip automatique conflits

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🔥 TESTS CORRUPTION DONNÉES ET RÉSEAU - Système Mémoire Neuromorphique
+ TESTS CORRUPTION DONNÉES ET RÉSEAU - Système Mémoire Neuromorphique
 Tests de résilience face aux pannes réseau, corruption et cas extrêmes
 """
 
@@ -43,7 +43,7 @@ class CorruptionNetworkTester:
     
     async def test_data_corruption_resilience(self):
         """Test résilience face à la corruption de données"""
-        print("🔥 TEST 1: RÉSILIENCE CORRUPTION DONNÉES")
+        print(" TEST 1: RÉSILIENCE CORRUPTION DONNÉES")
         
         try:
             # Créer données corrompues de différents types
@@ -126,19 +126,19 @@ class CorruptionNetworkTester:
                 'details': details
             }
             
-            print(f"   ✅ Gérés: {handled}/{total}")
-            print(f"   ✅ Taux d'erreur: {details['error_rate']*100:.1f}%")
+            print(f"    Gérés: {handled}/{total}")
+            print(f"    Taux d'erreur: {details['error_rate']*100:.1f}%")
             
         except Exception as e:
             self.results['data_corruption'] = {
                 'success': False,
                 'error': str(e)
             }
-            print(f"   ❌ Échec critique: {e}")
+            print(f"    Échec critique: {e}")
     
     async def test_network_timeout_simulation(self):
         """Test simulation timeouts et pannes réseau"""
-        print("🔥 TEST 2: SIMULATION TIMEOUTS RÉSEAU")
+        print(" TEST 2: SIMULATION TIMEOUTS RÉSEAU")
         
         try:
             # Simuler différents types de pannes réseau
@@ -226,18 +226,18 @@ class CorruptionNetworkTester:
                 'details': details
             }
             
-            print(f"   ✅ Succès global: {total_successes}/{total_ops} ({details['overall_success_rate']*100:.1f}%)")
+            print(f"    Succès global: {total_successes}/{total_ops} ({details['overall_success_rate']*100:.1f}%)")
             
         except Exception as e:
             self.results['network_timeouts'] = {
                 'success': False,
                 'error': str(e)
             }
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_database_corruption_recovery(self):
         """Test récupération après corruption base de données"""
-        print("🔥 TEST 3: RÉCUPÉRATION CORRUPTION BDD")
+        print(" TEST 3: RÉCUPÉRATION CORRUPTION BDD")
         
         try:
             # Créer base SQLite temporaire pour tester
@@ -347,18 +347,18 @@ class CorruptionNetworkTester:
                 'details': details
             }
             
-            print(f"   ✅ Récupérations réussies: {successful_recoveries}/{total_tests}")
+            print(f"    Récupérations réussies: {successful_recoveries}/{total_tests}")
             
         except Exception as e:
             self.results['database_corruption'] = {
                 'success': False,
                 'error': str(e)
             }
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_signal_interruption_handling(self):
         """Test gestion interruptions système (SIGINT, SIGTERM)"""
-        print("🔥 TEST 4: GESTION INTERRUPTIONS SYSTÈME")
+        print(" TEST 4: GESTION INTERRUPTIONS SYSTÈME")
         
         try:
             interrupted_operations = []
@@ -420,20 +420,20 @@ class CorruptionNetworkTester:
                 'details': details
             }
             
-            print(f"   ✅ Complétées: {len(completed_operations)}")
-            print(f"   ✅ Interrompues proprement: {len(interrupted_operations)}")
-            print(f"   ✅ Annulées: {cancelled}")
+            print(f"    Complétées: {len(completed_operations)}")
+            print(f"    Interrompues proprement: {len(interrupted_operations)}")
+            print(f"    Annulées: {cancelled}")
             
         except Exception as e:
             self.results['signal_interruption'] = {
                 'success': False,
                 'error': str(e)
             }
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_qdrant_connection_failures(self):
         """Test pannes connexion Qdrant avec fallback"""
-        print("🔥 TEST 5: PANNES CONNEXION QDRANT")
+        print(" TEST 5: PANNES CONNEXION QDRANT")
         
         try:
             # Simuler différents états de Qdrant
@@ -512,18 +512,18 @@ class CorruptionNetworkTester:
                 'details': details
             }
             
-            print(f"   ✅ Fallback global: {total_fallbacks}/{total_ops} ({details['overall_fallback_rate']*100:.1f}%)")
+            print(f"    Fallback global: {total_fallbacks}/{total_ops} ({details['overall_fallback_rate']*100:.1f}%)")
             
         except Exception as e:
             self.results['qdrant_failures'] = {
                 'success': False,
                 'error': str(e)
             }
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def run_all_corruption_network_tests(self):
         """Execute tous les tests de corruption et réseau"""
-        print("🔥 LANCEMENT TESTS CORRUPTION ET RÉSEAU")
+        print(" LANCEMENT TESTS CORRUPTION ET RÉSEAU")
         print("=" * 80)
         
         tests = [
@@ -543,7 +543,7 @@ class CorruptionNetworkTester:
             total_tests = len(self.results)
             successful_tests = sum(1 for r in self.results.values() if r.get('success', False))
             
-            print("🔥 RAPPORT FINAL CORRUPTION ET RÉSEAU")
+            print(" RAPPORT FINAL CORRUPTION ET RÉSEAU")
             print("=" * 60)
             print(f"Tests exécutés: {total_tests}")
             print(f"Succès: {successful_tests}")
@@ -552,20 +552,20 @@ class CorruptionNetworkTester:
             
             # Détails par test
             for test_name, result in self.results.items():
-                status = "✅" if result.get('success', False) else "❌"
+                status = "" if result.get('success', False) else ""
                 print(f"{status} {test_name}")
                 if 'error' in result:
                     print(f"    Erreur: {result['error']}")
             
             if successful_tests / total_tests >= 0.8:
-                print("\n🏆 SYSTÈME TRÈS RÉSISTANT AUX PANNES")
-                print("✅ Excellent fallback et récupération")
+                print("\n SYSTÈME TRÈS RÉSISTANT AUX PANNES")
+                print(" Excellent fallback et récupération")
             elif successful_tests / total_tests >= 0.6:
-                print("\n⚠️ SYSTÈME MOYENNEMENT RÉSILIENT")
-                print("🔧 Améliorations possibles")
+                print("\n SYSTÈME MOYENNEMENT RÉSILIENT")
+                print(" Améliorations possibles")
             else:
-                print("\n❌ SYSTÈME FRAGILE AUX PANNES")
-                print("🚫 Corrections critiques nécessaires")
+                print("\n SYSTÈME FRAGILE AUX PANNES")
+                print(" Corrections critiques nécessaires")
             
             return successful_tests / total_tests >= 0.6
             

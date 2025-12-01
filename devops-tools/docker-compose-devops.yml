@@ -1,9 +1,9 @@
-# 🛠️ Stack DevOps complète pour Jarvis
+#  Stack DevOps complète pour Jarvis
 # Jenkins + ArgoCD + Prometheus + Grafana + Loki
 
 services:
   # ===========================================
-  # 🔧 CI/CD - JENKINS
+  #  CI/CD - JENKINS
   # ===========================================
   jenkins:
     image: jenkins/jenkins:lts
@@ -24,13 +24,13 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 🚀 GITOPS - ARGOCD (Running on K3s)
+  #  GITOPS - ARGOCD (Running on K3s)
   # ArgoCD is now deployed on local Kubernetes cluster
   # Access via: kubectl port-forward svc/argocd-server -n argocd 8081:443
   # ===========================================
 
   # ===========================================
-  # 📊 MONITORING - PROMETHEUS
+  #  MONITORING - PROMETHEUS
   # ===========================================
   prometheus:
     image: prom/prometheus:latest
@@ -55,7 +55,7 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 📈 DASHBOARDS - GRAFANA
+  #  DASHBOARDS - GRAFANA
   # ===========================================
   grafana:
     image: grafana/grafana:latest
@@ -76,7 +76,7 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 📝 LOGS - LOKI
+  #  LOGS - LOKI
   # ===========================================
   loki:
     image: grafana/loki:latest
@@ -107,7 +107,7 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 🚨 ALERTING - ALERTMANAGER
+  #  ALERTING - ALERTMANAGER
   # ===========================================
   alertmanager:
     image: prom/alertmanager:latest
@@ -134,7 +134,7 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 📊 EXPORTERS - MÉTRIQUES SYSTÈME
+  #  EXPORTERS - MÉTRIQUES SYSTÈME
   # ===========================================
   node-exporter:
     image: prom/node-exporter:latest
@@ -175,7 +175,7 @@ services:
       - jarvis_network
 
   # ===========================================
-  # 🌐 REVERSE PROXY - NGINX
+  #  REVERSE PROXY - NGINX
   # ===========================================
   nginx-devops:
     image: nginx:alpine

@@ -131,22 +131,22 @@ impl AppError {
 
         match self {
             AppError::Unauthorized(_) | AppError::Forbidden(_) | AppError::InvalidToken(_) => {
-                tracing::warn!("🔐 SECURITY: {}", log_msg);
+                tracing::warn!(" SECURITY: {}", log_msg);
             }
             AppError::ValidationFailed(_) | AppError::InvalidInput(_) => {
-                tracing::warn!("⚠️  VALIDATION: {}", log_msg);
+                tracing::warn!("  VALIDATION: {}", log_msg);
             }
             AppError::RateLimitExceeded(_) => {
-                tracing::warn!("🚨 RATE LIMIT: {}", log_msg);
+                tracing::warn!(" RATE LIMIT: {}", log_msg);
             }
             AppError::NotFound(_) | AppError::Conflict(_) => {
-                tracing::info!("ℹ️  BUSINESS: {}", log_msg);
+                tracing::info!("ℹ  BUSINESS: {}", log_msg);
             }
             AppError::InternalError(_) | AppError::DatabaseError(_) => {
-                tracing::error!("❌ ERROR: {}", log_msg);
+                tracing::error!(" ERROR: {}", log_msg);
             }
             AppError::ServiceUnavailable(_) | AppError::ExternalServiceError(_) => {
-                tracing::error!("⚠️  SERVICE: {}", log_msg);
+                tracing::error!("  SERVICE: {}", log_msg);
             }
         }
     }
@@ -273,7 +273,7 @@ impl AuditLog {
             event = event,
             user_id = user_id,
             details = details,
-            "🔐 SECURITY EVENT"
+            " SECURITY EVENT"
         );
     }
 
@@ -283,7 +283,7 @@ impl AuditLog {
             username = username,
             success = success,
             ip = ip,
-            "🔑 AUTH ATTEMPT"
+            " AUTH ATTEMPT"
         );
     }
 
@@ -293,7 +293,7 @@ impl AuditLog {
             user_id = user_id,
             resource = resource,
             action = action,
-            "📊 DATA ACCESS"
+            " DATA ACCESS"
         );
     }
 
@@ -303,7 +303,7 @@ impl AuditLog {
             ip = ip,
             endpoint = endpoint,
             limit = limit,
-            "🚨 RATE LIMIT VIOLATION"
+            " RATE LIMIT VIOLATION"
         );
     }
 
@@ -313,7 +313,7 @@ impl AuditLog {
             endpoint = endpoint,
             field = field,
             reason = reason,
-            "⚠️  VALIDATION FAILURE"
+            "  VALIDATION FAILURE"
         );
     }
 }

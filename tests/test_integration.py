@@ -39,7 +39,7 @@ class Settings:
 async def test_integration():
     """Test complet de l'intégration"""
     try:
-        logger.info("🧪 [TEST] Démarrage test intégration gpt-oss:20B...")
+        logger.info(" [TEST] Démarrage test intégration gpt-oss:20B...")
         
         # 1. Initialisation des services
         settings = Settings()
@@ -47,7 +47,7 @@ async def test_integration():
         database = Database(config)
         
         # Services
-        logger.info("📦 [TEST] Initialisation des services...")
+        logger.info(" [TEST] Initialisation des services...")
         llm_service = LLMService(settings)
         web_search_service = WebSearchService(settings)
         brain_memory_service = MemoryManager(database)
@@ -58,14 +58,14 @@ async def test_integration():
         await brain_memory_service.initialize()
         
         # Injection des services
-        logger.info("🔗 [TEST] Injection des services dans LLM...")
+        logger.info(" [TEST] Injection des services dans LLM...")
         llm_service.inject_services(
             web_search_service=web_search_service,
             brain_memory_service=brain_memory_service
         )
         
         # 2. Test mémoire persistante
-        logger.info("🧠 [TEST] Test mémoire persistante...")
+        logger.info(" [TEST] Test mémoire persistante...")
         user_id = "test_user_enzo"
         
         # Premier message pour créer une mémoire
@@ -74,7 +74,7 @@ async def test_integration():
             context={},
             user_id=user_id
         )
-        logger.info(f"📝 [TEST] Réponse 1: {response1[:100]}...")
+        logger.info(f" [TEST] Réponse 1: {response1[:100]}...")
         
         # Deuxième message pour tester la mémoire
         response2 = await llm_service.generate_response(
@@ -82,31 +82,31 @@ async def test_integration():
             context={},
             user_id=user_id
         )
-        logger.info(f"🧠 [TEST] Réponse mémoire: {response2[:100]}...")
+        logger.info(f" [TEST] Réponse mémoire: {response2[:100]}...")
         
         # 3. Test accès internet
-        logger.info("🌐 [TEST] Test accès internet...")
+        logger.info(" [TEST] Test accès internet...")
         response3 = await llm_service.generate_response(
             message="Quelles sont les dernières actualités en cybersécurité ?",
             context={},
             user_id=user_id
         )
-        logger.info(f"📰 [TEST] Réponse web: {response3[:100]}...")
+        logger.info(f" [TEST] Réponse web: {response3[:100]}...")
         
         # 4. Test combiné mémoire + internet
-        logger.info("🚀 [TEST] Test combiné mémoire + internet...")
+        logger.info(" [TEST] Test combiné mémoire + internet...")
         response4 = await llm_service.generate_response(
             message="Recherche des nouvelles sur la cybersécurité qui pourraient m'intéresser à Perpignan",
             context={},
             user_id=user_id
         )
-        logger.info(f"🎯 [TEST] Réponse combinée: {response4[:100]}...")
+        logger.info(f" [TEST] Réponse combinée: {response4[:100]}...")
         
-        logger.info("✅ [TEST] Tous les tests réussis !")
-        logger.info("✅ [TEST] gpt-oss:20B dispose maintenant de:")
-        logger.info("  🧠 Mémoire persistante entre conversations")
-        logger.info("  🌐 Accès internet en temps réel")
-        logger.info("  🤖 Intégration complète des services")
+        logger.info(" [TEST] Tous les tests réussis !")
+        logger.info(" [TEST] gpt-oss:20B dispose maintenant de:")
+        logger.info("   Mémoire persistante entre conversations")
+        logger.info("   Accès internet en temps réel")
+        logger.info("   Intégration complète des services")
         
         # Fermeture propre
         await llm_service.close()
@@ -114,7 +114,7 @@ async def test_integration():
         # memory_manager n'a pas de méthode close()
         
     except Exception as e:
-        logger.error(f"❌ [TEST] Erreur test: {e}")
+        logger.error(f" [TEST] Erreur test: {e}")
         import traceback
         traceback.print_exc()
 

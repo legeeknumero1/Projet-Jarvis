@@ -1,20 +1,20 @@
-# 🚀 Quick Start - Jarvis Rust Backend
+#  Quick Start - Jarvis Rust Backend
 
 **Démarrer le backend Rust en 5 minutes**
 
 ---
 
-## 📋 Prérequis
+##  Prérequis
 
-- ✅ Rust 1.90+ ([installer ici](https://rustup.rs/))
-- ✅ Docker & Docker Compose (optionnel)
-- ✅ Quelques GBs d'espace disque pour les dépendances
+-  Rust 1.90+ ([installer ici](https://rustup.rs/))
+-  Docker & Docker Compose (optionnel)
+-  Quelques GBs d'espace disque pour les dépendances
 
 ---
 
-## ⚡ Option 1: Démarrage Local (Rapide)
+##  Option 1: Démarrage Local (Rapide)
 
-### 1️⃣ Cloner et configurer
+### 1⃣ Cloner et configurer
 
 ```bash
 cd Projet-Jarvis/core
@@ -23,7 +23,7 @@ cd Projet-Jarvis/core
 cp .env.example .env
 ```
 
-### 2️⃣ Compiler et lancer
+### 2⃣ Compiler et lancer
 
 ```bash
 # Compilation (première fois ~30-60s)
@@ -33,7 +33,7 @@ cargo build --release
 ./target/release/jarvis-core
 ```
 
-### 3️⃣ Vérifier que ça marche
+### 3⃣ Vérifier que ça marche
 
 ```bash
 # Dans un autre terminal
@@ -47,13 +47,13 @@ curl http://localhost:8100/health
 # }
 ```
 
-✅ **Le serveur écoute sur `http://localhost:8100`**
+ **Le serveur écoute sur `http://localhost:8100`**
 
 ---
 
-## 🐳 Option 2: Démarrage Docker (Recommandé)
+##  Option 2: Démarrage Docker (Recommandé)
 
-### 1️⃣ Construire l'image
+### 1⃣ Construire l'image
 
 ```bash
 cd Projet-Jarvis/core
@@ -61,13 +61,13 @@ cd Projet-Jarvis/core
 docker build -t jarvis-core:1.9.0 .
 ```
 
-### 2️⃣ Lancer avec Docker Compose
+### 2⃣ Lancer avec Docker Compose
 
 ```bash
 docker-compose up -d
 ```
 
-### 3️⃣ Vérifier que c'est opérationnel
+### 3⃣ Vérifier que c'est opérationnel
 
 ```bash
 # Voir les logs
@@ -77,7 +77,7 @@ docker logs -f jarvis-core
 curl http://localhost:8100/health
 ```
 
-✅ **Stack complète lancée:**
+ **Stack complète lancée:**
 - Port 8100 : Rust Backend
 - Port 8005 : Python Bridges (placeholder)
 - Port 8004 : Audio Engine (placeholder)
@@ -87,7 +87,7 @@ curl http://localhost:8100/health
 
 ---
 
-## 🧪 Tester les Endpoints
+##  Tester les Endpoints
 
 ### Health Check
 
@@ -135,7 +135,7 @@ curl -X POST http://localhost:8100/api/memory/add \
 
 ---
 
-## 📊 Monitoring
+##  Monitoring
 
 ### Logs détaillés
 
@@ -158,7 +158,7 @@ curl http://localhost:8100/metrics
 
 ---
 
-## 🛑 Arrêter les services
+##  Arrêter les services
 
 ### Local
 
@@ -174,7 +174,7 @@ docker-compose down
 
 ---
 
-## 🔧 Configuration
+##  Configuration
 
 Modifier `.env` pour changer les paramètres:
 
@@ -191,7 +191,7 @@ AUDIO_ENGINE_URL=http://localhost:8004
 
 ---
 
-## 📚 Prochaines étapes
+##  Prochaines étapes
 
 1. **Lire la [documentation complète](./README.md)**
 2. **Explorer le code source** dans `src/`
@@ -202,7 +202,7 @@ AUDIO_ENGINE_URL=http://localhost:8004
 
 ---
 
-## 🆘 Troubleshooting
+##  Troubleshooting
 
 ### Port 8100 déjà utilisé
 
@@ -239,13 +239,13 @@ cargo --version
 
 ---
 
-## 📖 Ressources
+##  Ressources
 
-- 🦀 [Documentation Rust officielle](https://doc.rust-lang.org)
-- 🚀 [Axum Web Framework](https://github.com/tokio-rs/axum)
-- 📚 [Tokio Async Runtime](https://tokio.rs)
-- 🐳 [Docker Documentation](https://docs.docker.com)
+-  [Documentation Rust officielle](https://doc.rust-lang.org)
+-  [Axum Web Framework](https://github.com/tokio-rs/axum)
+-  [Tokio Async Runtime](https://tokio.rs)
+-  [Docker Documentation](https://docs.docker.com)
 
 ---
 
-**✨ Bienvenue dans le futur du backend Rust avec Jarvis! 🚀**
+** Bienvenue dans le futur du backend Rust avec Jarvis! **

@@ -116,21 +116,21 @@ python -m pytest       # Python tests
 ## Project Structure
 
 Projet-Jarvis/
-├── core/                      # Phase 1: Rust Backend
-├── backend-audio-cpp/         # Phase 2: C++ Audio
-├── backend-python-bridges/    # Phase 3: Python IA
-├── backend-rust-db/           # Phase 4: DB Layer
-├── backend-rust-mqtt/         # Phase 5: MQTT
-├── monitoring-go/             # Phase 6: Go Monitoring
-├── frontend/                  # Phase 7: React Frontend
-├── backend-lua-plugins/       # Phase 8: Lua Plugins
-├── clustering-elixir/         # Phase 9: Elixir HA
-├── docs/                      # Documentation
-├── config/                    # Configuration files
-├── scripts/                   # Utilities
-├── tests/                     # Tests
-├── docker-compose.yml         # Orchestration
-└── certs/                     # TLS certificates
+ core/                      # Phase 1: Rust Backend
+ backend-audio-cpp/         # Phase 2: C++ Audio
+ backend-python-bridges/    # Phase 3: Python IA
+ backend-rust-db/           # Phase 4: DB Layer
+ backend-rust-mqtt/         # Phase 5: MQTT
+ monitoring-go/             # Phase 6: Go Monitoring
+ frontend/                  # Phase 7: React Frontend
+ backend-lua-plugins/       # Phase 8: Lua Plugins
+ clustering-elixir/         # Phase 9: Elixir HA
+ docs/                      # Documentation
+ config/                    # Configuration files
+ scripts/                   # Utilities
+ tests/                     # Tests
+ docker-compose.yml         # Orchestration
+ certs/                     # TLS certificates
 
 ---
 

@@ -117,25 +117,25 @@ impl SearchIndex {
 
             let conversation_id = retrieved_doc
                 .get_first(self.conversation_id)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 
             let user_message = retrieved_doc
                 .get_first(self.user_message)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 
             let bot_response = retrieved_doc
                 .get_first(self.bot_response)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 
             let timestamp = retrieved_doc
                 .get_first(self.timestamp)
-                .and_then(|v| v.as_text())
+                .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 

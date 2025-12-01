@@ -23,14 +23,14 @@ pub async fn add_memory(
     // ============================================================================
     let validator = MemoryContentValidator::new(req.content.clone(), req.importance);
     if let Err(e) = validator.validate() {
-        tracing::warn!("🚨 MEMORY VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        tracing::warn!(" MEMORY VALIDATION FAILED: {} from user {}", e, claims.user_id);
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid memory: {}", e),
         ));
     }
 
-    info!("💾 Adding memory for user: {}", claims.user_id);
+    info!(" Adding memory for user: {}", claims.user_id);
     let memory = MemoryEntry {
         id: Uuid::new_v4().to_string(),
         content: req.content,
@@ -52,14 +52,14 @@ pub async fn search_memory(
     // ============================================================================
     let validator = SearchQueryValidator::new(req.query.clone(), req.limit);
     if let Err(e) = validator.validate() {
-        tracing::warn!("🚨 SEARCH VALIDATION FAILED: {} from user {}", e, claims.user_id);
+        tracing::warn!(" SEARCH VALIDATION FAILED: {} from user {}", e, claims.user_id);
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid search: {}", e),
         ));
     }
 
-    info!("🔍 Searching memory for user: {}", claims.user_id);
+    info!(" Searching memory for user: {}", claims.user_id);
     let results = vec![
         MemoryEntry {
             id: Uuid::new_v4().to_string(),
@@ -82,7 +82,7 @@ pub async fn list_memories(
     ValidatedJwt(claims): ValidatedJwt,
     State(_state): State<Arc<AppState>>,
 ) -> (StatusCode, Json<Vec<MemoryEntry>>) {
-    info!("📚 Listing memories for user: {}", claims.user_id);
+    info!(" Listing memories for user: {}", claims.user_id);
     let memories = vec![
         MemoryEntry {
             id: Uuid::new_v4().to_string(),

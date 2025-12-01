@@ -38,7 +38,7 @@ pub struct PluginManager {
 impl PluginManager {
     /// Create new plugin manager
     pub async fn new(plugins_dir: &str) -> PluginResult<Self> {
-        info!("🧩 Loading plugins from: {}", plugins_dir);
+        info!(" Loading plugins from: {}", plugins_dir);
 
         let mut plugins = HashMap::new();
         let mut manager = Self {
@@ -73,7 +73,7 @@ impl PluginManager {
                 };
 
                 self.plugins.insert(metadata.id, plugin);
-                info!("✅ Discovered plugin: {}", metadata.name);
+                info!(" Discovered plugin: {}", metadata.name);
             }
         }
 

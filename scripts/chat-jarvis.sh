@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${BLUE}🤖 Chat avec Jarvis${NC}"
+echo -e "${BLUE} Chat avec Jarvis${NC}"
 echo "================================="
 
 if [ $# -eq 0 ]; then

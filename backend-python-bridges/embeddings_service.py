@@ -31,15 +31,15 @@ class EmbeddingsService:
                         - all-mpnet-base-v2 (meilleure qualité, plus lent)
         """
         self.model_name = model_name
-        logger.info(f"🧠 Loading embeddings model: {model_name}")
+        logger.info(f" Loading embeddings model: {model_name}")
 
         try:
             from sentence_transformers import SentenceTransformer
             self.model = SentenceTransformer(model_name)
             self.dimension = self.model.get_sentence_embedding_dimension()
-            logger.info(f"✅ Embeddings model loaded: {self.dimension}D vectors")
+            logger.info(f" Embeddings model loaded: {self.dimension}D vectors")
         except ImportError:
-            logger.error("❌ sentence-transformers not installed")
+            logger.error(" sentence-transformers not installed")
             self.model = None
             self.dimension = 384
 
@@ -54,7 +54,7 @@ class EmbeddingsService:
             Embedding avec vecteur et métadonnées
         """
         if not self.model:
-            logger.error("❌ Embeddings model not available")
+            logger.error(" Embeddings model not available")
             return Embedding(
                 text=text,
                 vector=np.zeros(self.dimension, dtype=np.float32),
@@ -72,7 +72,7 @@ class EmbeddingsService:
             )
 
         except Exception as e:
-            logger.error(f"❌ Embedding error: {e}")
+            logger.error(f" Embedding error: {e}")
             return Embedding(
                 text=text,
                 vector=np.zeros(self.dimension, dtype=np.float32),
@@ -90,7 +90,7 @@ class EmbeddingsService:
             Liste d'Embeddings
         """
         if not self.model:
-            logger.error("❌ Embeddings model not available")
+            logger.error(" Embeddings model not available")
             return [
                 Embedding(
                     text=text,
@@ -101,7 +101,7 @@ class EmbeddingsService:
             ]
 
         try:
-            logger.debug(f"🧠 Embedding {len(texts)} texts")
+            logger.debug(f" Embedding {len(texts)} texts")
 
             # Vectoriser batch
             embeddings = self.model.encode(texts, convert_to_numpy=True)
@@ -115,11 +115,11 @@ class EmbeddingsService:
                 for text, embedding in zip(texts, embeddings)
             ]
 
-            logger.debug(f"✅ Embedded {len(results)} texts")
+            logger.debug(f" Embedded {len(results)} texts")
             return results
 
         except Exception as e:
-            logger.error(f"❌ Batch embedding error: {e}")
+            logger.error(f" Batch embedding error: {e}")
             return [
                 Embedding(
                     text=text,
@@ -152,7 +152,7 @@ class EmbeddingsService:
             return float(similarity)
 
         except Exception as e:
-            logger.error(f"❌ Similarity calculation error: {e}")
+            logger.error(f" Similarity calculation error: {e}")
             return 0.0
 
 

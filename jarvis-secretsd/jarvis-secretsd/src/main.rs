@@ -43,8 +43,8 @@ async fn main() -> Result<()> {
     // Initialize logging
     init_logging(&config)?;
 
-    info!("🚀 Starting jarvis-secretsd v{}", env!("CARGO_PKG_VERSION"));
-    info!("📁 Config loaded from: {}", config_path);
+    info!(" Starting jarvis-secretsd v{}", env!("CARGO_PKG_VERSION"));
+    info!(" Config loaded from: {}", config_path);
 
     // 1. Ensure master key exists or generate
     let master = ensure_master_key(&config.paths.master_key_path)?;
@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
     )?;
     let store = Arc::new(store);
 
-    info!("✅ Vault loaded: {}", config.paths.vault_path);
+    info!(" Vault loaded: {}", config.paths.vault_path);
 
     // 3. Load policy
     let policy = Policy::load(&config.security.rbac_policy_path)?;
@@ -90,13 +90,13 @@ async fn main() -> Result<()> {
 
     // 8. Start server
     let bind_addr = config.server.bind_addr.clone();
-    info!("🌐 Starting server on {}", bind_addr);
+    info!(" Starting server on {}", bind_addr);
 
     let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .with_context(|| format!("failed to bind to {}", bind_addr))?;
 
-    info!("✅ Server started successfully");
+    info!(" Server started successfully");
     audit.log_success("server_start", None, None);
 
     axum::serve(listener, app)
@@ -131,7 +131,7 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
     let path_obj = Path::new(path);
 
     if path_obj.exists() {
-        info!("🔑 Loading existing master key from {}", path);
+        info!(" Loading existing master key from {}", path);
 
         let bytes = fs::read(path)
             .with_context(|| format!("failed to read master key: {}", path))?;
@@ -145,7 +145,7 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
 
         Ok(key)
     } else {
-        info!("🆕 Generating new master key at {}", path);
+        info!(" Generating new master key at {}", path);
 
         // Ensure directory exists
         if let Some(parent) = path_obj.parent() {
@@ -167,7 +167,7 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
             fs::set_permissions(path, perms)?;
         }
 
-        info!("✅ Generated new master key (32 bytes)");
+        info!(" Generated new master key (32 bytes)");
 
         Ok(key)
     }

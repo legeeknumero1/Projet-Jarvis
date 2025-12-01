@@ -51,12 +51,12 @@ class WhisperClient:
         self.language = language
         self.device = device
 
-        logger.info(f"🎤 Whisper Client initializing: {model_size}")
+        logger.info(f" Whisper Client initializing: {model_size}")
         try:
             self.model = whisper.load_model(model_size, device=device)
-            logger.info(f"✅ Whisper model loaded: {model_size}")
+            logger.info(f" Whisper model loaded: {model_size}")
         except Exception as e:
-            logger.error(f"❌ Error loading Whisper model: {e}")
+            logger.error(f" Error loading Whisper model: {e}")
             raise
 
     def transcribe(
@@ -82,7 +82,7 @@ class WhisperClient:
             import time
             start_time = time.time()
 
-            logger.debug(f"🎤 Transcribing {len(audio) / sample_rate:.1f}s of audio")
+            logger.debug(f" Transcribing {len(audio) / sample_rate:.1f}s of audio")
 
             # Normaliser audio si nécessaire
             if audio.max() > 1.0:
@@ -111,7 +111,7 @@ class WhisperClient:
                     "confidence": segment.get("confidence", 0.0)
                 })
 
-            logger.info(f"✅ Transcription done in {duration_ms:.0f}ms: {result.get('text', '')[:50]}")
+            logger.info(f" Transcription done in {duration_ms:.0f}ms: {result.get('text', '')[:50]}")
 
             return WhisperResult(
                 text=result.get("text", "").strip(),
@@ -122,7 +122,7 @@ class WhisperClient:
             )
 
         except Exception as e:
-            logger.error(f"❌ Transcription error: {e}")
+            logger.error(f" Transcription error: {e}")
             return WhisperResult(
                 text=f"Error: {str(e)}",
                 language="unknown",
@@ -138,7 +138,7 @@ class WhisperClient:
     ) -> WhisperResult:
         """Transcrire un fichier audio"""
         try:
-            logger.info(f"🎤 Transcribing file: {file_path}")
+            logger.info(f" Transcribing file: {file_path}")
             result = self.model.transcribe(
                 file_path,
                 language=language or self.language,
@@ -152,7 +152,7 @@ class WhisperClient:
                 segments=result.get("segments", [])
             )
         except Exception as e:
-            logger.error(f"❌ File transcription error: {e}")
+            logger.error(f" File transcription error: {e}")
             return WhisperResult(
                 text=f"Error: {str(e)}",
                 language="unknown",
@@ -164,7 +164,7 @@ class WhisperClient:
     def set_language(self, language: str):
         """Définir la langue pour les transcriptions futures"""
         self.language = language
-        logger.info(f"🌍 Whisper language set to: {language}")
+        logger.info(f" Whisper language set to: {language}")
 
 
 # Instance globale

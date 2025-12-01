@@ -1,27 +1,27 @@
-# 🤖 Coordination Multi-Instances Claude - Projet Jarvis
+#  Coordination Multi-Instances Claude - Projet Jarvis
 
-## ⚠️ SYSTÈME DE COORDINATION MULTI-INSTANCES ⚠️
+##  SYSTÈME DE COORDINATION MULTI-INSTANCES 
 
 **Ce fichier permet à plusieurs instances Claude Code de travailler simultanément sur le même projet sans conflits.**
 
 ---
 
-## 🎯 État actuel du projet
+##  État actuel du projet
 
-### 📊 Instances actives
-- **Instance #1** : ACTIVE - CONTRÔLE TOTAL UNIQUE ✅ (2025-07-21)
+###  Instances actives
+- **Instance #1** : ACTIVE - CONTRÔLE TOTAL UNIQUE  (2025-07-21)
 - **Instance #2-#11** : TERMINÉES - Toutes instances fermées et consolidées
 
-### 🔄 Dernière synchronisation
+###  Dernière synchronisation
 **Date** : 2025-01-17 - 18:06
 **Par** : Instance #2
 **Action** : Détection et synchronisation avec Instance #1 - Chat vocal IA fonctionnel !
 
 ---
 
-## 📋 Protocole de coordination OBLIGATOIRE
+##  Protocole de coordination OBLIGATOIRE
 
-### 🔴 AVANT TOUTE ACTION - LECTURE OBLIGATOIRE
+###  AVANT TOUTE ACTION - LECTURE OBLIGATOIRE
 
 1. **LIRE** ce fichier `CLAUDE_INSTANCES.md` EN PREMIER
 2. **VÉRIFIER** si une autre instance travaille déjà sur la même tâche
@@ -29,7 +29,7 @@
 4. **ATTENDRE** 30 secondes avant de commencer (éviter conflits)
 5. **METTRE À JOUR** ce fichier après chaque action importante
 
-### 🎯 Règles de collaboration
+###  Règles de collaboration
 
 1. **UNE TÂCHE = UNE INSTANCE** : Éviter le travail simultané sur le même fichier
 2. **COMMUNICATION ASYNCHRONE** : Utiliser ce fichier pour communiquer
@@ -39,7 +39,7 @@
 
 ---
 
-## 🔒 Réservations de tâches
+##  Réservations de tâches
 
 ### Tâches en cours
 ```
@@ -57,7 +57,7 @@
 
 ---
 
-## 📝 Réservation de tâche (TEMPLATE)
+##  Réservation de tâche (TEMPLATE)
 
 **Pour réserver une tâche, copier ce template :**
 
@@ -76,7 +76,7 @@ Prochaine étape: [Action suivante recommandée]
 
 ---
 
-## 🔄 Log d'activité temps réel
+##  Log d'activité temps réel
 
 ### 18:00 - Instance #2
 - **Action** : Création CLAUDE_INSTANCES.md
@@ -94,7 +94,7 @@ Prochaine étape: [Action suivante recommandée]
 
 ---
 
-## 🛠️ Configuration Git (recommandée)
+##  Configuration Git (recommandée)
 
 ### Initialisation recommandée
 ```bash
@@ -124,7 +124,7 @@ git push origin feature/nom-instance-X
 
 ---
 
-## 🔍 Détection de conflits
+##  Détection de conflits
 
 ### Vérifications automatiques
 - **Avant modification** : Vérifier si le fichier n'est pas réservé
@@ -139,31 +139,31 @@ git push origin feature/nom-instance-X
 
 ---
 
-## 📊 État des composants
+##  État des composants
 
 ### Backend (FastAPI)
-- **main.py** : ✅ Fonctionnel
-- **config/** : ✅ Configuré
-- **db/** : ✅ PostgreSQL opérationnel
-- **memory/** : 🔄 En développement
-- **speech/** : 🔄 En développement
-- **integration/** : 🔄 En développement
+- **main.py** :  Fonctionnel
+- **config/** :  Configuré
+- **db/** :  PostgreSQL opérationnel
+- **memory/** :  En développement
+- **speech/** :  En développement
+- **integration/** :  En développement
 
 ### Frontend (React)
-- **Structure** : ✅ Créée
-- **Composants** : 🔄 En développement
-- **Services** : 🔄 En développement
+- **Structure** :  Créée
+- **Composants** :  En développement
+- **Services** :  En développement
 
 ### Infrastructure
-- **Docker** : ✅ Configuré
-- **PostgreSQL** : ✅ Opérationnel
-- **Ollama** : ✅ Fonctionnel (LLaMA 3.1)
-- **Whisper** : ✅ Installé
-- **Piper** : ✅ Installé
+- **Docker** :  Configuré
+- **PostgreSQL** :  Opérationnel
+- **Ollama** :  Fonctionnel (LLaMA 3.1)
+- **Whisper** :  Installé
+- **Piper** :  Installé
 
 ---
 
-## 🎯 Priorités de développement
+##  Priorités de développement
 
 ### P1 - CRITIQUE (à faire en premier)
 1. Reconnaissance vocale Whisper
@@ -182,7 +182,7 @@ git push origin feature/nom-instance-X
 
 ---
 
-## 🔄 Handover entre instances
+##  Handover entre instances
 
 ### Template de handover
 ```
@@ -197,11 +197,11 @@ git push origin feature/nom-instance-X
 
 ---
 
-## 🚨 Urgences et blocages
+##  Urgences et blocages
 
 ### Signaler un blocage
 ```
-🚨 BLOCAGE - Instance #X - HH:MM
+ BLOCAGE - Instance #X - HH:MM
 Tâche: [nom]
 Problème: [description]
 Aide nécessaire: [type d'aide]
@@ -209,7 +209,7 @@ Aide nécessaire: [type d'aide]
 
 ### Demander assistance
 ```
-🆘 ASSISTANCE - Instance #X - HH:MM
+ ASSISTANCE - Instance #X - HH:MM
 Besoin: [description]
 Expertise: [domaine requis]
 Urgence: [haute/moyenne/basse]
@@ -217,14 +217,14 @@ Urgence: [haute/moyenne/basse]
 
 ---
 
-## 🔄 Dernière mise à jour
+##  Dernière mise à jour
 **Date** : 2025-01-17 - 18:00
 **Par** : Instance #2 (Claude)
 **Action** : Création du système de coordination multi-instances
 
 ---
 
-## 📝 Notes importantes
+##  Notes importantes
 
 - **Ce fichier est la SOURCE DE VÉRITÉ** pour la coordination
 - **Mettre à jour OBLIGATOIRE** après chaque action

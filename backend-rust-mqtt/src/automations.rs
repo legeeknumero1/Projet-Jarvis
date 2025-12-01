@@ -61,7 +61,7 @@ pub struct AutomationEngine {
 impl AutomationEngine {
     /// Créer nouveau engine
     pub fn new() -> Self {
-        info!("⚙️ Automation Engine initialized");
+        info!(" Automation Engine initialized");
 
         Self {
             automations: std::sync::Arc::new(tokio::sync::Mutex::new(HashMap::new())),
@@ -75,7 +75,7 @@ impl AutomationEngine {
         let mut automations = self.automations.lock().await;
         automations.insert(automation.id.clone(), automation.clone());
 
-        info!("✅ Automation added: {}", automation.name);
+        info!(" Automation added: {}", automation.name);
         Ok(())
     }
 
@@ -96,7 +96,7 @@ impl AutomationEngine {
         let mut automations = self.automations.lock().await;
         automations.remove(id);
 
-        info!("✅ Automation deleted: {}", id);
+        info!(" Automation deleted: {}", id);
         Ok(())
     }
 

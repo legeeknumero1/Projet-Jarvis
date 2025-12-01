@@ -30,7 +30,7 @@ pub struct SecretsValidator;
 impl SecretsValidator {
     /// Valider tous les secrets requis
     pub fn validate_all() -> Result<(), String> {
-        info!("🔐 Validating secrets configuration...");
+        info!(" Validating secrets configuration...");
 
         // Validate JWT Secret
         Self::validate_jwt_secret()?;
@@ -41,7 +41,7 @@ impl SecretsValidator {
         // Validate External Service URLs
         Self::validate_service_urls()?;
 
-        info!("✅ All secrets validated successfully!");
+        info!(" All secrets validated successfully!");
         Ok(())
     }
 
@@ -51,7 +51,7 @@ impl SecretsValidator {
             .unwrap_or_else(|_| "dev-secret-key-change-in-production".to_string());
 
         if jwt_secret.contains("dev-secret-key") || jwt_secret.contains("changeme") {
-            warn!("⚠️  SECURITY WARNING: Using default/insecure JWT_SECRET!");
+            warn!("  SECURITY WARNING: Using default/insecure JWT_SECRET!");
             warn!("   This is ONLY acceptable for development!");
             warn!("   In production, set JWT_SECRET to a secure random value:");
             warn!("   $ openssl rand -base64 32");
@@ -68,7 +68,7 @@ impl SecretsValidator {
             ));
         }
 
-        info!("✅ JWT_SECRET validated (length: {})", jwt_secret.len());
+        info!(" JWT_SECRET validated (length: {})", jwt_secret.len());
         Ok(())
     }
 
@@ -95,7 +95,7 @@ impl SecretsValidator {
             }
         }
 
-        info!("✅ CORS_ORIGINS validated ({} origins)", origin_count);
+        info!(" CORS_ORIGINS validated ({} origins)", origin_count);
         Ok(())
     }
 
@@ -116,7 +116,7 @@ impl SecretsValidator {
                 ));
             }
 
-            info!("✅ {} validated", var_name);
+            info!(" {} validated", var_name);
         }
 
         Ok(())
@@ -134,7 +134,7 @@ impl SecretsValidator {
             if let Ok(value) = env::var(var_name) {
                 if value.to_lowercase().contains(pattern) {
                     warn!(
-                        "🚨 SECURITY WARNING: {} contains insecure pattern: {}",
+                        " SECURITY WARNING: {} contains insecure pattern: {}",
                         var_name, pattern
                     );
                 }
@@ -168,7 +168,7 @@ impl EnvironmentChecklist {
     /// Afficher une checklist des variables d'environnement
     pub fn print_requirements() {
         eprintln!("\n{}", "=".repeat(80));
-        eprintln!("🔐 JARVIS SECRET MANAGEMENT - REQUIRED ENVIRONMENT VARIABLES");
+        eprintln!(" JARVIS SECRET MANAGEMENT - REQUIRED ENVIRONMENT VARIABLES");
         eprintln!("{}\n", "=".repeat(80));
 
         eprintln!("CRITICAL SECRETS (MUST BE CHANGED):");
@@ -196,8 +196,8 @@ impl EnvironmentChecklist {
         eprintln!();
 
         eprintln!("{}", "=".repeat(80));
-        eprintln!("📋 For more info, see: .env.template");
-        eprintln!("📖 Secret Rotation Guide: SECURITY_FIXES_2025_10_25.md");
+        eprintln!(" For more info, see: .env.template");
+        eprintln!(" Secret Rotation Guide: SECURITY_FIXES_2025_10_25.md");
         eprintln!("{}\n", "=".repeat(80));
     }
 }

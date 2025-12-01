@@ -33,8 +33,8 @@ class MultiSearchManagerMCP:
         # Initialiser les providers disponibles
         self._initialize_providers()
         
-        logger.info("🔍 Multi Search Manager MCP Server initialized")
-        logger.info(f"📊 Active providers: {list(self.providers.keys())}")
+        logger.info(" Multi Search Manager MCP Server initialized")
+        logger.info(f" Active providers: {list(self.providers.keys())}")
     
     def _initialize_providers(self):
         """Initialise tous les providers de recherche disponibles"""
@@ -51,9 +51,9 @@ class MultiSearchManagerMCP:
                 "status": "available"
             }
             # DuckDuckGo ajouté en dernier car souvent bloqué
-            logger.info("✅ DuckDuckGo Search initialized")
+            logger.info(" DuckDuckGo Search initialized")
         except Exception as e:
-            logger.error(f"❌ Failed to initialize DuckDuckGo: {e}")
+            logger.error(f" Failed to initialize DuckDuckGo: {e}")
         
         # Brave Search
         if os.getenv("BRAVE_API_KEY"):
@@ -68,9 +68,9 @@ class MultiSearchManagerMCP:
                     "status": "available"
                 }
                 self.fallback_order.append("brave")
-                logger.info("✅ Brave Search initialized")
+                logger.info(" Brave Search initialized")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize Brave Search: {e}")
+                logger.error(f" Failed to initialize Brave Search: {e}")
         
         # Tavily Search
         if os.getenv("TAVILY_API_KEY"):
@@ -86,9 +86,9 @@ class MultiSearchManagerMCP:
                     "ai_optimized": True
                 }
                 self.fallback_order.append("tavily")
-                logger.info("✅ Tavily Search initialized")
+                logger.info(" Tavily Search initialized")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize Tavily Search: {e}")
+                logger.error(f" Failed to initialize Tavily Search: {e}")
         
         # Google Custom Search
         if os.getenv("GOOGLE_API_KEY") and os.getenv("GOOGLE_SEARCH_ENGINE_ID"):
@@ -103,16 +103,16 @@ class MultiSearchManagerMCP:
                     "status": "available"
                 }
                 self.fallback_order.append("google")
-                logger.info("✅ Google Custom Search initialized")
+                logger.info(" Google Custom Search initialized")
             except Exception as e:
-                logger.error(f"❌ Failed to initialize Google Search: {e}")
+                logger.error(f" Failed to initialize Google Search: {e}")
         
         # Ajouter DuckDuckGo en dernier car souvent bloqué
         if "duckduckgo" in self.providers:
             self.fallback_order.append("duckduckgo")
             
         if not self.providers:
-            logger.warning("⚠️  No search providers available!")
+            logger.warning("  No search providers available!")
     
     def get_best_provider(self, search_type: str = "web", privacy_preference: str = "medium") -> Optional[str]:
         """Sélectionne le meilleur provider selon le type de recherche et préférences"""
@@ -136,7 +136,7 @@ class MultiSearchManagerMCP:
                           privacy_preference: str = "medium", enable_fallback: bool = True,
                           providers_preference: List[str] = None) -> Dict[str, Any]:
         """Recherche intelligente avec sélection automatique du provider"""
-        logger.info(f"🧠 Smart search: '{query}' (type={search_type}, privacy={privacy_preference})")
+        logger.info(f" Smart search: '{query}' (type={search_type}, privacy={privacy_preference})")
         
         # Sélectionner le provider optimal
         if providers_preference:
@@ -154,7 +154,7 @@ class MultiSearchManagerMCP:
                 provider = self.providers[provider_name]
                 client = provider["client"]
                 
-                logger.info(f"🔍 Trying {provider['name']}...")
+                logger.info(f" Trying {provider['name']}...")
                 
                 if search_type == "web":
                     result = await client.web_search(query, count=count)
@@ -181,11 +181,11 @@ class MultiSearchManagerMCP:
                     }
                     result["fallback_used"] = provider_name != selected_providers[0]
                     
-                    logger.info(f"✅ Search successful with {provider['name']}")
+                    logger.info(f" Search successful with {provider['name']}")
                     return result
                 
             except Exception as e:
-                logger.warning(f"⚠️  {provider['name']} failed: {e}")
+                logger.warning(f"  {provider['name']} failed: {e}")
                 if not enable_fallback:
                     break
                 continue
@@ -202,7 +202,7 @@ class MultiSearchManagerMCP:
     async def parallel_search(self, query: str, providers: List[str] = None, 
                             count: int = 5) -> Dict[str, Any]:
         """Recherche parallèle sur plusieurs providers"""
-        logger.info(f"⚡ Parallel search: '{query}' on multiple providers")
+        logger.info(f" Parallel search: '{query}' on multiple providers")
         
         if not providers:
             providers = list(self.providers.keys())[:3]  # Max 3 pour éviter rate limits
@@ -241,10 +241,10 @@ class MultiSearchManagerMCP:
                         result["provider_source"] = provider_name
                         results["combined_results"].append(result)
                 
-                logger.info(f"✅ {provider_name}: {len(provider_result.get('results', []))} results")
+                logger.info(f" {provider_name}: {len(provider_result.get('results', []))} results")
                 
             except Exception as e:
-                logger.warning(f"⚠️  {provider_name} failed in parallel search: {e}")
+                logger.warning(f"  {provider_name} failed in parallel search: {e}")
                 results["provider_results"][provider_name] = {"error": str(e)}
         
         # Trier les résultats combinés par pertinence (simple)
@@ -256,7 +256,7 @@ class MultiSearchManagerMCP:
         
         results["total_combined_results"] = len(results["combined_results"])
         
-        logger.info(f"✅ Parallel search completed: {results['total_combined_results']} total results")
+        logger.info(f" Parallel search completed: {results['total_combined_results']} total results")
         return results
     
     async def get_provider_status(self) -> Dict[str, Any]:
@@ -292,9 +292,9 @@ class MultiSearchManagerMCP:
             try:
                 if hasattr(provider["client"], 'close'):
                     await provider["client"].close()
-                    logger.info(f"🔍 {provider['name']} client closed")
+                    logger.info(f" {provider['name']} client closed")
             except Exception as e:
-                logger.error(f"❌ Error closing {provider['name']}: {e}")
+                logger.error(f" Error closing {provider['name']}: {e}")
 
 # Point d'entrée principal
 async def main():
@@ -316,7 +316,7 @@ async def main():
             print("Parallel Search Result:", json.dumps(parallel_result, indent=2, ensure_ascii=False))
         
     except Exception as e:
-        logger.error(f"❌ Manager error: {e}")
+        logger.error(f" Manager error: {e}")
     finally:
         await manager.close()
 

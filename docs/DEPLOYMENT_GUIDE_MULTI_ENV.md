@@ -1,6 +1,6 @@
 # GUIDE DÉPLOIEMENT MULTI-ENVIRONNEMENT JARVIS v1.9.0
 
-## 📋 **SOMMAIRE DÉPLOIEMENT**
+##  **SOMMAIRE DÉPLOIEMENT**
 
 1. [Vue d'Ensemble](#vue-densemble)
 2. [Environnements Cibles](#environnements-cibles)
@@ -15,23 +15,23 @@
 
 ---
 
-## 🎯 **VUE D'ENSEMBLE**
+##  **VUE D'ENSEMBLE**
 
 ### **Stratégie Déploiement Enterprise**
 ```
-┌─────────────── PIPELINE DÉPLOIEMENT JARVIS v1.3.2 ───────────────┐
-│                                                                   │
-│  Development    Staging        Production      Cloud              │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐          │
-│  │ Local   │───▶│ Pre-Prod│───▶│ On-Prem │───▶│ AWS/Azure│         │
-│  │ Docker  │   │ K8s     │   │ K8s HA  │   │ Multi-AZ │          │
-│  │ Compose │   │ Test    │   │ LoadBalancer│ │ Auto-Scale│        │
-│  └─────────┘   └─────────┘   └─────────┘   └─────────┘          │
-│       │             │             │             │                │
-│   [Auto-tests]  [Integration]  [Security]   [Global]            │
-│   [Hot-reload]   [E2E Tests]   [Backup]     [CDN]               │
-│                                                                   │
-└───────────────────────────────────────────────────────────────────┘
+ PIPELINE DÉPLOIEMENT JARVIS v1.3.2 
+                                                                   
+  Development    Staging        Production      Cloud              
+                     
+   Local    Pre-Prod On-Prem  AWS/Azure         
+   Docker      K8s         K8s HA      Multi-AZ           
+   Compose     Test        LoadBalancer  Auto-Scale        
+                     
+                                                              
+   [Auto-tests]  [Integration]  [Security]   [Global]            
+   [Hot-reload]   [E2E Tests]   [Backup]     [CDN]               
+                                                                   
+
 ```
 
 ### **Principes Déploiement**
@@ -44,7 +44,7 @@
 
 ---
 
-## 🏢 **ENVIRONNEMENTS CIBLES**
+##  **ENVIRONNEMENTS CIBLES**
 
 ### **1. Développement Local**
 - **Usage** : Développement quotidien, debug
@@ -76,7 +76,7 @@
 
 ---
 
-## 🔧 **PRÉREQUIS PAR ENVIRONNEMENT**
+##  **PRÉREQUIS PAR ENVIRONNEMENT**
 
 ### **Développement Local**
 ```bash
@@ -134,27 +134,27 @@
 
 ---
 
-## ⚙️ **CONFIGURATION VARIABLES**
+##  **CONFIGURATION VARIABLES**
 
 ### **Structure Environnements**
 ```
-├── environments/
-│   ├── development/
-│   │   ├── .env
-│   │   ├── docker-compose.override.yml
-│   │   └── config.local.json
-│   ├── staging/
-│   │   ├── .env.staging
-│   │   ├── k8s-staging/
-│   │   └── values-staging.yaml
-│   ├── production/
-│   │   ├── .env.production
-│   │   ├── k8s-production/
-│   │   └── values-production.yaml
-│   └── cloud/
-│       ├── .env.cloud
-│       ├── terraform/
-│       └── values-cloud.yaml
+ environments/
+    development/
+       .env
+       docker-compose.override.yml
+       config.local.json
+    staging/
+       .env.staging
+       k8s-staging/
+       values-staging.yaml
+    production/
+       .env.production
+       k8s-production/
+       values-production.yaml
+    cloud/
+        .env.cloud
+        terraform/
+        values-cloud.yaml
 ```
 
 ### **Variables par Environnement**
@@ -273,14 +273,14 @@ BACKUP_RETENTION_DAYS=30
 
 ---
 
-## 💻 **DÉPLOIEMENT DÉVELOPPEMENT**
+##  **DÉPLOIEMENT DÉVELOPPEMENT**
 
 ### **Setup Initial**
 ```bash
 #!/bin/bash
 # setup-development.sh
 
-echo "🚀 Configuration environnement développement Jarvis v1.9.0"
+echo " Configuration environnement développement Jarvis v1.9.0"
 
 # 1. Clonage repository
 git clone https://github.com/enzo/jarvis.git
@@ -291,24 +291,24 @@ cp environments/development/.env .env
 cp environments/development/docker-compose.override.yml .
 
 # 3. Build images
-echo "🔨 Build des images Docker..."
+echo " Build des images Docker..."
 docker-compose build --no-cache
 
 # 4. Démarrage services
-echo "🚀 Démarrage services..."
+echo " Démarrage services..."
 docker-compose up -d
 
 # 5. Vérification santé
-echo "🔍 Vérification santé services..."
+echo " Vérification santé services..."
 sleep 30
 ./scripts/health-check.sh
 
 # 6. Setup initial database
-echo "💾 Initialisation base de données..."
+echo " Initialisation base de données..."
 docker-compose exec backend python -m alembic upgrade head
 
 # 7. Création utilisateur admin
-echo "👤 Création utilisateur admin..."
+echo " Création utilisateur admin..."
 docker-compose exec backend python -c "
 from backend.auth.models import User
 from backend.auth.security import SecurityManager
@@ -318,10 +318,10 @@ security = SecurityManager('dev_secret_key_32_chars_long_123')
 # Create admin user logic here
 "
 
-echo "✅ Environnement développement prêt !"
-echo "🌐 Interface: http://localhost:3000"
-echo "📊 API: http://localhost:8100"
-echo "📈 Grafana: http://localhost:3001"
+echo " Environnement développement prêt !"
+echo " Interface: http://localhost:3000"
+echo " API: http://localhost:8100"
+echo " Grafana: http://localhost:3001"
 ```
 
 ### **Workflow Développement**
@@ -360,14 +360,14 @@ docker-compose up --build
 
 ---
 
-## 🧪 **DÉPLOIEMENT STAGING**
+##  **DÉPLOIEMENT STAGING**
 
 ### **Infrastructure Staging (K3s)**
 ```bash
 #!/bin/bash
 # deploy-staging.sh
 
-echo "🎯 Déploiement Staging Jarvis v1.9.0"
+echo " Déploiement Staging Jarvis v1.9.0"
 
 # 1. Configuration kubectl
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
@@ -392,7 +392,7 @@ kubectl get pods -n jarvis-staging
 kubectl get services -n jarvis-staging
 kubectl get ingress -n jarvis-staging
 
-echo "✅ Déploiement staging terminé"
+echo " Déploiement staging terminé"
 ```
 
 ### **Helm Chart Staging (`values-staging.yaml`)**
@@ -470,48 +470,48 @@ autoscaling:
 #!/bin/bash
 # test-staging.sh
 
-echo "🧪 Tests automatisés staging"
+echo " Tests automatisés staging"
 
 # Variables
 STAGING_URL="https://app-staging.jarvis.local"
 API_URL="https://api-staging.jarvis.local"
 
 # 1. Health checks
-echo "🔍 Health checks..."
+echo " Health checks..."
 curl -f ${API_URL}/health || exit 1
 curl -f ${API_URL}/metrics || exit 1
 
 # 2. Tests API
-echo "📡 Tests API..."
+echo " Tests API..."
 python -m pytest tests/e2e/ \
   --base-url=${API_URL} \
   --staging \
   --junit-xml=reports/staging-api-tests.xml
 
 # 3. Tests interface
-echo "🎭 Tests interface..."
+echo " Tests interface..."
 npx playwright test \
   --config=playwright.staging.config.js \
   --reporter=junit
 
 # 4. Tests performance
-echo "⚡ Tests performance..."
+echo " Tests performance..."
 k6 run tests/performance/staging-load-test.js
 
 # 5. Tests sécurité
-echo "🔒 Tests sécurité..."
+echo " Tests sécurité..."
 bandit -r backend/ -f json -o reports/staging-security.json
 
 # 6. Rapport final
-echo "📊 Génération rapport..."
+echo " Génération rapport..."
 python scripts/generate-staging-report.py
 
-echo "✅ Tests staging terminés"
+echo " Tests staging terminés"
 ```
 
 ---
 
-## 🏭 **DÉPLOIEMENT PRODUCTION**
+##  **DÉPLOIEMENT PRODUCTION**
 
 ### **Architecture Production HA**
 ```yaml
@@ -590,27 +590,27 @@ spec:
 #!/bin/bash
 # deploy-production.sh
 
-echo "🏭 Déploiement PRODUCTION Jarvis v1.9.0"
+echo " Déploiement PRODUCTION Jarvis v1.9.0"
 
 # Validation sécurité pré-déploiement
 if [[ "$ENVIRONMENT" != "production" ]]; then
-    echo "❌ ERREUR: Variable ENVIRONMENT doit être 'production'"
+    echo " ERREUR: Variable ENVIRONMENT doit être 'production'"
     exit 1
 fi
 
 # Validation secrets
 if [[ -z "$JARVIS_PROD_SECRET_KEY" ]]; then
-    echo "❌ ERREUR: JARVIS_PROD_SECRET_KEY requis"
+    echo " ERREUR: JARVIS_PROD_SECRET_KEY requis"
     exit 1
 fi
 
 # 1. Backup avant déploiement
-echo "💾 Backup base de données..."
+echo " Backup base de données..."
 kubectl exec -n jarvis-production postgres-cluster-1 -- \
   pg_dump -U jarvis_prod jarvis_production > backup-$(date +%Y%m%d-%H%M%S).sql
 
 # 2. Blue/Green deployment
-echo "🔄 Déploiement Blue/Green..."
+echo " Déploiement Blue/Green..."
 
 # Deploy version Green (nouvelle)
 helm upgrade jarvis-green ./helm/jarvis \
@@ -621,24 +621,24 @@ helm upgrade jarvis-green ./helm/jarvis \
   --wait --timeout=900s
 
 # Validation Green environment
-echo "🧪 Validation environnement Green..."
+echo " Validation environnement Green..."
 ./scripts/validate-production.sh green
 
 # Switch traffic Blue -> Green
-echo "🚦 Basculement trafic vers Green..."
+echo " Basculement trafic vers Green..."
 kubectl patch service jarvis-loadbalancer \
   -p '{"spec":{"selector":{"version":"green"}}}' \
   -n jarvis-production
 
 # Validation post-switch
-echo "✅ Validation post-déploiement..."
+echo " Validation post-déploiement..."
 ./scripts/validate-production.sh green --post-switch
 
 # Cleanup old Blue version
-echo "🧹 Nettoyage ancienne version Blue..."
+echo " Nettoyage ancienne version Blue..."
 helm uninstall jarvis-blue -n jarvis-production
 
-echo "🎉 Déploiement PRODUCTION réussi !"
+echo " Déploiement PRODUCTION réussi !"
 ```
 
 ### **Monitoring Production**
@@ -740,7 +740,7 @@ groups:
 
 ---
 
-## ☁️ **DÉPLOIEMENT CLOUD**
+##  **DÉPLOIEMENT CLOUD**
 
 ### **AWS EKS Deployment**
 ```hcl
@@ -932,11 +932,11 @@ resource "azurerm_redis_cache" "jarvis" {
 CLOUD_PROVIDER=${1:-aws}  # aws or azure
 ENVIRONMENT=production
 
-echo "☁️ Déploiement Cloud ${CLOUD_PROVIDER} - Jarvis v1.9.0"
+echo " Déploiement Cloud ${CLOUD_PROVIDER} - Jarvis v1.9.0"
 
 case $CLOUD_PROVIDER in
   "aws")
-    echo "🚀 Déploiement AWS EKS..."
+    echo " Déploiement AWS EKS..."
     
     # 1. Infrastructure Terraform
     cd terraform/aws
@@ -956,7 +956,7 @@ case $CLOUD_PROVIDER in
     ;;
     
   "azure")
-    echo "🚀 Déploiement Azure AKS..."
+    echo " Déploiement Azure AKS..."
     
     # 1. Infrastructure Terraform
     cd terraform/azure
@@ -976,28 +976,28 @@ case $CLOUD_PROVIDER in
     ;;
     
   *)
-    echo "❌ Provider non supporté: $CLOUD_PROVIDER"
+    echo " Provider non supporté: $CLOUD_PROVIDER"
     echo "Usage: $0 [aws|azure]"
     exit 1
     ;;
 esac
 
 # 4. Validation déploiement
-echo "🔍 Validation déploiement cloud..."
+echo " Validation déploiement cloud..."
 kubectl get pods -n jarvis-production
 kubectl get services -n jarvis-production
 kubectl get ingress -n jarvis-production
 
 # 5. Tests post-déploiement
-echo "🧪 Tests post-déploiement..."
+echo " Tests post-déploiement..."
 ./scripts/test-cloud-deployment.sh $CLOUD_PROVIDER
 
-echo "✅ Déploiement cloud $CLOUD_PROVIDER terminé !"
+echo " Déploiement cloud $CLOUD_PROVIDER terminé !"
 ```
 
 ---
 
-## 📊 **MONITORING & OBSERVABILITÉ**
+##  **MONITORING & OBSERVABILITÉ**
 
 ### **Stack Monitoring Multi-Environnement**
 ```yaml
@@ -1133,7 +1133,7 @@ jarvis_database_connections = Gauge(
 
 ---
 
-## 🔄 **ROLLBACK & RECOVERY**
+##  **ROLLBACK & RECOVERY**
 
 ### **Stratégies Rollback**
 
@@ -1145,30 +1145,30 @@ jarvis_database_connections = Gauge(
 ENVIRONMENT=${1:-staging}
 REVISION=${2:-0}  # 0 = previous version
 
-echo "🔄 Rollback application Jarvis - Environment: $ENVIRONMENT"
+echo " Rollback application Jarvis - Environment: $ENVIRONMENT"
 
 # Liste des versions disponibles
 helm history jarvis -n jarvis-$ENVIRONMENT
 
 # Rollback vers version précédente ou spécifique
 if [[ $REVISION -eq 0 ]]; then
-    echo "📍 Rollback vers version précédente..."
+    echo " Rollback vers version précédente..."
     helm rollback jarvis -n jarvis-$ENVIRONMENT
 else
-    echo "📍 Rollback vers revision $REVISION..."
+    echo " Rollback vers revision $REVISION..."
     helm rollback jarvis $REVISION -n jarvis-$ENVIRONMENT
 fi
 
 # Validation post-rollback
-echo "🔍 Validation post-rollback..."
+echo " Validation post-rollback..."
 kubectl get pods -n jarvis-$ENVIRONMENT
 ./scripts/health-check.sh $ENVIRONMENT
 
 # Tests automatiques
-echo "🧪 Tests post-rollback..."
+echo " Tests post-rollback..."
 ./scripts/test-deployment.sh $ENVIRONMENT
 
-echo "✅ Rollback terminé avec succès"
+echo " Rollback terminé avec succès"
 ```
 
 #### **2. Database Rollback**
@@ -1179,26 +1179,26 @@ echo "✅ Rollback terminé avec succès"
 ENVIRONMENT=${1:-staging}
 BACKUP_FILE=${2}
 
-echo "💾 Rollback base de données - Environment: $ENVIRONMENT"
+echo " Rollback base de données - Environment: $ENVIRONMENT"
 
 if [[ -z "$BACKUP_FILE" ]]; then
     # Utiliser le backup le plus récent
     BACKUP_FILE=$(ls -t backups/ | head -1)
-    echo "📁 Utilisation backup: $BACKUP_FILE"
+    echo " Utilisation backup: $BACKUP_FILE"
 fi
 
 # Validation backup
 if [[ ! -f "backups/$BACKUP_FILE" ]]; then
-    echo "❌ Backup file not found: $BACKUP_FILE"
+    echo " Backup file not found: $BACKUP_FILE"
     exit 1
 fi
 
 # Scale down application
-echo "⬇️ Scale down application..."
+echo " Scale down application..."
 kubectl scale deployment jarvis-backend --replicas=0 -n jarvis-$ENVIRONMENT
 
 # Restore database
-echo "🔄 Restoration base de données..."
+echo " Restoration base de données..."
 case $ENVIRONMENT in
     "staging"|"development")
         kubectl exec -n jarvis-$ENVIRONMENT postgres-0 -- \
@@ -1211,14 +1211,14 @@ case $ENVIRONMENT in
 esac
 
 # Scale up application
-echo "⬆️ Scale up application..."
+echo " Scale up application..."
 kubectl scale deployment jarvis-backend --replicas=2 -n jarvis-$ENVIRONMENT
 
 # Validation
-echo "✅ Validation restoration..."
+echo " Validation restoration..."
 ./scripts/validate-database.sh $ENVIRONMENT
 
-echo "🎉 Rollback base de données terminé"
+echo " Rollback base de données terminé"
 ```
 
 ### **Disaster Recovery Plan**
@@ -1271,24 +1271,24 @@ disaster_recovery:
 
 ---
 
-## 📝 **CONCLUSION DÉPLOIEMENT**
+##  **CONCLUSION DÉPLOIEMENT**
 
 Ce guide couvre tous les aspects du déploiement multi-environnement de Jarvis v1.9.0 :
 
-### ✅ **Objectifs Atteints**
+###  **Objectifs Atteints**
 - **Multi-environnement** : Dev, Staging, Production, Cloud
 - **Infrastructure as Code** : Terraform + Helm + GitOps
 - **Zero Downtime** : Blue/Green + Rolling updates
 - **Monitoring Complet** : Prometheus + Grafana + Alerting
 - **Disaster Recovery** : Backup + Rollback automatisé
 
-### 🎯 **Best Practices Appliquées**
+###  **Best Practices Appliquées**
 - **Security First** : Secrets management + RBAC + Network policies
 - **Scalabilité** : Horizontal Pod Autoscaling + Load balancing
 - **Observabilité** : Metrics + Logs + Tracing + Alerting
 - **Automation** : CI/CD pipelines + GitOps + Self-healing
 
-### 🚀 **Prochaines Étapes**
+###  **Prochaines Étapes**
 - **Multi-Region** : Déploiement géographiquement distribué
 - **Chaos Engineering** : Tests de résistance automatisés
 - **Cost Optimization** : Optimisation ressources cloud

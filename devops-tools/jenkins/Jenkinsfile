@@ -13,9 +13,9 @@ pipeline {
     }
     
     stages {
-        stage('🔍 Checkout') {
+        stage(' Checkout') {
             steps {
-                echo '📥 Récupération du code source...'
+                echo ' Récupération du code source...'
                 checkout scm
                 script {
                     env.GIT_COMMIT_SHORT = sh(
@@ -26,13 +26,13 @@ pipeline {
             }
         }
         
-        stage('🔧 Install Dependencies') {
+        stage(' Install Dependencies') {
             parallel {
                 stage('Backend Dependencies') {
                     steps {
                         dir('backend') {
                             sh '''
-                                echo "🐍 Installation dépendances Python..."
+                                echo " Installation dépendances Python..."
                                 python3 -m venv venv
                                 source venv/bin/activate
                                 pip install -r requirements.txt
@@ -46,7 +46,7 @@ pipeline {
                             ['stt', 'tts'].each { service ->
                                 dir("services/${service}") {
                                     sh '''
-                                        echo "🐍 Installation dépendances pour ''' + service + '''..."
+                                        echo " Installation dépendances pour ''' + service + '''..."
                                         python3 -m venv venv
                                         source venv/bin/activate
                                         pip install -r requirements.txt
@@ -60,7 +60,7 @@ pipeline {
                     steps {
                         dir('services/interface') {
                             sh '''
-                                echo "🐍 Installation dépendances Interface..."
+                                echo " Installation dépendances Interface..."
                                 python3 -m venv venv
                                 source venv/bin/activate
                                 pip install -r requirements.txt
@@ -71,19 +71,19 @@ pipeline {
             }
         }
         
-        stage('🧪 Tests') {
+        stage(' Tests') {
             parallel {
                 stage('Backend Tests') {
                     steps {
                         dir('backend') {
                             sh '''
-                                echo "🧪 Tests backend Python..."
+                                echo " Tests backend Python..."
                                 source venv/bin/activate
                                 # Tests basiques si le dossier tests existe
                                 if [ -d "tests" ]; then
                                     python -m pytest tests/ --junitxml=test-results.xml --cov=. --cov-report=xml
                                 else
-                                    echo "✅ Pas de tests unitaires configurés, validation syntaxe..."
+                                    echo " Pas de tests unitaires configurés, validation syntaxe..."
                                     python -m py_compile main.py
                                 fi
                             '''
@@ -105,9 +105,9 @@ pipeline {
                 stage('Services Tests') {
                     steps {
                         script {
-                            echo "🧪 Tests services Jarvis..."
+                            echo " Tests services Jarvis..."
                             sh '''
-                                echo "✅ Tests basiques services..."
+                                echo " Tests basiques services..."
                                 # Tests health check des endpoints
                                 python3 -c "print('Services tests completed')"
                             '''
@@ -117,7 +117,7 @@ pipeline {
                 stage('Security Scan') {
                     steps {
                         sh '''
-                            echo "🔒 Scan sécurité avec Trivy..."
+                            echo " Scan sécurité avec Trivy..."
                             docker run --rm -v $(pwd):/workspace aquasec/trivy:latest fs /workspace
                         '''
                     }
@@ -125,14 +125,14 @@ pipeline {
             }
         }
         
-        stage('🐳 Build Docker Images') {
+        stage(' Build Docker Images') {
             steps {
                 script {
-                    echo "🏗️ Construction images Docker..."
+                    echo " Construction images Docker..."
                     
                     // Build backend
                     sh """
-                        echo "🐳 Build backend..."
+                        echo " Build backend..."
                         docker build -t ${PROJECT_NAME}-backend:${env.GIT_COMMIT_SHORT} ./backend/
                         docker tag ${PROJECT_NAME}-backend:${env.GIT_COMMIT_SHORT} ${PROJECT_NAME}-backend:latest
                     """
@@ -144,7 +144,7 @@ pipeline {
                     for (service in services) {
                         builds[service] = {
                             sh """
-                                echo "🐳 Build ${service}..."
+                                echo " Build ${service}..."
                                 docker build -t ${PROJECT_NAME}-${service}:${env.GIT_COMMIT_SHORT} ./services/${service}/
                                 docker tag ${PROJECT_NAME}-${service}:${env.GIT_COMMIT_SHORT} ${PROJECT_NAME}-${service}:latest
                             """
@@ -155,34 +155,34 @@ pipeline {
             }
         }
         
-        stage('📊 Quality Gates') {
+        stage(' Quality Gates') {
             steps {
                 script {
-                    echo "📊 Vérifications qualité..."
+                    echo " Vérifications qualité..."
                     sh '''
-                        echo "🔍 Code quality avec SonarQube..."
+                        echo " Code quality avec SonarQube..."
                         # SonarQube scan ici
                         
-                        echo "📏 Métriques de performance..."
+                        echo " Métriques de performance..."
                         # Performance tests ici
                     '''
                 }
             }
         }
         
-        stage('🚀 Deploy to Staging') {
+        stage(' Deploy to Staging') {
             when {
                 branch 'develop'
             }
             steps {
                 script {
-                    echo "🚀 Déploiement staging..."
+                    echo " Déploiement staging..."
                     sh '''
-                        echo "📦 Push images vers registry..."
+                        echo " Push images vers registry..."
                         docker push ${DOCKER_REGISTRY}/${PROJECT_NAME}-backend:${GIT_COMMIT_SHORT}
                         docker push ${DOCKER_REGISTRY}/${PROJECT_NAME}-interface:${GIT_COMMIT_SHORT}
                         
-                        echo "⚙️ Déploiement via ArgoCD..."
+                        echo " Déploiement via ArgoCD..."
                         # Trigger ArgoCD sync
                         kubectl patch application jarvis-staging -n argocd --type merge -p '{"spec":{"source":{"targetRevision":"'${GIT_COMMIT_SHORT}'"}}}'
                     '''
@@ -190,21 +190,21 @@ pipeline {
             }
         }
         
-        stage('🏭 Deploy to Production') {
+        stage(' Deploy to Production') {
             when {
                 branch 'main'
             }
             steps {
                 script {
-                    echo "🏭 Déploiement production..."
+                    echo " Déploiement production..."
                     input message: 'Deploy to production?', ok: 'Deploy'
                     
                     sh '''
-                        echo "📦 Push images production..."
+                        echo " Push images production..."
                         docker tag ${DOCKER_REGISTRY}/${PROJECT_NAME}-backend:${GIT_COMMIT_SHORT} ${DOCKER_REGISTRY}/${PROJECT_NAME}-backend:stable
                         docker push ${DOCKER_REGISTRY}/${PROJECT_NAME}-backend:stable
                         
-                        echo "⚙️ Déploiement production via ArgoCD..."
+                        echo " Déploiement production via ArgoCD..."
                         kubectl patch application jarvis-production -n argocd --type merge -p '{"spec":{"source":{"targetRevision":"stable"}}}'
                     '''
                 }
@@ -214,24 +214,24 @@ pipeline {
     
     post {
         always {
-            echo '🧹 Nettoyage...'
+            echo ' Nettoyage...'
             sh 'docker system prune -f'
             cleanWs()
         }
         success {
-            echo '✅ Pipeline exécuté avec succès!'
+            echo ' Pipeline exécuté avec succès!'
             slackSend(
                 channel: '#jarvis-ci',
                 color: 'good',
-                message: "✅ Jarvis build ${env.BUILD_NUMBER} succeeded on ${env.BRANCH_NAME}"
+                message: " Jarvis build ${env.BUILD_NUMBER} succeeded on ${env.BRANCH_NAME}"
             )
         }
         failure {
-            echo '❌ Pipeline échoué!'
+            echo ' Pipeline échoué!'
             slackSend(
                 channel: '#jarvis-ci',
                 color: 'danger',
-                message: "❌ Jarvis build ${env.BUILD_NUMBER} failed on ${env.BRANCH_NAME}"
+                message: " Jarvis build ${env.BUILD_NUMBER} failed on ${env.BRANCH_NAME}"
             )
         }
     }

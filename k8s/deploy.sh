@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Déploiement Kubernetes Jarvis V1.4.0"
+echo " Déploiement Kubernetes Jarvis V1.4.0"
 echo "========================================"
 
 # Couleurs pour output
@@ -21,11 +21,11 @@ log() {
 }
 
 warn() {
-    echo -e "${YELLOW}[$(date +'%H:%M:%S')] ⚠️  $1${NC}"
+    echo -e "${YELLOW}[$(date +'%H:%M:%S')]   $1${NC}"
 }
 
 error() {
-    echo -e "${RED}[$(date +'%H:%M:%S')] ❌ $1${NC}"
+    echo -e "${RED}[$(date +'%H:%M:%S')]  $1${NC}"
     exit 1
 }
 
@@ -47,7 +47,7 @@ if ! command -v docker &> /dev/null; then
     error "Docker n'est pas installé"
 fi
 
-log "✅ Prérequis validés"
+log " Prérequis validés"
 
 # Fonction pour attendre qu'un deployment soit prêt
 wait_for_deployment() {
@@ -57,9 +57,9 @@ wait_for_deployment() {
     
     log "Attente deployment $deployment..."
     if kubectl wait --for=condition=available --timeout=${timeout}s deployment/$deployment -n $namespace; then
-        log "✅ $deployment est prêt"
+        log " $deployment est prêt"
     else
-        error "❌ Timeout deployment $deployment"
+        error " Timeout deployment $deployment"
     fi
 }
 
@@ -67,34 +67,34 @@ wait_for_deployment() {
 log "Construction des images Docker..."
 
 # Image Backend
-log "🔨 Build image jarvis-backend..."
+log " Build image jarvis-backend..."
 cd /home/enzo/Documents/Projet\ Jarvis/backend
 docker build -t jarvis-backend:latest . || error "Erreur build backend"
 
 # Image TTS
-log "🔨 Build image jarvis-tts..."
+log " Build image jarvis-tts..."
 cd /home/enzo/Documents/Projet\ Jarvis/services/tts
 docker build -t jarvis-tts:latest . || error "Erreur build TTS"
 
 # Image STT
-log "🔨 Build image jarvis-stt..."
+log " Build image jarvis-stt..."
 cd /home/enzo/Documents/Projet\ Jarvis/services/stt
 docker build -t jarvis-stt:latest . || error "Erreur build STT"
 
 # Image Interface
-log "🔨 Build image jarvis-interface..."
+log " Build image jarvis-interface..."
 cd /home/enzo/Documents/Projet\ Jarvis/services/interface
 docker build -t jarvis-interface:latest . || error "Erreur build interface"
 
-log "✅ Images construites"
+log " Images construites"
 
 # Import des images dans K3s
-log "📦 Import des images dans K3s..."
+log " Import des images dans K3s..."
 k3s ctr images import <(docker save jarvis-backend:latest) || warn "Erreur import backend"
 k3s ctr images import <(docker save jarvis-tts:latest) || warn "Erreur import TTS"  
 k3s ctr images import <(docker save jarvis-stt:latest) || warn "Erreur import STT"
 k3s ctr images import <(docker save jarvis-interface:latest) || warn "Erreur import interface"
-log "✅ Images importées dans K3s"
+log " Images importées dans K3s"
 
 # Retour au répertoire k8s
 cd /home/enzo/Documents/Projet\ Jarvis/k8s
@@ -147,20 +147,20 @@ kubectl apply -f 13-monitoring.yaml || warn "Monitoring non appliqué (prometheu
 # Vérification finale
 log "Vérification du déploiement..."
 echo ""
-echo "📊 État des pods:"
+echo " État des pods:"
 kubectl get pods -n jarvis -o wide
 
 echo ""
-echo "🌐 Services disponibles:"
+echo " Services disponibles:"
 kubectl get svc -n jarvis
 
 echo ""
-echo "💾 Stockage:"
+echo " Stockage:"
 kubectl get pvc -n jarvis
 
 # URLs d'accès
 echo ""
-echo "🎯 URLs d'accès:"
+echo " URLs d'accès:"
 echo "Frontend:    http://localhost:30100"
 echo "Backend API: http://localhost:30000"
 echo "WebSocket:   ws://localhost:30001"
@@ -171,7 +171,7 @@ echo "Grafana:     http://localhost:30300 (admin/jarvis123)"
 
 # Commandes utiles
 echo ""
-echo "📝 Commandes utiles:"
+echo " Commandes utiles:"
 echo "Logs backend:    kubectl logs -f deployment/jarvis-backend -n jarvis"
 echo "Logs interface:  kubectl logs -f deployment/jarvis-interface -n jarvis"
 echo "Shell backend:   kubectl exec -it deployment/jarvis-backend -n jarvis -- /bin/bash"
@@ -183,14 +183,14 @@ sleep 10
 
 # Test health check backend
 if curl -s http://localhost:30000/health > /dev/null; then
-    log "✅ Backend API répond"
+    log " Backend API répond"
 else
-    warn "⚠️ Backend API ne répond pas encore"
+    warn " Backend API ne répond pas encore"
 fi
 
-log "🎉 Déploiement Kubernetes Jarvis terminé !"
+log " Déploiement Kubernetes Jarvis terminé !"
 log "Accédez à l'interface: http://localhost:30100"
 
 echo ""
-echo "🔧 Pour arrêter complètement:"
+echo " Pour arrêter complètement:"
 echo "kubectl delete namespace jarvis"

@@ -1,10 +1,10 @@
-# 🐛 Bug Reports - Jarvis v1.9.0
+#  Bug Reports - Jarvis v1.9.0
 
 **Suivi des problèmes techniques** identifiés dans les audits.
 
 ---
 
-## 🔴 VULNÉRABILITÉS SÉCURITÉ - AUDIT 2025-10-25
+##  VULNÉRABILITÉS SÉCURITÉ - AUDIT 2025-10-25
 
 **15 vulnérabilités critiques/hautes découvertes par audit complet du 2025-10-25**
 
@@ -55,25 +55,25 @@
 
 ---
 
-## 📊 État Actuel (25/10/2025 15:15)
+##  État Actuel (25/10/2025 15:15)
 
-**PROGRES MAJEUR - TOUS LES SYSTÈMES OPÉRATIONNELS**: 🎉🎉🎉
+**PROGRES MAJEUR - TOUS LES SYSTÈMES OPÉRATIONNELS**: 
 
-- ✅ **Rust Core Backend** : Compilé, déployé et 100% opérationnel
-- ✅ **Docker Deployment** : 10/10 containers running and healthy!
-- ✅ **docker-compose.yml** : Chemins corrigés (./backend → ./core)
-- ✅ **API Testing** : All endpoints responding correctly
-- ✅ **Inter-Service Communication** : All network paths verified
-- ⚠️ **Sécurité** : 15 vulnérabilités critiques/hautes (voir SECURITY.md)
+-  **Rust Core Backend** : Compilé, déployé et 100% opérationnel
+-  **Docker Deployment** : 10/10 containers running and healthy!
+-  **docker-compose.yml** : Chemins corrigés (./backend → ./core)
+-  **API Testing** : All endpoints responding correctly
+-  **Inter-Service Communication** : All network paths verified
+-  **Sécurité** : 15 vulnérabilités critiques/hautes (voir SECURITY.md)
 
 ---
 
-## ✅ BUGS FIXES AUJOURD'HUI (25/10/2025 - SESSION TESTING)
+##  BUGS FIXES AUJOURD'HUI (25/10/2025 - SESSION TESTING)
 
-### **BUG-DOCKER-001** - docker-compose.yml chemins incorrects ✅ RÉSOLU
+### **BUG-DOCKER-001** - docker-compose.yml chemins incorrects  RÉSOLU
 
-**Priorité**: 🚨 **CRITIQUE**
-**Statut**: ✅ **RÉSOLU**
+**Priorité**:  **CRITIQUE**
+**Statut**:  **RÉSOLU**
 **Impact**: docker-compose build échouait (backend inexistant)
 
 **Erreur originale**:
@@ -92,18 +92,18 @@ unable to prepare context: path "C:\\Users\\Le Geek\\Documents\\Projet-Jarvis\\b
 # AVANT (ERREUR)
 backend:
   build:
-    context: ./backend  # ❌ N'existe pas!
+    context: ./backend  #  N'existe pas!
     dockerfile: Dockerfile
   ports:
-    - "8100:8100"  # ✅ Correct port
+    - "8100:8100"  #  Correct port
 
 # APRÈS (CORRECT)
 backend:
   build:
-    context: ./core  # ✅ Rust backend
+    context: ./core  #  Rust backend
     dockerfile: Dockerfile
   ports:
-    - "8100:8100"  # ✅ Port Rust
+    - "8100:8100"  #  Port Rust
 ```
 
 **Fichiers modifiés**:
@@ -111,12 +111,12 @@ backend:
 - Volumes init.sql supprimées (migrations Rust)
 - Environment variables mises à jour
 
-**Status**: ✅ docker-compose build now succeeds!
+**Status**:  docker-compose build now succeeds!
 
-### **BUG-RUST-001** - Warnings compilation non-bloquants ⚠️ ACCEPTABLE
+### **BUG-RUST-001** - Warnings compilation non-bloquants  ACCEPTABLE
 
-**Priorité**: 🟡 **FAIBLE**
-**Statut**: ⚠️ **ACCEPTABLE** (non-critique)
+**Priorité**:  **FAIBLE**
+**Statut**:  **ACCEPTABLE** (non-critique)
 **Impact**: Aucun (warnings développement seulement)
 
 **Warnings détectés** (11 total):
@@ -128,23 +128,23 @@ backend:
 
 ---
 
-## ✅ BUGS CRITIQUES RÉSOLUS (24/10/2025)
+##  BUGS CRITIQUES RÉSOLUS (24/10/2025)
 
-### **BUG-CONFIG-001** - Config.allowed_origins manquant ✅ RÉSOLU
+### **BUG-CONFIG-001** - Config.allowed_origins manquant  RÉSOLU
 
-**Priorité** : 🚨 **CRITIQUE**  
-**Statut** : ✅ **RÉSOLU**  
+**Priorité** :  **CRITIQUE**  
+**Statut** :  **RÉSOLU**  
 **Impact** : Backend ne démarre pas  
 
 **Solution appliquée** :
 - Ajouté `allowed_origins: list` dans backend/config/config.py
 - Backend démarre maintenant correctement
-- Log : `✅ [CORS] Configured for origins: ['http://localhost:3000', 'http://localhost:8100', 'http://172.20.0.50:3000']`
+- Log : ` [CORS] Configured for origins: ['http://localhost:3000', 'http://localhost:8100', 'http://172.20.0.50:3000']`
 
-### **BUG-DB-001** - Base "jarvis" inexistante ✅ RÉSOLU
+### **BUG-DB-001** - Base "jarvis" inexistante  RÉSOLU
 
-**Priorité** : 🚨 **CRITIQUE**  
-**Statut** : ✅ **RÉSOLU**  
+**Priorité** :  **CRITIQUE**  
+**Statut** :  **RÉSOLU**  
 **Impact** : PostgreSQL rejette les connexions
 
 **Solution appliquée** :
@@ -152,10 +152,10 @@ backend:
 - Database name aligné avec .env : POSTGRES_DB=jarvis_db
 - PostgreSQL maintenant healthy
 
-### **BUG-IMPORT-001** - Imports relatifs défaillants ✅ RÉSOLU
+### **BUG-IMPORT-001** - Imports relatifs défaillants  RÉSOLU
 
-**Priorité** : 🚨 **CRITIQUE**  
-**Statut** : ✅ **RÉSOLU**  
+**Priorité** :  **CRITIQUE**  
+**Statut** :  **RÉSOLU**  
 **Impact** : ImportError dans tous les modules
 
 **Solution appliquée** :
@@ -163,10 +163,10 @@ backend:
 - Corrigé routers/, middleware/, security/
 - Backend démarre sans erreur d'import
 
-### **BUG-OLLAMA-001** - Commande setup incorrecte ✅ RÉSOLU
+### **BUG-OLLAMA-001** - Commande setup incorrecte  RÉSOLU
 
-**Priorité** : 🚨 **CRITIQUE**  
-**Statut** : ✅ **RÉSOLU**  
+**Priorité** :  **CRITIQUE**  
+**Statut** :  **RÉSOLU**  
 **Impact** : Ollama setup échoue
 
 **Solution appliquée** :
@@ -176,12 +176,12 @@ backend:
 
 ---
 
-## ⚠️ BUGS IMPORTANTS - FONCTIONNALITÉS
+##  BUGS IMPORTANTS - FONCTIONNALITÉS
 
 ### **BUG-INTERFACE-001** - Module aiohttp_cors manquant
 
-**Priorité** : ⚠️ **IMPORTANT**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **IMPORTANT**  
+**Statut** :  **IDENTIFIÉ**  
 **Impact** : Interface web ne démarre pas (8/9 conteneurs healthy)
 
 **Erreur :**
@@ -199,8 +199,8 @@ ModuleNotFoundError: No module named 'aiohttp_cors'
 
 ### **BUG-IMPORT-001** - Imports relatifs backend
 
-**Priorité** : ⚠️ **IMPORTANT**  
-**Statut** : ✅ **PARTIELLEMENT RÉSOLU**  
+**Priorité** :  **IMPORTANT**  
+**Statut** :  **PARTIELLEMENT RÉSOLU**  
 **Impact** : Services ne s'importent pas correctement
 
 **Erreur** :
@@ -213,8 +213,8 @@ ImportError: attempted relative import beyond top-level package
 
 ### **BUG-SETUP-001** - Ollama setup command incorrect  
 
-**Priorité** : ⚠️ **IMPORTANT**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **IMPORTANT**  
+**Statut** :  **IDENTIFIÉ**  
 **Impact** : Modèles LLM non téléchargés automatiquement
 
 **Erreur** :
@@ -227,8 +227,8 @@ Error: unknown command "sh" for "ollama"
 
 ### **BUG-MEMORY-001** - Mémoire non persistante interface
 
-**Priorité** : ⚠️ **IMPORTANT**  
-**Statut** : ✅ **RÉSOLU** (24/10/2025)  
+**Priorité** :  **IMPORTANT**  
+**Statut** :  **RÉSOLU** (24/10/2025)  
 **Impact** : Chat interface n'a pas de mémoire contextuelle
 
 **Solution appliquée** :
@@ -238,12 +238,12 @@ Error: unknown command "sh" for "ollama"
 
 ---
 
-## 🔧 AMÉLIORATIONS TECHNIQUES
+##  AMÉLIORATIONS TECHNIQUES
 
 ### **OPT-001** - Healthchecks Docker
 
-**Priorité** : 🔧 **AMÉLIORATION**  
-**Statut** : ✅ **RÉSOLU** (24/10/2025)  
+**Priorité** :  **AMÉLIORATION**  
+**Statut** :  **RÉSOLU** (24/10/2025)  
 **Description** : Ollama/Qdrant healthchecks échouaient
 
 **Solution appliquée** :
@@ -253,8 +253,8 @@ Error: unknown command "sh" for "ollama"
 
 ### **OPT-002** - Fernet déchiffrement warnings
 
-**Priorité** : 🔧 **AMÉLIORATION**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **AMÉLIORATION**  
+**Statut** :  **IDENTIFIÉ**  
 **Description** : Warnings déchiffrement base données
 
 **Solution** :
@@ -263,8 +263,8 @@ Error: unknown command "sh" for "ollama"
 
 ### **OPT-003** - datetime.utcnow() déprécié
 
-**Priorité** : 🔧 **AMÉLIORATION**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **AMÉLIORATION**  
+**Statut** :  **IDENTIFIÉ**  
 **Description** : Python warnings sur datetime.utcnow()
 
 **Solution** :
@@ -273,8 +273,8 @@ Error: unknown command "sh" for "ollama"
 
 ### **OPT-004** - Docker build optimisation
 
-**Priorité** : 🔧 **AMÉLIORATION**  
-**Statut** : ✅ **RÉSOLU** (24/10/2025)  
+**Priorité** :  **AMÉLIORATION**  
+**Statut** :  **RÉSOLU** (24/10/2025)  
 **Description** : .dockerignore manquants
 
 **Solution appliquée** :
@@ -283,12 +283,12 @@ Error: unknown command "sh" for "ollama"
 
 ---
 
-## 🛡️ SÉCURITÉ - AUDIT BANDIT
+##  SÉCURITÉ - AUDIT BANDIT
 
 ### **SEC-001** - Random generators non-cryptographiques
 
-**Priorité** : 🛡️ **SÉCURITÉ LOW**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **SÉCURITÉ LOW**  
+**Statut** :  **IDENTIFIÉ**  
 **Impact** : 3 occurrences dans retry delays
 
 **Localisation** :
@@ -300,8 +300,8 @@ Error: unknown command "sh" for "ollama"
 
 ### **SEC-002** - Bind all interfaces
 
-**Priorité** : 🛡️ **SÉCURITÉ MEDIUM**  
-**Statut** : 🔍 **IDENTIFIÉ**  
+**Priorité** :  **SÉCURITÉ MEDIUM**  
+**Statut** :  **IDENTIFIÉ**  
 **Impact** : 1 occurrence dans script dev
 
 **Localisation** : `start_temp.py:24`  
@@ -309,66 +309,66 @@ Error: unknown command "sh" for "ollama"
 
 ---
 
-## ✅ BUGS RÉCEMMENT RÉSOLUS
+##  BUGS RÉCEMMENT RÉSOLUS
 
-### **BUG-TESTS-001** - Scripts test non fonctionnels ✅
+### **BUG-TESTS-001** - Scripts test non fonctionnels 
 **Résolu** : 24/10/2025  
 **Solution** : Scripts db_cli_test.py, test_memory_service.py, ollama_ping.py opérationnels
 
-### **BUG-DB-002** - Database methods manquantes ✅  
+### **BUG-DB-002** - Database methods manquantes   
 **Résolu** : 24/10/2025  
 **Solution** : Ajouté save_memory_fragment(), search_memories_hybrid(), delete_memory()
 
-### **BUG-HEALTH-001** - Healthchecks échouent ✅
+### **BUG-HEALTH-001** - Healthchecks échouent 
 **Résolu** : 24/10/2025  
 **Solution** : Corrigé commandes healthcheck Ollama/Qdrant
 
-### **BUG-IMPORT-002** - Imports sys.path manquants ✅
+### **BUG-IMPORT-002** - Imports sys.path manquants 
 **Résolu** : 24/10/2025  
 **Solution** : Ajouté ROOT_DIR paths dans scripts
 
-### **BUG-CONFIG-002** - asyncpg fallback manquant ✅  
+### **BUG-CONFIG-002** - asyncpg fallback manquant   
 **Résolu** : 24/10/2025  
 **Solution** : Détection asyncpg + fallback psycopg
 
-### **BUG-BUILD-001** - Docker build context trop lourd ✅
+### **BUG-BUILD-001** - Docker build context trop lourd 
 **Résolu** : 24/10/2025  
 **Solution** : .dockerignore pour exclure venv/, caches
 
 ---
 
-## 📋 Actions Prioritaires
+##  Actions Prioritaires
 
-### 🚨 Immédiat (24h)
+###  Immédiat (24h)
 1. **Corriger Config.allowed_origins** - Backend ne démarre pas
 2. **Fixer database name mismatch** - PostgreSQL connections fail  
 3. **Finaliser imports absolus** - Services imports
 
-### ⚠️ Court terme (1 semaine)  
+###  Court terme (1 semaine)  
 1. **Corriger Ollama setup command** - Modèles auto-download
 2. **Stabiliser encryption key** - Warnings Fernet
 3. **Migrer datetime.utcnow()** - Python deprecation
 
-### 🔧 Moyen terme (1 mois)
+###  Moyen terme (1 mois)
 1. **Améliorer error handling** - Graceful degradation
 2. **Optimiser Docker images** - Multi-stage builds
 3. **Renforcer sécurité** - Secrets management
 
 ---
 
-## 🔄 Workflow Bugs
+##  Workflow Bugs
 
 ### Signaler un nouveau bug
 
 1. **Reproduire** le problème de façon fiable
-2. **Catégoriser** : 🚨 Critique / ⚠️ Important / 🔧 Amélioration / 🛡️ Sécurité
+2. **Catégoriser** :  Critique /  Important /  Amélioration /  Sécurité
 3. **Documenter** avec template :
 
 ```markdown
 ### **BUG-XXX-000** - Titre court descriptif
 
-**Priorité** : 🚨/⚠️/🔧/🛡️  
-**Statut** : 🔍 IDENTIFIÉ / 🔄 EN COURS / ✅ RÉSOLU  
+**Priorité** : ///  
+**Statut** :  IDENTIFIÉ /  EN COURS /  RÉSOLU  
 **Impact** : Description impact utilisateur/système
 
 **Erreur** : (logs/stack trace si applicable)
@@ -379,25 +379,25 @@ Error: unknown command "sh" for "ollama"
 
 ### Résoudre un bug
 
-1. **Assignation** : Marquer statut 🔄 **EN COURS**
+1. **Assignation** : Marquer statut  **EN COURS**
 2. **Investigation** : Root cause analysis  
 3. **Implementation** : Code fix + tests
 4. **Validation** : Reproduire + tester fix
-5. **Documentation** : ✅ **RÉSOLU** avec détails
+5. **Documentation** :  **RÉSOLU** avec détails
 6. **Déploiement** : Merge + deploy + monitoring
 
 ---
 
-## 📊 Métriques
+##  Métriques
 
 **Temps résolution moyen** :
-- 🚨 Critiques : < 4h (SLA)
-- ⚠️ Importants : < 48h  
-- 🔧 Améliorations : < 2 semaines
+-  Critiques : < 4h (SLA)
+-  Importants : < 48h  
+-  Améliorations : < 2 semaines
 
 **Taux résolution** : 85% (17/20 derniers bugs)  
 **Backlog stabilité** : 9 bugs actifs (acceptable)
 
 ---
 
-**🐛 Bug tracking • 🔍 Root cause analysis • ✅ Resolution tracking • 📊 Quality metrics**
+** Bug tracking •  Root cause analysis •  Resolution tracking •  Quality metrics**

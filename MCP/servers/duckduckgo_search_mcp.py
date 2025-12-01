@@ -33,8 +33,8 @@ class DuckDuckGoSearchMCP:
             'Upgrade-Insecure-Requests': '1',
         }
         
-        logger.info("🦆 DuckDuckGo Search MCP Server initialized")
-        logger.info("🔒 Privacy-focused search - No API key required")
+        logger.info(" DuckDuckGo Search MCP Server initialized")
+        logger.info(" Privacy-focused search - No API key required")
     
     def _clean_text(self, text: str) -> str:
         """Nettoie le texte des balises HTML et entités"""
@@ -70,17 +70,17 @@ class DuckDuckGoSearchMCP:
                     content = response.read()
                     return content.decode('utf-8', errors='ignore')
                 else:
-                    logger.error(f"❌ HTTP {response.status} for {url}")
+                    logger.error(f" HTTP {response.status} for {url}")
                     return ""
                     
         except Exception as e:
-            logger.error(f"❌ Request error: {e}")
+            logger.error(f" Request error: {e}")
             return ""
     
     async def web_search(self, query: str, count: int = 10, region: str = "fr-fr", 
                         safesearch: str = "moderate", time_filter: str = "") -> Dict[str, Any]:
         """Recherche web avec DuckDuckGo"""
-        logger.info(f"🦆 Web search: '{query}' (count={count}, region={region})")
+        logger.info(f" Web search: '{query}' (count={count}, region={region})")
         
         try:
             # Paramètres de recherche DuckDuckGo
@@ -129,11 +129,11 @@ class DuckDuckGoSearchMCP:
                 "results": results[:count]
             }
             
-            logger.info(f"✅ Found {len(results)} web results")
+            logger.info(f" Found {len(results)} web results")
             return formatted_results
             
         except Exception as e:
-            logger.error(f"❌ Web search failed: {e}")
+            logger.error(f" Web search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -194,7 +194,7 @@ class DuckDuckGoSearchMCP:
                 results = self._fallback_simple_search(html_content)
                 
         except Exception as e:
-            logger.error(f"❌ Error parsing results: {e}")
+            logger.error(f" Error parsing results: {e}")
             
         return results
     
@@ -218,13 +218,13 @@ class DuckDuckGoSearchMCP:
                     })
                     
         except Exception as e:
-            logger.error(f"❌ Fallback search failed: {e}")
+            logger.error(f" Fallback search failed: {e}")
             
         return results
     
     async def instant_answer(self, query: str) -> Dict[str, Any]:
         """Recherche de réponse instantanée DuckDuckGo"""
-        logger.info(f"🦆 Instant answer: '{query}'")
+        logger.info(f" Instant answer: '{query}'")
         
         try:
             params = {
@@ -253,7 +253,7 @@ class DuckDuckGoSearchMCP:
                     "privacy": "high"
                 }
                 
-                logger.info(f"✅ Instant answer retrieved")
+                logger.info(f" Instant answer retrieved")
                 return result
             else:
                 return {
@@ -263,7 +263,7 @@ class DuckDuckGoSearchMCP:
                 }
                 
         except Exception as e:
-            logger.error(f"❌ Instant answer failed: {e}")
+            logger.error(f" Instant answer failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -272,7 +272,7 @@ class DuckDuckGoSearchMCP:
     
     async def news_search(self, query: str, count: int = 10, region: str = "fr-fr") -> Dict[str, Any]:
         """Recherche d'actualités avec DuckDuckGo"""
-        logger.info(f"🦆 News search: '{query}' (count={count})")
+        logger.info(f" News search: '{query}' (count={count})")
         
         # Ajouter news keyword à la recherche
         news_query = f"{query} news actualités"
@@ -292,7 +292,7 @@ class DuckDuckGoSearchMCP:
             return result
             
         except Exception as e:
-            logger.error(f"❌ News search failed: {e}")
+            logger.error(f" News search failed: {e}")
             return {
                 "query": query,
                 "error": str(e),
@@ -315,7 +315,7 @@ async def main():
         print("Test instant answer:", json.dumps(instant, indent=2, ensure_ascii=False))
         
     except Exception as e:
-        logger.error(f"❌ MCP Server error: {e}")
+        logger.error(f" MCP Server error: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())

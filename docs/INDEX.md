@@ -46,22 +46,22 @@ Pending Phases: 8 (Lua), 9 (Elixir)
 
 ```
 Projet-Jarvis/
-├── core/                         # Phase 1: Rust Backend (Axum)
-├── backend-audio-cpp/            # Phase 2: C++ Audio Engine
-├── backend-python-bridges/       # Phase 3: Python Bridges
-├── backend-rust-db/              # Phase 4: Rust DB Layer
-├── backend-rust-mqtt/            # Phase 5: MQTT Automations
-├── monitoring-go/                # Phase 6: Go Monitoring
-├── frontend/                     # Phase 7: React Frontend
-├── backend-lua-plugins/          # Phase 8: Lua Plugins
-├── clustering-elixir/            # Phase 9: Elixir Clustering
-│
-├── docs/                         # Documentation
-├── config/                       # Configuration files
-├── scripts/                      # Utilities and scripts
-├── tests/                        # Integrated tests
-├── docker-compose.yml            # Container orchestration
-└── certs/                        # TLS certificates
+ core/                         # Phase 1: Rust Backend (Axum)
+ backend-audio-cpp/            # Phase 2: C++ Audio Engine
+ backend-python-bridges/       # Phase 3: Python Bridges
+ backend-rust-db/              # Phase 4: Rust DB Layer
+ backend-rust-mqtt/            # Phase 5: MQTT Automations
+ monitoring-go/                # Phase 6: Go Monitoring
+ frontend/                     # Phase 7: React Frontend
+ backend-lua-plugins/          # Phase 8: Lua Plugins
+ clustering-elixir/            # Phase 9: Elixir Clustering
+
+ docs/                         # Documentation
+ config/                       # Configuration files
+ scripts/                      # Utilities and scripts
+ tests/                        # Integrated tests
+ docker-compose.yml            # Container orchestration
+ certs/                        # TLS certificates
 ```
 
 ---

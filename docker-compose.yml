@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   jarvis_network:
     driver: bridge
@@ -22,21 +20,23 @@ services:
       context: ./jarvis-secretsd
       dockerfile: Dockerfile.runtime
     container_name: jarvis_secretsd
+    env_file:
+      - ./jarvis-secretsd/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.5
     ports:
       - "127.0.0.1:8081:8081"
-    environment:
-      - RUST_LOG=info
     volumes:
-      - secretsd_vault:/opt/jarvis/secrets
-      - secretsd_audit:/opt/jarvis/audit
+      # Mount local migrated data to container
+      - ./jarvis-secretsd/run/secrets:/opt/jarvis/secrets
+      - ./jarvis-secretsd/run/audit:/opt/jarvis/audit
+      - ./jarvis-secretsd/run/master.key:/opt/jarvis/master.key
       - ./jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro
-      - ./jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro
+      - ./jarvis-secretsd/policy.yaml.example:/etc/jarvis-secretsd/policy.yaml:ro
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/healthz"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -53,22 +53,20 @@ services:
       context: .
       dockerfile: services/stt/Dockerfile
     container_name: jarvis_stt_api
+    env_file:
+      - ./services/stt/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.10
     ports:
       - "8003:8003"
-    environment:
-      - SERVICE_NAME=stt-api
-      - STT_MODEL_PATH=/app/models/stt
-      - BACKEND_API_URL=http://172.20.0.40:8000
     volumes:
       - ./services/stt:/app
       - ./models/stt:/app/models/stt
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -79,22 +77,20 @@ services:
       context: .
       dockerfile: services/tts/Dockerfile
     container_name: jarvis_tts_api
+    env_file:
+      - ./services/tts/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.20
     ports:
       - "8002:8002"
-    environment:
-      - SERVICE_NAME=tts-api
-      - TTS_MODEL_PATH=/app/models/tts
-      - BACKEND_API_URL=http://172.20.0.40:8000
     volumes:
       - ./services/tts:/app
       - ./models/tts:/app/models/tts
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -123,7 +119,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "bash", "-lc", "ollama --version >/dev/null 2>&1"]
+      test: [ "CMD", "bash", "-lc", "ollama --version >/dev/null 2>&1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -134,6 +130,8 @@ services:
       context: ./core
       dockerfile: Dockerfile
     container_name: jarvis_backend
+    env_file:
+      - ./core/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.40
@@ -147,17 +145,6 @@ services:
         reservations:
           memory: 512M
           cpus: '0.5'
-    environment:
-      - RUST_LOG=info
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-jarvis}:${POSTGRES_PASSWORD}@172.20.0.100:5432/${POSTGRES_DB:-jarvis_db}
-      - REDIS_URL=redis://172.20.0.110:6379
-      - OLLAMA_BASE_URL=http://172.20.0.30:11434
-      - TTS_API_URL=http://172.20.0.20:8002
-      - STT_API_URL=http://172.20.0.10:8003
-      - PYTHON_BRIDGES_URL=http://172.20.0.35:8005
-      # - AUDIO_ENGINE_URL=http://172.20.0.36:8004    # Phase 2 not deployed yet
-      - QDRANT_URL=http://172.20.0.120:6333
-      - TIMESCALE_URL=postgresql://${TIMESCALE_USER:-jarvis}:${TIMESCALE_PASSWORD}@172.20.0.130:5432/${TIMESCALE_DB:-jarvis_timeseries}
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
@@ -177,65 +164,32 @@ services:
       timescale:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8100/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Container 5: Interface Container - Cinquième dans le schéma
-  interface:
-    build:
-      context: .
-      dockerfile: services/interface/Dockerfile
-    container_name: jarvis_interface
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.50
-    ports:
-      - "8010:8010"  # Interface WebSocket bridge
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '1.0'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
-    environment:
-      - BACKEND_API_URL=http://172.20.0.40:8100
-      - TTS_API_URL=http://172.20.0.20:8002
-      - STT_API_URL=http://172.20.0.10:8003
-    volumes:
-      - ./services/interface:/app
-      - ./frontend:/app/frontend
-      - /app/node_modules
-    restart: unless-stopped
-    depends_on:
-      - backend
-      - tts-api
-      - stt-api
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  frontend-ui:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: jarvis_frontend
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: jarvis_open_webui
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.60
     ports:
-      - "3000:3000"
+      - "3000:8080"
     environment:
-      - REACT_APP_WS_URL=ws://localhost:8010/ws
-      - REACT_APP_API_KEY=jarvis-dev-key
+      - OLLAMA_BASE_URL=http://jarvis_ollama:11434
+      - OLLAMA_API_BASE_URL=http://jarvis_ollama:11434
+      - WEBUI_SECRET_KEY=${JWT_SECRET}
+      # Memory / RAG Configuration
+      - VECTOR_DB=qdrant
+      - QDRANT_URI=http://jarvis_qdrant:6333
+    volumes:
+      - open_webui_data:/app/backend/data
     restart: unless-stopped
     depends_on:
-      - interface
+      ollama:
+        condition: service_healthy
 
   # PyO3 Rust-Python Bridge
   pyo3-bridge:
@@ -243,18 +197,18 @@ services:
       context: ./backend-pyo3-bridge
       dockerfile: Dockerfile
     container_name: jarvis_pyo3_bridge
+    env_file:
+      - ./backend-pyo3-bridge/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.35
     ports:
       - "8005:8005"
-    environment:
-      - RUST_LOG=info
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python3", "-c", "import jarvis_bridge; print('OK')"]
+      test: [ "CMD", "python3", "-c", "import jarvis_bridge; print('OK')" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -276,7 +230,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_db"]
+      test: [ "CMD-SHELL", "pg_isready -U jarvis -d jarvis_db" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -293,12 +247,12 @@ services:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # 🧠 Qdrant Vector Database - Mémoire vectorielle neuromorphique
+  # Qdrant Vector Database - Memoire vectorielle neuromorphique
   qdrant:
     image: qdrant/qdrant:latest
     container_name: jarvis_qdrant
@@ -306,8 +260,8 @@ services:
       jarvis_network:
         ipv4_address: 172.20.0.120
     ports:
-      - "6333:6333"  # API REST
-      - "6334:6334"  # gRPC (optionnel)
+      - "6333:6333" # API REST
+      - "6334:6334" # gRPC (optionnel)
     environment:
       - QDRANT__SERVICE__HTTP_PORT=6333
       - QDRANT__SERVICE__GRPC_PORT=6334
@@ -318,12 +272,12 @@ services:
       - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333'"]
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333'" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # 🧠 TimescaleDB - Mémoire temporelle pour logs et métriques
+  # TimescaleDB - Memoire temporelle pour logs et metriques
   timescale:
     image: timescale/timescaledb:latest-pg15
     container_name: jarvis_timescale
@@ -339,34 +293,10 @@ services:
       - timescale_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries"]
+      test: [ "CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries" ]
       interval: 30s
       timeout: 10s
       retries: 5
-
-  # Setup Ollama models (run once)
-  ollama-setup:
-    image: ollama/ollama:latest
-    container_name: jarvis_ollama_setup
-    networks:
-      - jarvis_network
-    volumes:
-      - ollama_data:/root/.ollama
-    depends_on:
-      ollama:
-        condition: service_healthy
-    environment:
-      - OLLAMA_HOST=http://172.20.0.30:11434
-    command: >
-      bash -c "
-        echo '🤖 Téléchargement des modèles Ollama...' &&
-        ollama pull llama3.1:latest &&
-        echo '✅ llama3.1:latest téléchargé' &&
-        ollama pull llama3.2:1b &&
-        echo '✅ llama3.2:1b téléchargé' &&
-        echo '🎉 Tous les modèles sont prêts !'
-      "
-    restart: "no"
 
 volumes:
   secretsd_vault:
@@ -376,4 +306,6 @@ volumes:
   ollama_data:
   qdrant_data:
   timescale_data:
+  open_webui_data:
+
 

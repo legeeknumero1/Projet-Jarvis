@@ -103,7 +103,7 @@ impl LuaSandbox {
         // Load plugin code
         lua.load(&content).eval()?;
 
-        info!("✅ Plugin loaded: {} v{}", plugin.metadata.name, plugin.metadata.version);
+        info!(" Plugin loaded: {} v{}", plugin.metadata.name, plugin.metadata.version);
         Ok(())
     }
 
@@ -209,7 +209,7 @@ pub mod lua_api {
 
         // jarvis.log(message)
         jarvis.set("log", lua.create_function(|_, msg: String| {
-            tracing::info!("🧩 Plugin: {}", msg);
+            tracing::info!(" Plugin: {}", msg);
             Ok(())
         })?)?;
 

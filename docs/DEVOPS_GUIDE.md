@@ -1,10 +1,10 @@
 # Guide DevOps Jarvis v1.9.0
 
-## 📋 **Vue d'ensemble Sécurisée**
+##  **Vue d'ensemble Sécurisée**
 
 Jarvis v1.9.0 intègre une **stack DevOps professionnelle sécurisée** avec monitoring avancé, authentification, et corrections de sécurité critiques pour un déploiement production-ready.
 
-### 🎯 **Objectifs DevOps Jarvis v1.9.0**
+###  **Objectifs DevOps Jarvis v1.9.0**
 - **CI/CD sécurisé** : Pipelines avec tests sécurité intégrés (Trivy, SAST)
 - **GitOps RBAC** : Déploiement K8s avec contrôles d'accès et validation
 - **Monitoring sécurisé** : Métriques Jarvis custom + logs sanitisés + alerting intelligent
@@ -13,33 +13,33 @@ Jarvis v1.9.0 intègre une **stack DevOps professionnelle sécurisée** avec mon
 
 ---
 
-## 🏗️ **Architecture DevOps**
+##  **Architecture DevOps**
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    JARVIS DevOps STACK                      │
-├─────────────────────────────────────────────────────────────┤
-│  🔧 Jenkins CI/CD    │  🚀 ArgoCD GitOps │  📊 Monitoring    │
-│  - Build/Test/Deploy │  - K8s Deployments│  - Prometheus     │
-│  - Multi-stage       │  - Auto-sync       │  - Grafana        │
-│  - Security scans    │  - Self-healing    │  - Loki + Promtail│
-│                      │                   │  - AlertManager   │
-├─────────────────────────────────────────────────────────────┤
-│                    ☸️ Kubernetes K3s                        │
-│  - Cluster local production-ready                          │
-│  - kubectl configuré                                       │
-│  - Manifests Jarvis (PostgreSQL, Backend, Frontend)       │
-├─────────────────────────────────────────────────────────────┤
-│                 🐳 Docker Infrastructure                    │
-│  - Réseau jarvis_network (172.20.0.0/16) - Jarvis Core    │
-│  - Réseau jarvis_devops (172.21.0.0/16) - DevOps Tools    │
-│  - Volumes persistants pour tous les services             │
-└─────────────────────────────────────────────────────────────┘
+
+                    JARVIS DevOps STACK                      
+
+   Jenkins CI/CD       ArgoCD GitOps    Monitoring    
+  - Build/Test/Deploy   - K8s Deployments  - Prometheus     
+  - Multi-stage         - Auto-sync         - Grafana        
+  - Security scans      - Self-healing      - Loki + Promtail
+                                           - AlertManager   
+
+                     Kubernetes K3s                        
+  - Cluster local production-ready                          
+  - kubectl configuré                                       
+  - Manifests Jarvis (PostgreSQL, Backend, Frontend)       
+
+                  Docker Infrastructure                    
+  - Réseau jarvis_network (172.20.0.0/16) - Jarvis Core    
+  - Réseau jarvis_devops (172.21.0.0/16) - DevOps Tools    
+  - Volumes persistants pour tous les services             
+
 ```
 
 ---
 
-## 🚀 **Démarrage de la Stack DevOps**
+##  **Démarrage de la Stack DevOps**
 
 ### **1. Démarrage Complet**
 ```bash
@@ -68,7 +68,7 @@ sudo kubectl get applications -n argocd
 
 ---
 
-## 🔧 **Jenkins CI/CD**
+##  **Jenkins CI/CD**
 
 ### **Configuration Pipeline**
 - **Jenkinsfile** : `/devops-tools/jenkins/Jenkinsfile`
@@ -76,16 +76,16 @@ sudo kubectl get applications -n argocd
 - **Multi-stage pipeline** : Checkout → Dependencies → Tests → Build → Deploy
 
 ### **Stages Pipeline**
-1. **🔍 Checkout** : Git clone du repository
-2. **📦 Dependencies** : Installation deps Python + Node.js (parallèle)
-3. **🧪 Tests** : 
+1. ** Checkout** : Git clone du repository
+2. ** Dependencies** : Installation deps Python + Node.js (parallèle)
+3. ** Tests** : 
    - Tests Python backend (pytest)
    - Tests React frontend (jest)
    - Scans sécurité (Trivy)
-4. **🐳 Build** : Construction images Docker optimisées
-5. **📊 Quality Gates** : Code coverage, linting, métriques qualité
-6. **🚀 Deploy Staging** : Auto-deploy sur namespace staging
-7. **🏭 Deploy Production** : Deploy manuel avec approbation
+4. ** Build** : Construction images Docker optimisées
+5. ** Quality Gates** : Code coverage, linting, métriques qualité
+6. ** Deploy Staging** : Auto-deploy sur namespace staging
+7. ** Deploy Production** : Deploy manuel avec approbation
 
 ### **Commandes Jenkins**
 ```bash
@@ -101,7 +101,7 @@ docker restart jarvis_jenkins
 
 ---
 
-## 🚀 **ArgoCD GitOps**
+##  **ArgoCD GitOps**
 
 ### **Configuration K3s**
 - **Cluster** : K3s v1.33.3 local
@@ -118,13 +118,13 @@ docker restart jarvis_jenkins
 ```bash
 # Localisation
 /devops-tools/k8s/jarvis/
-├── namespace.yaml     # Namespace jarvis
-├── postgres.yaml      # PostgreSQL + PVC
-└── backend.yaml       # Backend + ConfigMap
+ namespace.yaml     # Namespace jarvis
+ postgres.yaml      # PostgreSQL + PVC
+ backend.yaml       # Backend + ConfigMap
 
 # Application ArgoCD
 /devops-tools/k8s/argocd-apps/
-└── jarvis-app.yaml    # Application ArgoCD
+ jarvis-app.yaml    # Application ArgoCD
 ```
 
 ### **Commandes ArgoCD**
@@ -145,7 +145,7 @@ sudo kubectl describe application jarvis -n argocd
 
 ---
 
-## 📊 **Monitoring Stack**
+##  **Monitoring Stack**
 
 ### **Prometheus - Collecte Métriques**
 - **URL** : http://localhost:9090
@@ -172,7 +172,7 @@ sudo kubectl describe application jarvis -n argocd
 
 ---
 
-## 🔍 **Métriques Surveillées**
+##  **Métriques Surveillées**
 
 ### **Métriques Jarvis**
 ```bash
@@ -204,7 +204,7 @@ container_network_receive_bytes_total # Network par container
 
 ---
 
-## 🚨 **Alerting et Monitoring**
+##  **Alerting et Monitoring**
 
 ### **Alertes Configurées**
 - **Services Down** : Backend, APIs, Ollama, Databases
@@ -233,7 +233,7 @@ for: 1m
 
 ---
 
-## 🛠️ **Maintenance et Troubleshooting**
+##  **Maintenance et Troubleshooting**
 
 ### **Logs Utiles**
 ```bash
@@ -284,66 +284,66 @@ curl -sfL https://get.k3s.io | sh -
 
 ---
 
-## 📁 **Structure Fichiers DevOps**
+##  **Structure Fichiers DevOps**
 
 ```
 devops-tools/
-├── docker-compose-devops.yml     # Stack principale DevOps
-├── start-devops.sh               # Script démarrage complet
-├── start-argocd.sh              # Script ArgoCD K3s
-├── DEVOPS-STATUS.md             # Status et documentation
-├── jenkins/
-│   ├── Jenkinsfile              # Pipeline CI/CD
-│   └── plugins.txt              # Plugins Jenkins
-├── monitoring/
-│   ├── prometheus/
-│   │   ├── prometheus.yml       # Config Prometheus
-│   │   ├── alertmanager.yml     # Config AlertManager
-│   │   └── rules/
-│   │       └── jarvis-alerts.yml # Règles alerting
-│   ├── grafana/
-│   │   ├── provisioning/        # Datasources + dashboards
-│   │   └── dashboards/          # Dashboards Jarvis
-│   └── loki/
-│       ├── loki.yml            # Config Loki
-│       └── promtail.yml        # Config Promtail
-├── k8s/
-│   ├── jarvis/                  # Manifests Jarvis
-│   │   ├── namespace.yaml
-│   │   ├── postgres.yaml
-│   │   └── backend.yaml
-│   └── argocd-apps/            # Applications ArgoCD
-│       └── jarvis-app.yaml
-└── configs/
-    └── nginx/
-        └── nginx.conf          # Reverse proxy DevOps
+ docker-compose-devops.yml     # Stack principale DevOps
+ start-devops.sh               # Script démarrage complet
+ start-argocd.sh              # Script ArgoCD K3s
+ DEVOPS-STATUS.md             # Status et documentation
+ jenkins/
+    Jenkinsfile              # Pipeline CI/CD
+    plugins.txt              # Plugins Jenkins
+ monitoring/
+    prometheus/
+       prometheus.yml       # Config Prometheus
+       alertmanager.yml     # Config AlertManager
+       rules/
+           jarvis-alerts.yml # Règles alerting
+    grafana/
+       provisioning/        # Datasources + dashboards
+       dashboards/          # Dashboards Jarvis
+    loki/
+        loki.yml            # Config Loki
+        promtail.yml        # Config Promtail
+ k8s/
+    jarvis/                  # Manifests Jarvis
+       namespace.yaml
+       postgres.yaml
+       backend.yaml
+    argocd-apps/            # Applications ArgoCD
+        jarvis-app.yaml
+ configs/
+     nginx/
+         nginx.conf          # Reverse proxy DevOps
 ```
 
 ---
 
-## 🎯 **Prochaines Étapes**
+##  **Prochaines Étapes**
 
 ### **En Cours de Finalisation**
-- ✅ Stack DevOps complète déployée
-- 🔄 Intégration métriques Prometheus dans tous services Jarvis
-- 🔄 Dashboards Grafana spécifiques Jarvis
-- 🔄 Pipeline Jenkins fonctionnel pour build/test/deploy
-- 🔄 Déploiement complet Jarvis via ArgoCD
+-  Stack DevOps complète déployée
+-  Intégration métriques Prometheus dans tous services Jarvis
+-  Dashboards Grafana spécifiques Jarvis
+-  Pipeline Jenkins fonctionnel pour build/test/deploy
+-  Déploiement complet Jarvis via ArgoCD
 
 ### **Améliorations Futures**
-- 🔮 SonarQube pour analyse qualité code
-- 🔮 Vault pour gestion secrets
-- 🔮 Backup automatique configurations et données
-- 🔮 SSL/TLS pour tous les services
-- 🔮 Multi-cluster ArgoCD pour staging/production
-- 🔮 Intégration notifications Slack/Discord
-- 🔮 Tests E2E automatisés (Cypress/Playwright)
+-  SonarQube pour analyse qualité code
+-  Vault pour gestion secrets
+-  Backup automatique configurations et données
+-  SSL/TLS pour tous les services
+-  Multi-cluster ArgoCD pour staging/production
+-  Intégration notifications Slack/Discord
+-  Tests E2E automatisés (Cypress/Playwright)
 
 ---
 
 ---
 
-## 📊 **MÉTRIQUES SÉCURITÉ DEVOPS**
+##  **MÉTRIQUES SÉCURITÉ DEVOPS**
 
 ### **Indicateurs Sécurité DevOps**
 - **Security Score Global** : 9.2/10 (vs 3.0/10 en v1.3.0)
@@ -365,14 +365,14 @@ devops-tools/
 
 ---
 
-## 🔐 **CONFORMITÉ SÉCURITÉ**
+##  **CONFORMITÉ SÉCURITÉ**
 
 ### **Standards Appliqués**
-- ✅ **OWASP Top 10** : Protection contre toutes les vulnérabilités critiques
-- ✅ **ISO 27001** : Gestion sécurisée de l'information
-- ✅ **NIST Cybersecurity** : Framework de sécurité respecté
-- ✅ **GDPR Compliance** : Respect vie privée et données personnelles
-- ✅ **SOC 2 Type II** : Contrôles sécurité opérationnels
+-  **OWASP Top 10** : Protection contre toutes les vulnérabilités critiques
+-  **ISO 27001** : Gestion sécurisée de l'information
+-  **NIST Cybersecurity** : Framework de sécurité respecté
+-  **GDPR Compliance** : Respect vie privée et données personnelles
+-  **SOC 2 Type II** : Contrôles sécurité opérationnels
 
 ### **Audit & Certification**
 - **Audit sécurité complet** : Réalisé en v1.3.1
@@ -383,7 +383,7 @@ devops-tools/
 
 ---
 
-**🔐 Stack DevOps Jarvis v1.9.0 - Sécurisé & Production-Ready !**
+** Stack DevOps Jarvis v1.9.0 - Sécurisé & Production-Ready !**
 
 *Documentation mise à jour le 2025-01-22*
 *Version sécurité : Score 9.2/10 avec corrections critiques appliquées*

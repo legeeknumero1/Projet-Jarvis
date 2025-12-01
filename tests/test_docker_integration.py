@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🐳 Tests d'Intégration Docker - Système Mémoire Neuromorphique Jarvis
+ Tests d'Intégration Docker - Système Mémoire Neuromorphique Jarvis
 Tests complets de l'architecture Docker et des services
 """
 
@@ -270,7 +270,7 @@ class TestMemorySystemLogic:
 
 def run_integration_tests():
     """Exécute tous les tests d'intégration"""
-    print("🐳 LANCEMENT TESTS D'INTÉGRATION DOCKER + SERVICES")
+    print(" LANCEMENT TESTS D'INTÉGRATION DOCKER + SERVICES")
     print("=" * 70)
     
     test_args = [
@@ -284,12 +284,12 @@ def run_integration_tests():
     try:
         result = pytest.main(test_args)
         if result == 0:
-            print("\n✅ TOUS LES TESTS D'INTÉGRATION PASSÉS !")
+            print("\n TOUS LES TESTS D'INTÉGRATION PASSÉS !")
         else:
-            print(f"\n❌ TESTS D'INTÉGRATION ÉCHOUÉS (Code: {result})")
+            print(f"\n TESTS D'INTÉGRATION ÉCHOUÉS (Code: {result})")
         return result
     except Exception as e:
-        print(f"\n💥 ERREUR TESTS D'INTÉGRATION: {e}")
+        print(f"\n ERREUR TESTS D'INTÉGRATION: {e}")
         return -1
 
 if __name__ == "__main__":

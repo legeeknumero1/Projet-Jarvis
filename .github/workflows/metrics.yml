@@ -1,0 +1,217 @@
+name: Metrics Module CI
+
+on:
+  push:
+    branches:
+      - feature/metrics-module
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'jarvis-secretsd/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: Build and Test Metrics Module
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.82.0
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            jarvis-secretsd/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: cargo fmt --check
+
+      - name: Lint with Clippy
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: cargo test --all-features --verbose
+
+      - name: Build release binary
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: cargo build --release --verbose
+
+      - name: Security audit
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: |
+          cargo install cargo-audit
+          cargo audit
+
+      - name: Verify metrics module
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: |
+          if grep -q "mod metrics" src/lib.rs || grep -q "mod metrics" src/main.rs; then
+            echo " Metrics module found"
+          else
+            echo " Metrics module not found"
+            exit 1
+          fi
+
+      - name: Check binary size
+        working-directory: jarvis-secretsd/jarvis-secretsd
+        run: |
+          BINARY_SIZE=$(stat -c%s target/release/jarvis-secretsd)
+          BINARY_SIZE_MB=$((BINARY_SIZE / 1024 / 1024))
+          echo "Binary size: ${BINARY_SIZE_MB} MB"
+          if [ $BINARY_SIZE_MB -gt 10 ]; then
+            echo "  Warning: Binary size exceeds 10 MB"
+          else
+            echo " Binary size within acceptable range"
+          fi
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jarvis-secretsd-metrics
+          path: jarvis-secretsd/jarvis-secretsd/target/release/jarvis-secretsd
+          retention-days: 7
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime image
+        working-directory: jarvis-secretsd
+        run: |
+          # First build the binary
+          docker build -t jarvis-secretsd-builder -f Dockerfile .
+
+          # Extract binary
+          docker create --name temp-builder jarvis-secretsd-builder
+          docker cp temp-builder:/usr/src/jarvis-secretsd/target/release/jarvis-secretsd ./target/release/jarvis-secretsd
+          docker rm temp-builder
+
+          # Build runtime image
+          docker build -t jarvis-secretsd:metrics -f Dockerfile.runtime .
+
+      - name: Test Docker image
+        run: |
+          docker run -d --name test-secretsd \
+            -e RUST_LOG=info \
+            -v $(pwd)/jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro \
+            -v $(pwd)/jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro \
+            jarvis-secretsd:metrics
+
+          sleep 10
+
+          # Check health endpoint
+          docker exec test-secretsd curl -f http://localhost:8081/healthz || exit 1
+
+          # Check metrics endpoint
+          docker exec test-secretsd curl -f http://localhost:8081/metrics || exit 1
+
+          docker stop test-secretsd
+          docker rm test-secretsd
+
+      - name: Export image
+        run: docker save jarvis-secretsd:metrics | gzip > jarvis-secretsd-metrics.tar.gz
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image-metrics
+          path: jarvis-secretsd-metrics.tar.gz
+          retention-days: 7
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download binary artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jarvis-secretsd-metrics
+          path: jarvis-secretsd/jarvis-secretsd/target/release/
+
+      - name: Set binary permissions
+        run: chmod +x jarvis-secretsd/jarvis-secretsd/target/release/jarvis-secretsd
+
+      - name: Run integration tests
+        working-directory: jarvis-secretsd
+        run: |
+          # Start daemon
+          mkdir -p /tmp/jarvis-test/secrets /tmp/jarvis-test/audit
+
+          cat > /tmp/jarvis-test/config.toml << 'EOF'
+          [server]
+          bind_addr = "127.0.0.1:8081"
+
+          [paths]
+          vault_path = "/tmp/jarvis-test/secrets/vault.json"
+          audit_path = "/tmp/jarvis-test/audit/audit.jsonl"
+          master_key_path = "/tmp/jarvis-test/secrets/master.key"
+
+          [security]
+          rotation_days = 90
+          grace_days = 14
+          require_client_id_header = true
+          rbac_policy_path = "/tmp/jarvis-test/policy.yaml"
+
+          [crypto]
+          aead = "aes-gcm-256"
+
+          [logging]
+          level = "info"
+          json = false
+          EOF
+
+          cp policy.yaml /tmp/jarvis-test/policy.yaml
+
+          RUST_LOG=info ./jarvis-secretsd/target/release/jarvis-secretsd \
+            --config /tmp/jarvis-test/config.toml &
+
+          DAEMON_PID=$!
+          sleep 3
+
+          # Test health endpoint
+          curl -f http://127.0.0.1:8081/healthz || exit 1
+
+          # Test metrics endpoint
+          METRICS=$(curl -f http://127.0.0.1:8081/metrics)
+
+          # Verify metrics contain expected labels
+          echo "$METRICS" | grep -q "http_requests_total" || exit 1
+          echo "$METRICS" | grep -q "secrets_total" || exit 1
+          echo "$METRICS" | grep -q "rbac_allowed_total" || exit 1
+
+          echo " All integration tests passed"
+
+          kill $DAEMON_PID

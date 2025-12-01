@@ -14,7 +14,7 @@ pub struct SearchService {
 impl SearchService {
     /// Créer nouveau service search
     pub async fn new() -> DbResult<Self> {
-        info!("🔍 Initializing Tantivy search index");
+        info!(" Initializing Tantivy search index");
 
         // Créer schema
         let mut schema_builder = Schema::builder();
@@ -29,7 +29,7 @@ impl SearchService {
         // Créer index en mémoire
         let index = Index::create_in_ram(schema.clone());
 
-        info!("✅ Tantivy index initialized");
+        info!(" Tantivy index initialized");
 
         Ok(Self { index, schema })
     }
@@ -69,7 +69,7 @@ impl SearchService {
         index_writer.commit()
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        info!("✅ Chunk indexed: {}", chunk.id);
+        info!(" Chunk indexed: {}", chunk.id);
         Ok(())
     }
 
@@ -102,7 +102,7 @@ impl SearchService {
         index_writer.commit()
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        info!("✅ Batch indexed chunks");
+        info!(" Batch indexed chunks");
         Ok(chunks.len())
     }
 
@@ -169,7 +169,7 @@ impl SearchService {
             });
         }
 
-        info!("✅ Found {} results", results.len());
+        info!(" Found {} results", results.len());
         Ok(results)
     }
 
@@ -188,7 +188,7 @@ impl SearchService {
         index_writer.commit()
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        info!("✅ Document deleted: {}", id);
+        info!(" Document deleted: {}", id);
         Ok(())
     }
 
@@ -219,7 +219,7 @@ impl SearchService {
         index_writer.commit()
             .map_err(|e| DbError::Search(e.to_string()))?;
 
-        info!("✅ Index cleared");
+        info!(" Index cleared");
         Ok(())
     }
 }

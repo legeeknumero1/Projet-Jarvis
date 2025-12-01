@@ -3,15 +3,15 @@
 
 set -e
 
-echo "🧪 Tests observabilité Jarvis v1.3"
+echo " Tests observabilité Jarvis v1.3"
 echo "================================"
 
 # 1) Validation config JSON
 echo "1) Validation config logs..."
 if command -v jq >/dev/null 2>&1; then
-    jq . prod/logs-config.json >/dev/null && echo "✅ JSON config valide"
+    jq . prod/logs-config.json >/dev/null && echo " JSON config valide"
 else
-    python -c "import json; json.load(open('prod/logs-config.json'))" && echo "✅ JSON config valide"
+    python -c "import json; json.load(open('prod/logs-config.json'))" && echo " JSON config valide"
 fi
 
 # 2) Test démarrage avec config
@@ -58,7 +58,7 @@ wait $BACKEND_PID 2>/dev/null || true
 # 5) Vérification logs
 echo "5) Vérification logs générés..."
 if [ -f "/tmp/jarvis-test-logs/app.jsonl" ]; then
-    echo "✅ Fichier logs JSON créé"
+    echo " Fichier logs JSON créé"
     echo "   Nombre de lignes: $(wc -l < /tmp/jarvis-test-logs/app.jsonl)"
     
     echo "   Exemples logs (3 premiers):"
@@ -72,17 +72,17 @@ if [ -f "/tmp/jarvis-test-logs/app.jsonl" ]; then
     
     # Vérifier présence champs obligatoires
     if grep -q '"request_id"' /tmp/jarvis-test-logs/app.jsonl; then
-        echo "✅ request_id présent dans les logs"
+        echo " request_id présent dans les logs"
     else
-        echo "❌ request_id manquant dans les logs"
+        echo " request_id manquant dans les logs"
     fi
     
     if grep -q '"component":"api"' /tmp/jarvis-test-logs/app.jsonl; then
-        echo "✅ component api détecté"
+        echo " component api détecté"
     fi
     
 else
-    echo "❌ Aucun fichier log JSON généré"
+    echo " Aucun fichier log JSON généré"
 fi
 
 # 6) Cleanup
@@ -90,7 +90,7 @@ rm -f /tmp/logs-config-test.json
 rm -rf /tmp/jarvis-test-logs
 
 echo ""
-echo "🎯 Tests terminés"
+echo " Tests terminés"
 echo "Pour tests WebSocket:"
 echo "   websocat ws://127.0.0.1:8000/ws <<< '{\"message\":\"test\",\"user_id\":\"enzo\"}'"
 echo ""

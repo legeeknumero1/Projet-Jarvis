@@ -113,12 +113,12 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "🤖 Attente démarrage Ollama..."
+          echo " Attente démarrage Ollama..."
           sleep 30
-          echo "🤖 Téléchargement des modèles Ollama..."
+          echo " Téléchargement des modèles Ollama..."
           ollama pull llama3.1:latest || echo "Erreur téléchargement llama3.1"
           ollama pull llama3.2:1b || echo "Erreur téléchargement llama3.2"
-          echo "✅ Setup Ollama terminé !"
+          echo " Setup Ollama terminé !"
         resources:
           requests:
             memory: "128Mi"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🧪 SCRIPT EXÉCUTION TESTS - JARVIS V1.3.2
+ SCRIPT EXÉCUTION TESTS - JARVIS V1.3.2
 =========================================
 Script pour lancer tests avec mesure couverture et rapports
 Target: 85% couverture avec rapports détaillés
@@ -17,17 +17,17 @@ from datetime import datetime
 
 def print_banner():
     """Affiche bannière de démarrage"""
-    print("🧪" + "="*60)
+    print("" + "="*60)
     print("    JARVIS V1.3.2 - ENTERPRISE TEST RUNNER")
     print("="*62)
-    print(f"📅 Démarré le: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("🎯 Objectif couverture: 85%")
+    print(f" Démarré le: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(" Objectif couverture: 85%")
     print("="*62)
 
 
 def check_dependencies():
     """Vérifie les dépendances requises"""
-    print("\n🔍 Vérification des dépendances...")
+    print("\n Vérification des dépendances...")
     
     required_packages = [
         'pytest',
@@ -43,23 +43,23 @@ def check_dependencies():
     for package in required_packages:
         try:
             __import__(package.replace('-', '_'))
-            print(f"  ✅ {package}")
+            print(f"   {package}")
         except ImportError:
             missing_packages.append(package)
-            print(f"  ❌ {package}")
+            print(f"   {package}")
     
     if missing_packages:
-        print(f"\n⚠️  Packages manquants: {', '.join(missing_packages)}")
-        print("💡 Installation: pip install " + " ".join(missing_packages))
+        print(f"\n  Packages manquants: {', '.join(missing_packages)}")
+        print(" Installation: pip install " + " ".join(missing_packages))
         return False
     
-    print("✅ Toutes les dépendances sont installées")
+    print(" Toutes les dépendances sont installées")
     return True
 
 
 def run_tests(test_type="all", verbose=False, coverage=True):
     """Lance les tests avec options"""
-    print(f"\n🚀 Lancement tests ({test_type})...")
+    print(f"\n Lancement tests ({test_type})...")
     
     # Construction commande pytest
     cmd = ["python", "-m", "pytest"]
@@ -99,7 +99,7 @@ def run_tests(test_type="all", verbose=False, coverage=True):
     # Répertoire des tests
     cmd.append("tests/")
     
-    print(f"📝 Commande: {' '.join(cmd)}")
+    print(f" Commande: {' '.join(cmd)}")
     
     # Exécution
     start_time = time.time()
@@ -108,27 +108,27 @@ def run_tests(test_type="all", verbose=False, coverage=True):
         end_time = time.time()
         
         # Affichage résultats
-        print(f"\n⏱️  Durée: {end_time - start_time:.2f}s")
-        print(f"🔢 Code de retour: {result.returncode}")
+        print(f"\n  Durée: {end_time - start_time:.2f}s")
+        print(f" Code de retour: {result.returncode}")
         
         if result.stdout:
-            print("\n📊 STDOUT:")
+            print("\n STDOUT:")
             print(result.stdout)
         
         if result.stderr:
-            print("\n⚠️  STDERR:")
+            print("\n  STDERR:")
             print(result.stderr)
         
         return result.returncode == 0
         
     except Exception as e:
-        print(f"❌ Erreur lors de l'exécution: {e}")
+        print(f" Erreur lors de l'exécution: {e}")
         return False
 
 
 def generate_coverage_report():
     """Génère rapport de couverture détaillé"""
-    print("\n📊 Génération rapport couverture...")
+    print("\n Génération rapport couverture...")
     
     try:
         # Rapport terminal
@@ -136,7 +136,7 @@ def generate_coverage_report():
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode == 0:
-            print("✅ Rapport terminal généré")
+            print(" Rapport terminal généré")
             
             # Extraire pourcentage couverture
             lines = result.stdout.split('\n')
@@ -147,13 +147,13 @@ def generate_coverage_report():
                     for part in parts:
                         if "%" in part:
                             coverage_percent = float(part.replace("%", ""))
-                            print(f"🎯 Couverture actuelle: {coverage_percent}%")
+                            print(f" Couverture actuelle: {coverage_percent}%")
                             
                             if coverage_percent >= 85:
-                                print("🎉 Objectif 85% atteint!")
+                                print(" Objectif 85% atteint!")
                             else:
                                 remaining = 85 - coverage_percent
-                                print(f"📈 Reste {remaining:.1f}% pour atteindre l'objectif")
+                                print(f" Reste {remaining:.1f}% pour atteindre l'objectif")
                             break
             
             # Rapport HTML
@@ -161,23 +161,23 @@ def generate_coverage_report():
             html_result = subprocess.run(html_cmd, capture_output=True, text=True)
             
             if html_result.returncode == 0:
-                print("✅ Rapport HTML généré dans 'htmlcov/'")
-                print("🌐 Ouvrir htmlcov/index.html pour détails")
+                print(" Rapport HTML généré dans 'htmlcov/'")
+                print(" Ouvrir htmlcov/index.html pour détails")
             
             return True
         else:
-            print("❌ Erreur génération rapport")
+            print(" Erreur génération rapport")
             print(result.stderr)
             return False
             
     except Exception as e:
-        print(f"❌ Erreur: {e}")
+        print(f" Erreur: {e}")
         return False
 
 
 def run_specific_test_file(test_file):
     """Lance un fichier de test spécifique"""
-    print(f"\n🎯 Test fichier spécifique: {test_file}")
+    print(f"\n Test fichier spécifique: {test_file}")
     
     cmd = [
         "python", "-m", "pytest", 
@@ -190,23 +190,23 @@ def run_specific_test_file(test_file):
     try:
         result = subprocess.run(cmd, capture_output=True, text=True)
         
-        print(f"📝 Résultat pour {test_file}:")
+        print(f" Résultat pour {test_file}:")
         print(result.stdout)
         
         if result.stderr:
-            print("⚠️  Erreurs:")
+            print("  Erreurs:")
             print(result.stderr)
         
         return result.returncode == 0
         
     except Exception as e:
-        print(f"❌ Erreur: {e}")
+        print(f" Erreur: {e}")
         return False
 
 
 def generate_test_summary():
     """Génère résumé des tests"""
-    print("\n📋 RÉSUMÉ DES TESTS")
+    print("\n RÉSUMÉ DES TESTS")
     print("="*40)
     
     test_files = [
@@ -226,12 +226,12 @@ def generate_test_summary():
             content = test_path.read_text()
             test_count = content.count("def test_")
             total_tests += test_count
-            print(f"📄 {test_file:<25} {test_count:>3} tests")
+            print(f" {test_file:<25} {test_count:>3} tests")
         else:
-            print(f"⚠️  {test_file:<25} NON TROUVÉ")
+            print(f"  {test_file:<25} NON TROUVÉ")
     
     print("-"*40)
-    print(f"📊 TOTAL: {total_tests} tests")
+    print(f" TOTAL: {total_tests} tests")
     
     # Estimation couverture par catégorie
     categories = {
@@ -242,7 +242,7 @@ def generate_test_summary():
         "Sécurité": 40
     }
     
-    print(f"\n📈 RÉPARTITION PAR CATÉGORIE:")
+    print(f"\n RÉPARTITION PAR CATÉGORIE:")
     for category, count in categories.items():
         print(f"  {category:<15}: {count:>3} tests")
     
@@ -251,7 +251,7 @@ def generate_test_summary():
 
 def run_quick_validation():
     """Lance validation rapide"""
-    print("\n⚡ VALIDATION RAPIDE")
+    print("\n VALIDATION RAPIDE")
     print("="*30)
     
     # Tests de base seulement
@@ -267,18 +267,18 @@ def run_quick_validation():
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         
         if result.returncode == 0:
-            print("✅ Validation rapide réussie")
+            print(" Validation rapide réussie")
             return True
         else:
-            print("❌ Validation rapide échouée")
+            print(" Validation rapide échouée")
             print(result.stdout)
             return False
             
     except subprocess.TimeoutExpired:
-        print("⏱️  Timeout validation rapide")
+        print("  Timeout validation rapide")
         return False
     except Exception as e:
-        print(f"❌ Erreur: {e}")
+        print(f" Erreur: {e}")
         return False
 
 
@@ -315,12 +315,12 @@ def main():
         success = run_tests(action, verbose=True, coverage=True)
     
     elif action == "all":
-        print("\n🎯 EXÉCUTION COMPLÈTE")
+        print("\n EXÉCUTION COMPLÈTE")
         print("="*40)
         
         # 1. Validation rapide d'abord
         if not run_quick_validation():
-            print("⚠️  Validation rapide échouée, continuation...")
+            print("  Validation rapide échouée, continuation...")
         
         # 2. Résumé tests
         generate_test_summary()
@@ -333,8 +333,8 @@ def main():
             generate_coverage_report()
     
     else:
-        print(f"❌ Action inconnue: {action}")
-        print("\n💡 Actions disponibles:")
+        print(f" Action inconnue: {action}")
+        print("\n Actions disponibles:")
         print("  all         - Tous les tests avec couverture")
         print("  quick       - Validation rapide") 
         print("  unit        - Tests unitaires seulement")
@@ -351,13 +351,13 @@ def main():
     # Conclusion
     print("\n" + "="*62)
     if success:
-        print("🎉 TESTS TERMINÉS AVEC SUCCÈS!")
-        print("✅ Objectif couverture 85% - En cours d'atteinte")
+        print(" TESTS TERMINÉS AVEC SUCCÈS!")
+        print(" Objectif couverture 85% - En cours d'atteinte")
     else:
-        print("❌ TESTS ÉCHOUÉS")
-        print("🔧 Vérifier les erreurs ci-dessus")
+        print(" TESTS ÉCHOUÉS")
+        print(" Vérifier les erreurs ci-dessus")
     
-    print(f"⏰ Terminé le: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" Terminé le: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*62)
     
     sys.exit(0 if success else 1)

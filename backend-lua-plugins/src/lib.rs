@@ -22,12 +22,12 @@ pub struct PluginServices {
 
 impl PluginServices {
     pub async fn new(plugins_dir: &str) -> PluginResult<Self> {
-        info!("🧩 Initializing Lua Plugin System");
+        info!(" Initializing Lua Plugin System");
 
         let sandbox = Arc::new(LuaSandbox::new().await?);
         let manager = Arc::new(PluginManager::new(plugins_dir).await?);
 
-        info!("✅ Plugin System initialized with {} plugins", manager.list_plugins().len());
+        info!(" Plugin System initialized with {} plugins", manager.list_plugins().len());
 
         Ok(PluginServices { manager, sandbox })
     }

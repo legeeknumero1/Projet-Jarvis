@@ -1,8 +1,8 @@
-# 📊 Observabilité Jarvis v1.3 - Production
+#  Observabilité Jarvis v1.3 - Production
 
-## 🎯 Stack d'Observabilité Complète
+##  Stack d'Observabilité Complète
 
-### 📈 Métriques Prometheus
+###  Métriques Prometheus
 **Endpoint**: `/metrics` (activé automatiquement)
 
 **Métriques WebSocket**:
@@ -23,7 +23,7 @@
 **Métriques Sécurité**:
 - `rate_limit_hits_total{endpoint,client_type}` - Rate limiting (counter)
 
-### 📝 Logs JSON Structurés
+###  Logs JSON Structurés
 
 **Format automatique avec Request-ID**:
 ```json
@@ -47,7 +47,7 @@
 - Tous les logs de la requête portent le même ID
 - Tracing complet de bout en bout
 
-### 🔍 Request Tracing
+###  Request Tracing
 
 **Headers automatiques**:
 - `X-Request-ID: uuid4` sur toutes les réponses
@@ -68,7 +68,7 @@ log_ctx = create_log_context(
 logger.info(json.dumps(log_ctx))
 ```
 
-## 🛠️ Configuration Production
+##  Configuration Production
 
 ### Docker Compose - Logs externes
 ```yaml
@@ -120,9 +120,9 @@ output {
 - Temps réponse services externes
 - Rate limiting hits
 
-## 📋 Monitoring Playbook
+##  Monitoring Playbook
 
-### 🚨 Alertes recommandées
+###  Alertes recommandées
 
 **Critiques**:
 - `ws_active_connections > 1000` (surcharge)
@@ -133,7 +133,7 @@ output {
 - `llm_generate_seconds P95 > 10s` (LLM lent)
 - `chat_errors_total rate > 5/min` (erreurs fréquentes)
 
-### 🔍 Debugging avec Request-ID
+###  Debugging avec Request-ID
 
 **1. Rechercher une session utilisateur**:
 ```bash
@@ -154,7 +154,7 @@ GET jarvis-logs-*/_search
 - Tous messages/erreurs portent le même ID
 - Tracing de A à Z possible
 
-### 📊 Métriques Business
+###  Métriques Business
 
 **KPIs automatiques**:
 - Messages traités par heure
@@ -167,7 +167,7 @@ GET jarvis-logs-*/_search
 - Patterns d'utilisation temporels
 - Performance par fonctionnalité
 
-## 🚀 Mise en Production
+##  Mise en Production
 
 ### 1. Variables d'environnement
 ```bash
@@ -201,7 +201,7 @@ healthcheck:
 
 ---
 
-## ✅ Validation
+##  Validation
 
 ### Tests observabilité
 
@@ -224,4 +224,4 @@ curl http://localhost:8000/metrics | grep -E "(ws_|chat_|llm_)"
 tail -f logs/jarvis.jsonl | jq .
 ```
 
-L'observabilité complète est opérationnelle ! 🎯
+L'observabilité complète est opérationnelle ! 

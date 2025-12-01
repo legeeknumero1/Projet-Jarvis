@@ -1,0 +1,329 @@
+{
+  "version": "1.9.0",
+  "updated": "2025-10-26",
+  "description": "Performance benchmarks and thresholds for Jarvis API load testing",
+
+  "endpoints": {
+    "health_check": {
+      "path": "/health",
+      "method": "GET",
+      "auth_required": false,
+      "thresholds": {
+        "p50_latency_ms": 10,
+        "p95_latency_ms": 50,
+        "p99_latency_ms": 100,
+        "error_rate_percent": 0.1,
+        "min_rps_per_100_users": 500
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 5,
+        "p95_latency_ms": 15,
+        "p99_latency_ms": 30,
+        "error_rate_percent": 0,
+        "rps": 850
+      }
+    },
+
+    "chat_send_message": {
+      "path": "/api/chat",
+      "method": "POST",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 200,
+        "p95_latency_ms": 500,
+        "p99_latency_ms": 1000,
+        "error_rate_percent": 1,
+        "min_rps_per_100_users": 50
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 180,
+        "p95_latency_ms": 350,
+        "p99_latency_ms": 750,
+        "error_rate_percent": 0.3,
+        "rps": 75
+      },
+      "dependencies": [
+        "Ollama LLM",
+        "PostgreSQL",
+        "Redis cache"
+      ]
+    },
+
+    "chat_list_conversations": {
+      "path": "/api/chat/conversations",
+      "method": "GET",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 50,
+        "p95_latency_ms": 150,
+        "p99_latency_ms": 300,
+        "error_rate_percent": 0.5,
+        "min_rps_per_100_users": 150
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 35,
+        "p95_latency_ms": 85,
+        "p99_latency_ms": 180,
+        "error_rate_percent": 0.1,
+        "rps": 220
+      },
+      "dependencies": [
+        "PostgreSQL",
+        "Redis cache"
+      ]
+    },
+
+    "chat_get_conversation": {
+      "path": "/api/chat/conversation/{id}",
+      "method": "GET",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 30,
+        "p95_latency_ms": 100,
+        "p99_latency_ms": 200,
+        "error_rate_percent": 0.5,
+        "min_rps_per_100_users": 200
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 22,
+        "p95_latency_ms": 65,
+        "p99_latency_ms": 120,
+        "error_rate_percent": 0.2,
+        "rps": 280
+      },
+      "dependencies": [
+        "PostgreSQL",
+        "Redis cache"
+      ]
+    },
+
+    "memory_search": {
+      "path": "/api/memory/search",
+      "method": "GET",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 100,
+        "p95_latency_ms": 250,
+        "p99_latency_ms": 500,
+        "error_rate_percent": 2,
+        "min_rps_per_100_users": 100
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 65,
+        "p95_latency_ms": 180,
+        "p99_latency_ms": 350,
+        "error_rate_percent": 0.8,
+        "rps": 145
+      },
+      "dependencies": [
+        "Tantivy search index"
+      ]
+    },
+
+    "memory_store": {
+      "path": "/api/memory/store",
+      "method": "POST",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 80,
+        "p95_latency_ms": 200,
+        "p99_latency_ms": 400,
+        "error_rate_percent": 1,
+        "min_rps_per_100_users": 80
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 55,
+        "p95_latency_ms": 145,
+        "p99_latency_ms": 280,
+        "error_rate_percent": 0.4,
+        "rps": 115
+      },
+      "dependencies": [
+        "Tantivy search index",
+        "PostgreSQL"
+      ]
+    },
+
+    "voice_tts": {
+      "path": "/api/voice/synthesize",
+      "method": "POST",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 1000,
+        "p95_latency_ms": 2000,
+        "p99_latency_ms": 3500,
+        "error_rate_percent": 5,
+        "min_rps_per_100_users": 15
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 850,
+        "p95_latency_ms": 1650,
+        "p99_latency_ms": 2800,
+        "error_rate_percent": 2.1,
+        "rps": 22
+      },
+      "dependencies": [
+        "TTS Service (pyo3-bridge)",
+        "Audio processing pipeline"
+      ],
+      "notes": "Latency varies with text length. Baseline assumes ~50 characters."
+    },
+
+    "voice_stt": {
+      "path": "/api/voice/transcribe",
+      "method": "POST",
+      "auth_required": true,
+      "thresholds": {
+        "p50_latency_ms": 1500,
+        "p95_latency_ms": 2500,
+        "p99_latency_ms": 4000,
+        "error_rate_percent": 5,
+        "min_rps_per_100_users": 12
+      },
+      "baseline_results": {
+        "date": "2025-10-26",
+        "p50_latency_ms": 1200,
+        "p95_latency_ms": 2100,
+        "p99_latency_ms": 3400,
+        "error_rate_percent": 2.5,
+        "rps": 18
+      },
+      "dependencies": [
+        "STT Service (pyo3-bridge)",
+        "Audio processing pipeline"
+      ],
+      "notes": "Latency varies with audio duration. Baseline assumes ~3 seconds of audio."
+    }
+  },
+
+  "load_profiles": {
+    "smoke_test": {
+      "description": "Minimal test to verify basic functionality",
+      "duration": "1m",
+      "max_users": 5,
+      "ramp_up_time": "10s"
+    },
+
+    "load_test": {
+      "description": "Normal load testing scenario",
+      "duration": "5m",
+      "max_users": 100,
+      "ramp_up_time": "2m",
+      "stages": [
+        {"duration": "30s", "target": 10},
+        {"duration": "1m", "target": 50},
+        {"duration": "2m", "target": 50},
+        {"duration": "30s", "target": 100},
+        {"duration": "1m", "target": 100},
+        {"duration": "30s", "target": 0}
+      ]
+    },
+
+    "stress_test": {
+      "description": "Push system to its limits",
+      "duration": "10m",
+      "max_users": 500,
+      "ramp_up_time": "3m",
+      "stages": [
+        {"duration": "1m", "target": 50},
+        {"duration": "2m", "target": 200},
+        {"duration": "3m", "target": 200},
+        {"duration": "2m", "target": 500},
+        {"duration": "1m", "target": 500},
+        {"duration": "1m", "target": 0}
+      ]
+    },
+
+    "spike_test": {
+      "description": "Sudden traffic surge",
+      "duration": "3m",
+      "max_users": 300,
+      "stages": [
+        {"duration": "30s", "target": 20},
+        {"duration": "10s", "target": 300},
+        {"duration": "1m", "target": 300},
+        {"duration": "1m", "target": 20},
+        {"duration": "30s", "target": 0}
+      ]
+    },
+
+    "soak_test": {
+      "description": "Extended duration for memory leaks",
+      "duration": "60m",
+      "max_users": 50,
+      "ramp_up_time": "5m",
+      "constant_load": true
+    }
+  },
+
+  "infrastructure_thresholds": {
+    "backend": {
+      "cpu_percent": 80,
+      "memory_mb": 2048,
+      "connections": 1000
+    },
+    "postgresql": {
+      "cpu_percent": 70,
+      "memory_mb": 1024,
+      "active_connections": 100,
+      "max_query_time_ms": 1000
+    },
+    "redis": {
+      "cpu_percent": 60,
+      "memory_mb": 512,
+      "hit_rate_percent": 80,
+      "response_time_ms": 5
+    },
+    "ollama": {
+      "cpu_percent": 90,
+      "memory_mb": 4096,
+      "gpu_memory_mb": 8192
+    }
+  },
+
+  "test_data": {
+    "sample_chat_messages": [
+      "Bonjour, comment vas-tu?",
+      "Quelle est la météo aujourd'hui?",
+      "Peux-tu m'aider avec un problème?",
+      "Raconte-moi une blague",
+      "Explique-moi la physique quantique"
+    ],
+    "sample_tts_texts": [
+      "Bonjour, je suis Jarvis",
+      "Comment puis-je vous aider?",
+      "Voici les résultats de votre recherche",
+      "La température est de 20 degrés",
+      "Votre rappel pour 15 heures"
+    ]
+  },
+
+  "reporting": {
+    "success_criteria": {
+      "all_thresholds_passed": true,
+      "zero_critical_errors": true,
+      "infrastructure_within_limits": true
+    },
+    "metrics_to_track": [
+      "http_req_duration (p50, p95, p99)",
+      "http_req_failed (error rate)",
+      "iterations (throughput)",
+      "data_sent / data_received",
+      "vus (virtual users)",
+      "http_reqs (total requests)"
+    ],
+    "visualization_tools": [
+      "Grafana dashboards",
+      "K6 HTML reports",
+      "Locust Web UI",
+      "InfluxDB queries"
+    ]
+  }
+}

@@ -7,21 +7,29 @@
 // - POST /auth/refresh - Refresh JWT token (public endpoint)
 // - GET /auth/verify - Verify token validity (protected endpoint)
 
-use axum::{
-    http::StatusCode,
-    Json,
-    extract::ConnectInfo,
-};
-use tracing::info;
+use axum::{extract::ConnectInfo, http::StatusCode, Json};
 use std::net::SocketAddr;
+use tracing::info;
 
+use crate::middleware::{
+    check_auth_rate_limit, generate_token, InputValidator, LoginValidator, ValidatedJwt,
+};
 use crate::models::{LoginRequest, LoginResponse};
-use crate::middleware::{generate_token, ValidatedJwt, check_auth_rate_limit, LoginValidator, InputValidator};
 
 /// Login endpoint - Generate JWT token for user
 ///
 /// SECURITY: This is intentionally permissive for testing/development
 /// In production, this should validate against a real user database
+#[utoipa::path(
+    post,
+    path = "/auth/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Login successful", body = LoginResponse),
+        (status = 400, description = "Invalid credentials"),
+        (status = 429, description = "Too many requests")
+    )
+)]
 pub async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(payload): Json<LoginRequest>,
@@ -31,7 +39,7 @@ pub async fn login(
     // ============================================================================
     let client_ip = addr.ip().to_string();
     if let Err(e) = check_auth_rate_limit(&client_ip) {
-        tracing::warn!("🚨 RATE LIMIT: Login attempt from {} - {}", client_ip, e);
+        tracing::warn!(" RATE LIMIT: Login attempt from {} - {}", client_ip, e);
         return Err((
             StatusCode::TOO_MANY_REQUESTS,
             "Too many login attempts. Please try again later.".to_string(),
@@ -43,7 +51,7 @@ pub async fn login(
     // ============================================================================
     let validator = LoginValidator::new(payload.username.clone(), payload.password.clone());
     if let Err(e) = validator.validate() {
-        tracing::warn!("🚨 LOGIN VALIDATION FAILED: {} from {}", e, client_ip);
+        tracing::warn!(" LOGIN VALIDATION FAILED: {} from {}", e, client_ip);
         return Err((
             StatusCode::BAD_REQUEST,
             format!("Invalid credentials: {}", e),
@@ -59,7 +67,7 @@ pub async fn login(
 
     match generate_token(&user_id, &payload.username) {
         Ok(token) => {
-            info!("🔐 Login successful for user: {}", payload.username);
+            info!(" Login successful for user: {}", payload.username);
 
             Ok((
                 StatusCode::OK,
@@ -73,7 +81,7 @@ pub async fn login(
             ))
         }
         Err(e) => {
-            tracing::error!("❌ Token generation failed: {}", e);
+            tracing::error!(" Token generation failed: {}", e);
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Failed to generate token".to_string(),
@@ -82,11 +90,26 @@ pub async fn login(
     }
 }
 
+/// Logout endpoint
+#[utoipa::path(
+    post,
+    path = "/auth/logout",
+    responses(
+        (status = 200, description = "Logout successful")
+    ),
+    security(
+        ("bearer_auth" = [])
+    )
+)]
+pub async fn logout() -> StatusCode {
+    StatusCode::OK
+}
+
 /// Verify token endpoint - Check if token is valid
 pub async fn verify_token(
     ValidatedJwt(claims): ValidatedJwt,
 ) -> (StatusCode, Json<serde_json::Value>) {
-    info!("✅ Token verified for user: {}", claims.user_id);
+    info!(" Token verified for user: {}", claims.user_id);
 
     (
         StatusCode::OK,
@@ -100,9 +123,7 @@ pub async fn verify_token(
 }
 
 /// Get current user info endpoint
-pub async fn whoami(
-    ValidatedJwt(claims): ValidatedJwt,
-) -> (StatusCode, Json<serde_json::Value>) {
+pub async fn whoami(ValidatedJwt(claims): ValidatedJwt) -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::OK,
         Json(serde_json::json!({

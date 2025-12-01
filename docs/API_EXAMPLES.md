@@ -454,7 +454,7 @@ echo -e "\n5. Search memory..."
 curl -s "$API_URL/api/memory/search?q=test&limit=5" \
   -H "Authorization: Bearer $TOKEN" | jq
 
-echo -e "\n✅ Tests completed!"
+echo -e "\n Tests completed!"
 ```
 
 ---

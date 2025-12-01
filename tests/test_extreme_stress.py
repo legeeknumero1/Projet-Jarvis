@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-💥 TESTS DE STRESS EXTRÊME - Système Mémoire Neuromorphique Jarvis
+ TESTS DE STRESS EXTRÊME - Système Mémoire Neuromorphique Jarvis
 Tests destructifs pour trouver TOUS les bugs cachés et limites système
 """
 
@@ -102,7 +102,7 @@ class ExtremeStressTester:
     
     async def test_massive_concurrent_load(self):
         """Test charge massive avec concurrence extrême"""
-        print("🔥 TEST 1: CHARGE MASSIVE CONCURRENTE")
+        print(" TEST 1: CHARGE MASSIVE CONCURRENTE")
         
         self.reporter.snapshot_memory("avant_charge_massive")
         
@@ -160,17 +160,17 @@ class ExtremeStressTester:
             
             self.reporter.add_result("massive_concurrent_load", success, duration, details)
             
-            print(f"   ✅ {successful}/{len(results)} tâches réussies")
-            print(f"   ✅ Débit: {details['throughput']:.0f} ops/seconde")
-            print(f"   ✅ Exceptions: {len(exceptions)}")
+            print(f"    {successful}/{len(results)} tâches réussies")
+            print(f"    Débit: {details['throughput']:.0f} ops/seconde")
+            print(f"    Exceptions: {len(exceptions)}")
             
         except Exception as e:
             self.reporter.add_result("massive_concurrent_load", False, 0, {}, e)
-            print(f"   ❌ Échec critique: {e}")
+            print(f"    Échec critique: {e}")
     
     async def test_memory_leak_detection(self):
         """Test détection fuites mémoire avec cycles longs"""
-        print("🔥 TEST 2: DÉTECTION FUITES MÉMOIRE")
+        print(" TEST 2: DÉTECTION FUITES MÉMOIRE")
         
         self.reporter.snapshot_memory("avant_fuite_memoire")
         
@@ -234,16 +234,16 @@ class ExtremeStressTester:
             
             self.reporter.add_result("memory_leak_detection", success, 0, details)
             
-            print(f"   ✅ Croissance objets: {object_growth}")
-            print(f"   ✅ Croissance mémoire: {memory_growth:.1f} MB")
+            print(f"    Croissance objets: {object_growth}")
+            print(f"    Croissance mémoire: {memory_growth:.1f} MB")
             
         except Exception as e:
             self.reporter.add_result("memory_leak_detection", False, 0, {}, e)
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_malformed_inputs(self):
         """Test inputs malformés et edge cases extrêmes"""
-        print("🔥 TEST 3: INPUTS MALFORMÉS ET EDGE CASES")
+        print(" TEST 3: INPUTS MALFORMÉS ET EDGE CASES")
         
         try:
             limbic = LimbicSystem()
@@ -253,7 +253,7 @@ class ExtremeStressTester:
                 "",  # Vide
                 None,  # None
                 "x" * 100000,  # Très long
-                "🤖💀👻🔥" * 1000,  # Emojis massifs
+                "" * 1000,  # Emojis massifs
                 "\x00\x01\x02" * 100,  # Caractères de contrôle
                 "SELECT * FROM users; DROP TABLE users;",  # Injection SQL
                 "<script>alert('xss')</script>" * 100,  # XSS
@@ -300,16 +300,16 @@ class ExtremeStressTester:
             
             self.reporter.add_result("malformed_inputs", success, 0, details)
             
-            print(f"   ✅ Gérés: {successes}/{len(malformed_inputs)}")
-            print(f"   ✅ Erreurs: {errors}")
+            print(f"    Gérés: {successes}/{len(malformed_inputs)}")
+            print(f"    Erreurs: {errors}")
             
         except Exception as e:
             self.reporter.add_result("malformed_inputs", False, 0, {}, e)
-            print(f"   ❌ Échec critique: {e}")
+            print(f"    Échec critique: {e}")
     
     async def test_race_conditions(self):
         """Test conditions de course et accès concurrent aux ressources"""
-        print("🔥 TEST 4: RACE CONDITIONS ET CONCURRENCE")
+        print(" TEST 4: RACE CONDITIONS ET CONCURRENCE")
         
         try:
             # Ressource partagée simulée
@@ -380,17 +380,17 @@ class ExtremeStressTester:
             
             self.reporter.add_result("race_conditions", success, duration, details)
             
-            print(f"   ✅ Erreurs: {total_errors}/{total_operations}")
-            print(f"   ✅ Compteur final: {final_counter} (attendu: {total_operations})")
-            print(f"   ✅ Fragments: {fragments_count}")
+            print(f"    Erreurs: {total_errors}/{total_operations}")
+            print(f"    Compteur final: {final_counter} (attendu: {total_operations})")
+            print(f"    Fragments: {fragments_count}")
             
         except Exception as e:
             self.reporter.add_result("race_conditions", False, 0, {}, e)
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_extreme_data_sizes(self):
         """Test avec données extrêmement volumineuses"""
-        print("🔥 TEST 5: DONNÉES VOLUMINEUSES EXTRÊMES")
+        print(" TEST 5: DONNÉES VOLUMINEUSES EXTRÊMES")
         
         try:
             limbic = LimbicSystem()
@@ -426,7 +426,7 @@ class ExtremeStressTester:
                         'chars_per_second': size / duration if duration > 0 else 0
                     }
                     
-                    print(f"     ✅ {duration:.2f}s, {memory_used:.1f} MB, {context.detected_emotion}")
+                    print(f"      {duration:.2f}s, {memory_used:.1f} MB, {context.detected_emotion}")
                     
                     # Nettoyage forcé
                     del huge_text
@@ -438,7 +438,7 @@ class ExtremeStressTester:
                         'error': str(e),
                         'duration': time.time() - start_time
                     }
-                    print(f"     ❌ Échec: {e}")
+                    print(f"      Échec: {e}")
             
             # Analyser les résultats
             successful_sizes = [size for size, result in results.items() if result.get('success', False)]
@@ -456,15 +456,15 @@ class ExtremeStressTester:
             
             self.reporter.add_result("extreme_data_sizes", success, 0, details)
             
-            print(f"   ✅ Taille max réussie: {max_successful_size:,} caractères")
+            print(f"    Taille max réussie: {max_successful_size:,} caractères")
             
         except Exception as e:
             self.reporter.add_result("extreme_data_sizes", False, 0, {}, e)
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def test_error_injection_resilience(self):
         """Test résilience avec injection d'erreurs aléatoires"""
-        print("🔥 TEST 6: RÉSILIENCE INJECTION D'ERREURS")
+        print(" TEST 6: RÉSILIENCE INJECTION D'ERREURS")
         
         try:
             # Simuler environnement défaillant
@@ -530,16 +530,16 @@ class ExtremeStressTester:
             
             self.reporter.add_result("error_injection_resilience", success, 0, details)
             
-            print(f"   ✅ Succès: {successes}/{operations} ({success_rate*100:.1f}%)")
-            print(f"   ✅ Types d'erreurs: {error_types}")
+            print(f"    Succès: {successes}/{operations} ({success_rate*100:.1f}%)")
+            print(f"    Types d'erreurs: {error_types}")
             
         except Exception as e:
             self.reporter.add_result("error_injection_resilience", False, 0, {}, e)
-            print(f"   ❌ Échec: {e}")
+            print(f"    Échec: {e}")
     
     async def run_all_stress_tests(self):
         """Exécute tous les tests de stress extrême"""
-        print("💥 LANCEMENT TESTS DE STRESS EXTRÊME")
+        print(" LANCEMENT TESTS DE STRESS EXTRÊME")
         print("=" * 80)
         
         self.reporter.snapshot_memory("debut_tests")
@@ -559,7 +559,7 @@ class ExtremeStressTester:
                 await test_func()
                 print()
             except Exception as e:
-                print(f"❌ ÉCHEC CRITIQUE {test_func.__name__}: {e}")
+                print(f" ÉCHEC CRITIQUE {test_func.__name__}: {e}")
                 traceback.print_exc()
                 print()
         
@@ -568,7 +568,7 @@ class ExtremeStressTester:
         # Générer rapport final
         report = self.reporter.generate_report()
         
-        print("💥 RAPPORT FINAL TESTS DE STRESS EXTRÊME")
+        print(" RAPPORT FINAL TESTS DE STRESS EXTRÊME")
         print("=" * 80)
         
         summary = report['summary']
@@ -592,14 +592,14 @@ class ExtremeStressTester:
         
         # Verdict final
         if summary['success_rate'] >= 80:
-            print("\n🏆 SYSTÈME EXTRÊMEMENT ROBUSTE")
-            print("✅ Résiste aux tests de stress les plus extrêmes")
+            print("\n SYSTÈME EXTRÊMEMENT ROBUSTE")
+            print(" Résiste aux tests de stress les plus extrêmes")
         elif summary['success_rate'] >= 60:
-            print("\n⚠️ SYSTÈME MOYENNEMENT ROBUSTE")  
-            print("🔧 Améliorations recommandées pour cas extrêmes")
+            print("\n SYSTÈME MOYENNEMENT ROBUSTE")  
+            print(" Améliorations recommandées pour cas extrêmes")
         else:
-            print("\n❌ SYSTÈME FRAGILE")
-            print("🚫 Corrections critiques requises")
+            print("\n SYSTÈME FRAGILE")
+            print(" Corrections critiques requises")
         
         return report
 

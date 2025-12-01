@@ -2,15 +2,15 @@
 
 **Date**: 2025-01-17  
 **Version**: 1.0.0  
-**Status**: ✅ PRODUCTION READY  
+**Status**:  PRODUCTION READY  
 
 ---
 
-## 🎯 Vue d'ensemble
+##  Vue d'ensemble
 
 Le système de monitoring PostgreSQL de Jarvis fournit une surveillance en temps réel des performances des requêtes de base de données, conforme aux standards enterprise 2025.
 
-### ✨ Fonctionnalités principales
+###  Fonctionnalités principales
 
 - **Monitoring automatique** des requêtes SQL avec métriques de performance
 - **Détection intelligente** des requêtes lentes (threshold configurable)
@@ -22,53 +22,53 @@ Le système de monitoring PostgreSQL de Jarvis fournit une surveillance en temps
 
 ---
 
-## 🏗️ Architecture du système
+##  Architecture du système
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    MONITORING ARCHITECTURE                  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌─────────────────┐    ┌───────────┐ │
-│  │   FastAPI    │───▶│  DB Middleware  │───▶│ SQLAlchemy│ │
-│  │ Application  │    │   Monitoring    │    │ Events    │ │
-│  └──────────────┘    └─────────────────┘    └───────────┘ │
-│           │                    │                    │      │
-│           ▼                    ▼                    ▼      │
-│  ┌──────────────┐    ┌─────────────────┐    ┌───────────┐ │
-│  │   REST API   │    │   Query Stats   │    │PostgreSQL│ │
-│  │  /monitoring │    │   Aggregator    │    │ Analysis  │ │
-│  └──────────────┘    └─────────────────┘    └───────────┘ │
-│           │                    │                    │      │
-│           ▼                    ▼                    ▼      │
-│  ┌──────────────┐    ┌─────────────────┐    ┌───────────┐ │
-│  │ Prometheus   │    │  Slow Query     │    │   Logs    │ │
-│  │   Metrics    │    │    Logger       │    │ /slow_*   │ │
-│  └──────────────┘    └─────────────────┘    └───────────┘ │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+
+                    MONITORING ARCHITECTURE                  
+
+                                                             
+           
+     FastAPI      DB Middleware   SQLAlchemy 
+   Application         Monitoring         Events     
+           
+                                                         
+                                                         
+           
+     REST API          Query Stats       PostgreSQL 
+    /monitoring        Aggregator         Analysis   
+           
+                                                         
+                                                         
+           
+   Prometheus         Slow Query            Logs     
+     Metrics            Logger            /slow_*    
+           
+                                                             
+
 ```
 
 ---
 
-## 📁 Structure des fichiers
+##  Structure des fichiers
 
 ```
 backend/
-├── monitoring/
-│   └── query_monitor.py        # Système principal de monitoring
-├── middleware/
-│   └── database_middleware.py  # Middleware FastAPI/SQLAlchemy
-├── api/
-│   └── monitoring.py          # Endpoints REST API
-├── logs/
-│   └── slow_queries.log       # Log des requêtes lentes
-└── test_simple_monitoring.py  # Tests du système
+ monitoring/
+    query_monitor.py        # Système principal de monitoring
+ middleware/
+    database_middleware.py  # Middleware FastAPI/SQLAlchemy
+ api/
+    monitoring.py          # Endpoints REST API
+ logs/
+    slow_queries.log       # Log des requêtes lentes
+ test_simple_monitoring.py  # Tests du système
 ```
 
 ---
 
-## ⚙️ Configuration et déploiement
+##  Configuration et déploiement
 
 ### 1. Dépendances requises
 
@@ -126,9 +126,9 @@ curl http://localhost:8100/monitoring/metrics
 
 ---
 
-## 🚀 Utilisation des endpoints API
+##  Utilisation des endpoints API
 
-### 🔍 Endpoints disponibles
+###  Endpoints disponibles
 
 | Endpoint | Méthode | Description | Authentification |
 |----------|---------|-------------|------------------|
@@ -141,7 +141,7 @@ curl http://localhost:8100/monitoring/metrics
 | `/monitoring/database-insights` | GET | Insights avancés DB | JWT |
 | `/monitoring/reset-stats` | POST | Reset statistiques | JWT |
 
-### 📊 Exemples d'utilisation
+###  Exemples d'utilisation
 
 #### Health Check
 ```bash
@@ -218,9 +218,9 @@ curl -H "Authorization: Bearer $JWT_TOKEN" \
 
 ---
 
-## 📈 Métriques et alerting
+##  Métriques et alerting
 
-### 🎯 Métriques Prometheus
+###  Métriques Prometheus
 
 Le système expose automatiquement les métriques suivantes :
 
@@ -229,7 +229,7 @@ Le système expose automatiquement les métriques suivantes :
 - `jarvis_db_active_connections` - Gauge connexions actives
 - `jarvis_db_pool_size` - Gauge taille pool connexions
 
-### ⚠️ Seuils d'alerte recommandés
+###  Seuils d'alerte recommandés
 
 ```yaml
 # Configuration Prometheus/AlertManager
@@ -251,7 +251,7 @@ groups:
           summary: "Trop de connexions actives"
 ```
 
-### 📊 Dashboard Grafana
+###  Dashboard Grafana
 
 Import du dashboard Jarvis Database Monitoring :
 
@@ -275,9 +275,9 @@ Import du dashboard Jarvis Database Monitoring :
 
 ---
 
-## 🔧 Configuration avancée
+##  Configuration avancée
 
-### 🎛️ Personnalisation des seuils
+###  Personnalisation des seuils
 
 ```python
 # Dans main.py - Configuration personnalisée
@@ -290,7 +290,7 @@ custom_monitor = DatabaseMonitor(
 )
 ```
 
-### 📝 Configuration du logging
+###  Configuration du logging
 
 ```python
 # Configuration logging avancée pour monitoring
@@ -310,7 +310,7 @@ handler = RotatingFileHandler(
 slow_logger.addHandler(handler)
 ```
 
-### 🚨 Intégration alerting externe
+###  Intégration alerting externe
 
 ```python
 # Exemple callback Slack
@@ -318,7 +318,7 @@ async def slack_alert(metrics):
     if metrics.duration > 5.0:  # Requêtes > 5s
         webhook_url = "https://hooks.slack.com/services/..."
         message = {
-            "text": f"🚨 Requête très lente détectée: {metrics.duration:.2f}s",
+            "text": f" Requête très lente détectée: {metrics.duration:.2f}s",
             "attachments": [{
                 "fields": [
                     {"title": "Table", "value": metrics.table, "short": True},
@@ -334,9 +334,9 @@ db_monitor.add_slow_query_callback(slack_alert)
 
 ---
 
-## 🧪 Tests et validation
+##  Tests et validation
 
-### ✅ Suite de tests
+###  Suite de tests
 
 ```bash
 # Test simple du monitoring
@@ -361,7 +361,7 @@ asyncio.run(load_test())
 "
 ```
 
-### 🔍 Validation des métriques
+###  Validation des métriques
 
 ```bash
 # Vérifier que les métriques sont exposées
@@ -379,17 +379,17 @@ curl -X POST -H "Authorization: Bearer $JWT" \
 
 ---
 
-## 🚀 Performance et optimisation
+##  Performance et optimisation
 
-### 📊 Métriques de performance
+###  Métriques de performance
 
 **Tests validés** :
-- ✅ **183,799 requêtes/seconde** en monitoring (sans I/O DB)
-- ✅ **< 1ms** latence ajoutée par requête monitorée
-- ✅ **Mémoire stable** avec rotation automatique des métriques
-- ✅ **Zero-impact** sur les requêtes normales
+-  **183,799 requêtes/seconde** en monitoring (sans I/O DB)
+-  **< 1ms** latence ajoutée par requête monitorée
+-  **Mémoire stable** avec rotation automatique des métriques
+-  **Zero-impact** sur les requêtes normales
 
-### 🎯 Optimisations intégrées
+###  Optimisations intégrées
 
 - **Pool de connexions** dédié pour les analyses PostgreSQL
 - **Déque limitée** pour les requêtes lentes récentes (maxlen=100)
@@ -399,9 +399,9 @@ curl -X POST -H "Authorization: Bearer $JWT" \
 
 ---
 
-## ❌ Dépannage
+##  Dépannage
 
-### 🔧 Problèmes courants
+###  Problèmes courants
 
 #### 1. Module 'asyncpg' non trouvé
 ```bash
@@ -432,7 +432,7 @@ curl http://localhost:8000/monitoring/metrics
 curl http://localhost:8000/health
 ```
 
-### 🚨 Debug mode
+###  Debug mode
 
 ```python
 # Activer debug monitoring
@@ -447,9 +447,9 @@ print(f"Stats: {db_monitor.get_query_statistics()}")
 
 ---
 
-## 📋 Checklist déploiement
+##  Checklist déploiement
 
-### ✅ Pré-déploiement
+###  Pré-déploiement
 
 - [ ] Dépendances installées (`asyncpg`, `prometheus_client`, `psutil`)
 - [ ] Variables environnement configurées
@@ -457,7 +457,7 @@ print(f"Stats: {db_monitor.get_query_statistics()}")
 - [ ] Tests de monitoring passent (`test_simple_monitoring.py`)
 - [ ] PostgreSQL accessible depuis l'application
 
-### 🚀 Post-déploiement
+###  Post-déploiement
 
 - [ ] Endpoint `/monitoring/health` répond `200 OK`
 - [ ] Métriques Prometheus exposées (`/monitoring/metrics`)
@@ -467,9 +467,9 @@ print(f"Stats: {db_monitor.get_query_statistics()}")
 
 ---
 
-## 🎯 Performance attendue
+##  Performance attendue
 
-### 📊 Métriques de référence
+###  Métriques de référence
 
 - **Débit monitoring** : 180k+ requêtes/seconde
 - **Latence ajoutée** : < 1ms par requête
@@ -477,24 +477,24 @@ print(f"Stats: {db_monitor.get_query_statistics()}")
 - **I/O disque** : Logs rotatifs (10MB max par fichier)
 - **Réseau** : Métriques Prometheus (~1KB/scrape)
 
-### 🎁 Bénéfices mesurés
+###  Bénéfices mesurés
 
-- ✅ **Détection proactive** des requêtes lentes
-- ✅ **Visibilité complète** de la performance DB
-- ✅ **Identification automatique** des anti-patterns
-- ✅ **Intégration native** avec stack DevOps
-- ✅ **Zero-configuration** après installation
+-  **Détection proactive** des requêtes lentes
+-  **Visibilité complète** de la performance DB
+-  **Identification automatique** des anti-patterns
+-  **Intégration native** avec stack DevOps
+-  **Zero-configuration** après installation
 
 ---
 
-## 📚 Ressources additionnelles
+##  Ressources additionnelles
 
-- 📖 [Documentation PostgreSQL EXPLAIN](https://www.postgresql.org/docs/current/sql-explain.html)
-- 📖 [Guide Prometheus Metrics](https://prometheus.io/docs/practices/naming/)
-- 📖 [SQLAlchemy Events](https://docs.sqlalchemy.org/en/20/core/events.html)
-- 📖 [FastAPI Middleware](https://fastapi.tiangolo.com/tutorial/middleware/)
+-  [Documentation PostgreSQL EXPLAIN](https://www.postgresql.org/docs/current/sql-explain.html)
+-  [Guide Prometheus Metrics](https://prometheus.io/docs/practices/naming/)
+-  [SQLAlchemy Events](https://docs.sqlalchemy.org/en/20/core/events.html)
+-  [FastAPI Middleware](https://fastapi.tiangolo.com/tutorial/middleware/)
 
 ---
 
 **Développé pour Jarvis v1.9.0 - Système de monitoring PostgreSQL enterprise**  
-**🔒 Sécurisé JWT | 📊 Métriques Prometheus | 🚀 Production-ready**
+** Sécurisé JWT |  Métriques Prometheus |  Production-ready**
