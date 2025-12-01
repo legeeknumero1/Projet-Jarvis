@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt::init();
 
     // Load environment variables from .env file
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     info!(" Jarvis Rust Backend v1.9.0 starting...");
 
