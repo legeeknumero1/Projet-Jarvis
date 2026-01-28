@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     println!("=== REDIS + DATABASE INTEGRATION TESTS ===\n");
 

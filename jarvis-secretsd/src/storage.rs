@@ -21,15 +21,19 @@ impl VaultStore {
         let path_buf = PathBuf::from(path);
 
         let vault = if path_buf.exists() {
-            info!(" Loading existing vault from {}", path);
             let content = fs::read_to_string(&path_buf)
                 .context("failed to read vault file")?;
 
-            let v: Vault = serde_json::from_str(&content)
-                .context("failed to parse vault JSON")?;
-
-            info!(" Loaded vault with {} secrets", v.secrets.len());
-            v
+            if content.trim().is_empty() {
+                warn!("Vault file at {} is empty, initializing new vault.", path);
+                Vault::new(rotation_days, grace_days)
+            } else {
+                info!("Loading existing vault from {}", path);
+                let v: Vault = serde_json::from_str(&content)
+                    .context("failed to parse vault JSON")?;
+                info!("Loaded vault with {} secrets", v.secrets.len());
+                v
+            }
         } else {
             info!(" Creating new vault at {}", path);
 
@@ -271,6 +275,9 @@ mod tests {
         // Generate
         store.generate_and_store("jwt_key", "jwt_signing_key").unwrap();
         let (value1, meta1) = store.get_secret("jwt_key").unwrap();
+
+        // Add a delay to ensure timestamp changes for KID generation
+        std::thread::sleep(std::time::Duration::from_secs(1));
 
         // Rotate
         store.rotate_secret("jwt_key", "jwt_signing_key").unwrap();

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace jarvis::audio {
 
@@ -50,36 +51,69 @@ struct AudioStats {
 };
 
 // ============================================================================
-// SPSC (Single Producer Single Consumer) Lock-free Queue
+// Ring Buffer (SPSC Lock-free)
 // ============================================================================
 
 template<typename T>
-class SPSCQueue {
+class RingBuffer {
 public:
-    explicit SPSCQueue(size_t capacity = 128);
-    ~SPSCQueue();
+    explicit RingBuffer(size_t capacity) {
+        // Round up to next power of 2
+        size_t real_cap = 1;
+        while (real_cap < capacity) real_cap <<= 1;
+        capacity_ = real_cap;
+        mask_ = real_cap - 1;
+        buffer_.resize(real_cap);
+    }
 
-    /// Try to push item (returns false if queue full - non-blocking)
-    bool push(const T& item);
+    ~RingBuffer() = default;
 
-    /// Try to pop item (returns false if queue empty - non-blocking)
-    bool pop(T& item);
+    bool push(const T& item) {
+        const size_t head = head_.load(std::memory_order_relaxed);
+        const size_t next_head = (head + 1) & mask_;
+        
+        if (next_head == tail_.load(std::memory_order_acquire)) {
+            return false;
+        }
+        
+        buffer_[head] = item;
+        head_.store(next_head, std::memory_order_release);
+        return true;
+    }
 
-    /// Get approximate queue size
-    size_t size() const;
+    bool pop(T& item) {
+        const size_t tail = tail_.load(std::memory_order_relaxed);
+        
+        if (tail == head_.load(std::memory_order_acquire)) {
+            return false;
+        }
+        
+        item = buffer_[tail];
+        tail_.store((tail + 1) & mask_, std::memory_order_release);
+        return true;
+    }
 
-    /// Check if queue is empty
-    bool empty() const;
+    size_t size() const {
+        size_t head = head_.load(std::memory_order_relaxed);
+        size_t tail = tail_.load(std::memory_order_relaxed);
+        return (head - tail) & mask_;
+    }
+
+    bool empty() const {
+        return head_.load(std::memory_order_relaxed) == tail_.load(std::memory_order_relaxed);
+    }
+
+    bool full() const {
+        size_t next_head = (head_.load(std::memory_order_relaxed) + 1) & mask_;
+        return next_head == tail_.load(std::memory_order_relaxed);
+    }
 
 private:
-    struct Node {
-        T data;
-        std::atomic<Node*> next{nullptr};
-    };
-
-    std::atomic<Node*> head_;
-    std::atomic<Node*> tail_;
+    std::vector<T> buffer_;
     size_t capacity_;
+    size_t mask_;
+    std::atomic<size_t> head_{0};
+    std::atomic<size_t> tail_{0};
 };
 
 // ============================================================================
@@ -91,33 +125,21 @@ public:
     DSPPipeline();
     ~DSPPipeline();
 
-    /// Initialize DSP pipeline with audio config
     void init(const AudioConfig& config);
 
-    /// Process audio frame through DSP chain
-    /// Order: Noise Suppression -> Echo Cancellation -> Gain -> Resample
-    void process(AudioBuffer& buffer);
+    /// Process audio frame (Zero-Copy)
+    void process(float* buffer, size_t frames);
 
-    /// Get processing statistics
     AudioStats get_stats() const;
 
 private:
-    /// Noise suppression (Spectral Subtraction)
-    void suppress_noise(AudioBuffer& buffer);
-
-    /// Echo cancellation (Normalized LMS algorithm)
-    void cancel_echo(AudioBuffer& buffer);
-
-    /// Gain normalization (Peak detection + normalization)
-    void normalize_gain(AudioBuffer& buffer);
-
-    /// Sample rate conversion (if needed)
-    void resample(AudioBuffer& buffer);
+    void suppress_noise(float* buffer, size_t frames);
+    void cancel_echo(float* buffer, size_t frames);
+    void normalize_gain(float* buffer, size_t frames);
 
     AudioConfig config_;
     AudioStats stats_;
 
-    // DSP state
     std::vector<float> noise_profile_;
     std::vector<float> echo_buffer_;
     float lms_step_size_{0.01f};
@@ -125,7 +147,7 @@ private:
 };
 
 // ============================================================================
-// Buffer Manager (using SPSC queues)
+// Buffer Manager
 // ============================================================================
 
 class BufferManager {
@@ -133,24 +155,15 @@ public:
     BufferManager(size_t queue_depth = 16);
     ~BufferManager();
 
-    /// Get input buffer for recording
     AudioBuffer* get_input_buffer();
-
-    /// Submit buffer to processing queue
     bool enqueue_for_processing(AudioBuffer* buffer);
-
-    /// Get processed buffer
     bool dequeue_processed(AudioBuffer* buffer);
-
-    /// Release buffer back to pool
     void release_buffer(AudioBuffer* buffer);
-
-    /// Get queue statistics
     size_t get_queue_depth() const;
 
 private:
-    std::unique_ptr<SPSCQueue<AudioBuffer*>> input_queue_;
-    std::unique_ptr<SPSCQueue<AudioBuffer*>> output_queue_;
+    std::unique_ptr<RingBuffer<AudioBuffer*>> input_queue_;
+    std::unique_ptr<RingBuffer<AudioBuffer*>> output_queue_;
 
     std::vector<std::unique_ptr<AudioBuffer>> buffer_pool_;
     std::atomic<size_t> available_buffers_;
@@ -165,25 +178,15 @@ public:
     AudioEngine();
     ~AudioEngine();
 
-    /// Initialize audio engine with configuration
     int init(const AudioConfig& config);
-
-    /// Start audio processing
     int start();
-
-    /// Stop audio processing
     int stop();
-
-    /// Health check
     bool health_check() const;
 
-    /// Process audio frame
-    int process_audio(const std::vector<float>& input, std::vector<float>& output);
+    /// Process audio frame (Zero-Copy)
+    int process_audio(const float* input, float* output, size_t frames);
 
-    /// Get latency in milliseconds
     double get_latency_ms() const;
-
-    /// Get statistics
     AudioStats get_stats() const;
 
 private:
@@ -193,7 +196,6 @@ private:
 
     bool initialized_{false};
     bool running_{false};
-
     uint64_t process_count_{0};
 };
 

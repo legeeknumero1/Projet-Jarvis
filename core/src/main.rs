@@ -14,7 +14,7 @@ mod models;
 mod openapi;
 mod services;
 
-use handlers::{auth, chat, health, memory, stt, tts};
+use handlers::{auth, chat, health, memory, openai_compat, stt, tts, web_search};
 use middleware::{CertificateLoader, EnvironmentChecklist, SecretsValidator, TlsConfig};
 use models::AppState;
 use openapi::ApiDoc;
@@ -85,10 +85,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("  - Audio Engine: {}", audio_engine_url);
     info!("  - CORS Origins: {}", cors_origins);
 
+    // ============================================================================
+    // DATABASE CONNECTION - Initialize PostgreSQL pool for authentication
+    // ============================================================================
+    // let database_url = std::env::var("DATABASE_URL")
+    //     .expect("DATABASE_URL must be set (loaded from jarvis-secretsd)");
+
+    // info!(" Connecting to PostgreSQL database...");
+    // let db_pool = sqlx::postgres::PgPoolOptions::new()
+    //     .max_connections(10)
+    //     .connect(&database_url)
+    //     .await
+    //     .expect("Failed to connect to PostgreSQL");
+
+    // info!(" Database connection established");
+
+    // // Run migrations
+    // info!(" Running database migrations...");
+    // sqlx::migrate!("./migrations")
+    //     .run(&db_pool)
+    //     .await
+    //     .expect("Failed to run database migrations");
+    // info!(" Database migrations completed");
+
     // Create application state
     let state = Arc::new(AppState {
         python_bridges_url,
         audio_engine_url,
+        db_pool: (), // Dummy value for now
     });
 
     // ============================================================================
@@ -144,20 +168,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // OpenAPI/Swagger UI
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         // Auth endpoints
-        .route("/api/auth/login", post(auth::login))
-        .route("/api/auth/verify", post(auth::verify_token))
-        .route("/api/auth/whoami", get(auth::whoami))
+        // .route("/api/auth/login", post(auth::login))
+        // .route("/api/auth/verify", post(auth::verify_token))
+        // .route("/api/auth/whoami", get(auth::whoami))
         // ============================================================================
         // PROTECTED ENDPOINTS (JWT authentication required)
         // ============================================================================
         // Chat endpoints
-        .route("/api/chat", post(chat::chat_endpoint))
-        .route("/api/chat/conversations", get(chat::get_conversations))
-        .route("/api/chat/history/:id", get(chat::get_history))
-        .route(
-            "/api/chat/conversation/:id",
-            axum::routing::delete(chat::delete_conversation),
-        )
+        // .route("/api/chat", post(chat::chat_endpoint))
+        // .route("/api/chat/conversations", get(chat::get_conversations))
+        // .route("/api/chat/history/:id", get(chat::get_history))
+        // .route(
+        //     "/api/chat/conversation/:id",
+        //     axum::routing::delete(chat::delete_conversation),
+        // )
         // STT/TTS endpoints
         .route("/api/voice/transcribe", post(stt::transcribe))
         .route("/api/voice/synthesize", post(tts::synthesize))
@@ -167,6 +191,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/memory/add", post(memory::add_memory))
         .route("/api/memory/search", post(memory::search_memory))
         .route("/api/memory/list", get(memory::list_memories))
+        // Web Search endpoint (uses BRAVE_API_KEY from jarvis-secretsd)
+        .route("/api/v1/search", get(web_search::web_search))
+        // OpenAI-compatible endpoints for Open-WebUI integration
+        .route("/v1/audio/transcriptions", post(openai_compat::create_transcription))
+        .route("/v1/audio/speech", post(openai_compat::create_speech))
         // WebSocket
         .route("/ws", axum::routing::get(chat::websocket_handler))
         // Security layers

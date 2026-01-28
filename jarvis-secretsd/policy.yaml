@@ -6,10 +6,16 @@ clients:
   backend:
     allow:
       - "jwt_signing_key"
+      - "jwt_secret_key"
+      - "jwt_algorithm"
+      - "jwt_expiration_hours"
       - "jarvis_encryption_key"
       - "brave_api_key"
       - "openweather_api_key"
       - "backup_encryption_key"
+      - "postgres_password"
+      - "redis_password"
+      - "database_url"
     deny: []
 
   # Database service can only access DB passwords
@@ -30,6 +36,12 @@ clients:
   stt:
     allow:
       - "stt_api_key"
+    deny: []
+
+  # Open-WebUI needs JWT secret for authentication
+  open-webui:
+    allow:
+      - "jwt_secret_key"
     deny: []
 
   # Monitoring can list but not read secret values

@@ -44,7 +44,8 @@ impl SearchIndex {
         let schema = schema_builder.build();
 
         // Create or open index
-        let index = if index_path.as_ref().exists() {
+        let meta_path = index_path.as_ref().join("meta.json");
+        let index = if meta_path.exists() {
             info!("Opening existing search index at {:?}", index_path.as_ref());
             Index::open_in_dir(index_path)?
         } else {

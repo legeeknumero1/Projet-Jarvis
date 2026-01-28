@@ -5,7 +5,7 @@ use anyhow::Result;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Load environment variables
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     println!("=== TESTING NEW JARVIS MODULES ===\n");
 

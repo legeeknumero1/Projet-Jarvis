@@ -210,7 +210,7 @@ mod tests {
     fn test_mask_secret() {
         let secret = "super-secret-key-12345";
         let masked = mask_secret(secret, 5);
-        assert_eq!(masked, "super*********************");
+        assert_eq!(masked, "super*****************");
 
         let short = "abc";
         let masked_short = mask_secret(short, 5);

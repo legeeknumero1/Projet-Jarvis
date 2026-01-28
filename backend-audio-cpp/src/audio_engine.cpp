@@ -16,71 +16,10 @@
 namespace jarvis::audio {
 
 // ============================================================================
-// SPSC Queue Implementation
+// Ring Buffer Implementation (Moved to Header)
 // ============================================================================
 
-template<typename T>
-SPSCQueue<T>::SPSCQueue(size_t capacity) : capacity_(capacity) {
-    auto node = new Node();
-    node->next = nullptr;
-    head_ = node;
-    tail_ = node;
-}
-
-template<typename T>
-SPSCQueue<T>::~SPSCQueue() {
-    Node* current = head_.load();
-    while (current) {
-        Node* next = current->next.load();
-        delete current;
-        current = next;
-    }
-}
-
-template<typename T>
-bool SPSCQueue<T>::push(const T& item) {
-    auto new_node = new Node();
-    new_node->data = item;
-    new_node->next = nullptr;
-
-    Node* old_tail = tail_.load();
-    old_tail->next = new_node;
-    tail_ = new_node;
-
-    return true;
-}
-
-template<typename T>
-bool SPSCQueue<T>::pop(T& item) {
-    Node* old_head = head_.load();
-    Node* new_head = old_head->next.load();
-
-    if (!new_head) {
-        return false;  // Queue empty
-    }
-
-    item = new_head->data;
-    head_ = new_head;
-    delete old_head;
-
-    return true;
-}
-
-template<typename T>
-size_t SPSCQueue<T>::size() const {
-    size_t count = 0;
-    Node* current = head_.load();
-    while (current) {
-        count++;
-        current = current->next.load();
-    }
-    return count;
-}
-
-template<typename T>
-bool SPSCQueue<T>::empty() const {
-    return head_.load()->next.load() == nullptr;
-}
+// Template implementation moved to audio_engine.h to support instantiation
 
 // ============================================================================
 // DSP Pipeline Implementation
@@ -103,14 +42,14 @@ void DSPPipeline::init(const AudioConfig& config) {
     stats_ = {0.0, 0.0, 0.0, 0};
 }
 
-void DSPPipeline::process(AudioBuffer& buffer) {
+void DSPPipeline::process(float* buffer, size_t frames) {
     auto start = std::chrono::high_resolution_clock::now();
 
-    // DSP Pipeline Chain
-    suppress_noise(buffer);
-    cancel_echo(buffer);
-    normalize_gain(buffer);
-    resample(buffer);
+    // DSP Pipeline Chain (Zero-Copy)
+    suppress_noise(buffer, frames);
+    cancel_echo(buffer, frames);
+    normalize_gain(buffer, frames);
+    // resample is skipped for now
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -120,82 +59,51 @@ void DSPPipeline::process(AudioBuffer& buffer) {
     stats_.frames_processed++;
 }
 
-void DSPPipeline::suppress_noise(AudioBuffer& buffer) {
-    /// Spectral Subtraction Algorithm
-    /// Removes noise by subtracting estimated noise spectrum
-    ///
-    /// Formula: S(f) = max(|Y(f)| - α * |N(f)|, β * |Y(f)|)
-    /// where Y = noisy signal, N = noise estimate, α = over-subtraction factor
+void DSPPipeline::suppress_noise(float* buffer, size_t frames) {
+    const float alpha = 1.5f;
+    const float beta = 0.01f;
 
-    const float alpha = 1.5f;  // Over-subtraction factor
-    const float beta = 0.01f;   // Floor factor
-
-    for (size_t i = 0; i < buffer.samples.size(); ++i) {
-        float sample = buffer.samples[i];
+    for (size_t i = 0; i < frames; ++i) {
+        float sample = buffer[i];
         float noise = noise_profile_[i % noise_profile_.size()];
 
-        // Spectral subtraction
         float suppressed = std::abs(sample) - (alpha * noise);
         suppressed = std::max(suppressed, beta * std::abs(sample));
 
-        // Preserve original phase
-        buffer.samples[i] = (sample >= 0) ? suppressed : -suppressed;
+        buffer[i] = (sample >= 0) ? suppressed : -suppressed;
     }
 }
 
-void DSPPipeline::cancel_echo(AudioBuffer& buffer) {
-    /// Echo Cancellation using Normalized LMS (NLMS) Algorithm
-    ///
-    /// Formula: w[n+1] = w[n] + (μ/||x||²) * e[n] * x[n]
-    /// where w = filter coefficients, e = error signal, x = input
+void DSPPipeline::cancel_echo(float* buffer, size_t frames) {
+    const float mu = 0.1f;
 
-    const float mu = 0.1f;  // Step size
-
-    for (size_t i = 0; i < buffer.samples.size() && i < echo_buffer_.size(); ++i) {
-        float input = buffer.samples[i];
+    for (size_t i = 0; i < frames && i < echo_buffer_.size(); ++i) {
+        float input = buffer[i];
         float echo = echo_buffer_[i];
 
-        // Calculate error
         float error = input - echo;
-
-        // NLMS update
-        float power = input * input + 1e-6f;  // Avoid division by zero
+        float power = input * input + 1e-6f;
         echo_buffer_[i] += (mu / power) * error * input;
 
-        // Output: original minus estimated echo
-        buffer.samples[i] = error;
+        buffer[i] = error;
     }
 }
 
-void DSPPipeline::normalize_gain(AudioBuffer& buffer) {
-    /// Automatic Gain Control (AGC)
-    /// Normalizes signal to target level
-
+void DSPPipeline::normalize_gain(float* buffer, size_t frames) {
     const float target_level = 0.8f;
-
-    // Find peak level
     float peak = 0.0f;
-    for (const auto& sample : buffer.samples) {
-        peak = std::max(peak, std::abs(sample));
+
+    for (size_t i = 0; i < frames; ++i) {
+        peak = std::max(peak, std::abs(buffer[i]));
     }
 
     if (peak > 0.001f) {
         float gain = target_level / peak;
-
-        // Apply gain
-        for (auto& sample : buffer.samples) {
-            sample *= gain;
+        for (size_t i = 0; i < frames; ++i) {
+            buffer[i] *= gain;
         }
     }
-
     stats_.peak_level = peak;
-}
-
-void DSPPipeline::resample(AudioBuffer& buffer) {
-    /// Sample rate conversion (if needed)
-    /// For now, we keep the original sample rate
-    /// In production, use SRC (Secret Rabbit Code) or libsamplerate
-    // Placeholder: no resampling for demonstration
 }
 
 AudioStats DSPPipeline::get_stats() const {
@@ -203,12 +111,12 @@ AudioStats DSPPipeline::get_stats() const {
 }
 
 // ============================================================================
-// Buffer Manager Implementation
+// BufferManager Implementation
 // ============================================================================
 
 BufferManager::BufferManager(size_t queue_depth) {
-    input_queue_ = std::make_unique<SPSCQueue<AudioBuffer*>>(queue_depth);
-    output_queue_ = std::make_unique<SPSCQueue<AudioBuffer*>>(queue_depth);
+    input_queue_ = std::make_unique<RingBuffer<AudioBuffer*>>(queue_depth);
+    output_queue_ = std::make_unique<RingBuffer<AudioBuffer*>>(queue_depth);
 
     // Pre-allocate buffers
     for (size_t i = 0; i < queue_depth; ++i) {
@@ -296,23 +204,20 @@ bool AudioEngine::health_check() const {
     return initialized_ && running_;
 }
 
-int AudioEngine::process_audio(const std::vector<float>& input, std::vector<float>& output) {
+int AudioEngine::process_audio(const float* input, float* output, size_t frames) {
     if (!running_) {
         return -1;
     }
 
-    // Create buffer
-    AudioBuffer buffer(config_.sample_rate, config_.channels, input.size());
-    buffer.samples = input;
-    buffer.timestamp_us = std::chrono::duration_cast<std::chrono::microseconds>(
-        std::chrono::high_resolution_clock::now().time_since_epoch()
-    ).count();
-
-    // Process through DSP pipeline
-    dsp_->process(buffer);
-
-    // Return output
-    output = buffer.samples;
+    // Zero-copy processing
+    // We copy input to output first, then process in-place on output buffer
+    // This assumes the caller manages the memory and output is at least size 'frames'
+    
+    std::copy(input, input + frames, output);
+    
+    // Process in-place
+    dsp_->process(output, frames);
+    
     process_count_++;
 
     return 0;
@@ -351,16 +256,8 @@ extern "C" {
             return -1;
         }
 
-        std::vector<float> input_vec(input, input + len);
-        std::vector<float> output_vec;
-
-        int result = g_engine->process_audio(input_vec, output_vec);
-
-        if (result == 0 && !output_vec.empty()) {
-            std::copy(output_vec.begin(), output_vec.end(), output);
-        }
-
-        return result;
+        // Direct pointer passing - NO VECTOR ALLOCATION
+        return g_engine->process_audio(input, output, len);
     }
 
     double audio_engine_get_latency() {

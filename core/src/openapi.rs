@@ -26,6 +26,9 @@ use utoipa::OpenApi;
         crate::handlers::tts::synthesize,
         crate::handlers::auth::login,
         crate::handlers::auth::logout,
+        crate::handlers::openai_compat::create_transcription,
+        crate::handlers::openai_compat::create_speech,
+        crate::handlers::web_search::web_search,
     ),
     components(
         schemas(
@@ -38,6 +41,10 @@ use utoipa::OpenApi;
             crate::models::TranscribeResponse,
             crate::models::LoginRequest,
             crate::models::LoginResponse,
+            crate::handlers::openai_compat::TranscriptionResponse,
+            crate::handlers::openai_compat::SpeechRequest,
+            crate::handlers::web_search::SearchResult,
+            crate::handlers::web_search::SearchResponse,
         )
     ),
     modifiers(&SecurityAddon),
@@ -46,6 +53,8 @@ use utoipa::OpenApi;
         (name = "chat", description = "Chat and conversation endpoints"),
         (name = "voice", description = "TTS and STT voice endpoints"),
         (name = "auth", description = "Authentication endpoints"),
+        (name = "OpenAI Compatible", description = "OpenAI-compatible endpoints for Open-WebUI integration"),
+        (name = "Web Search", description = "Internet search via Brave Search API (secured by jarvis-secretsd)"),
     )
 )]
 pub struct ApiDoc;

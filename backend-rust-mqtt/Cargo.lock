@@ -534,6 +534,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "dotenvy",
+ "parking_lot",
  "regex",
  "reqwest",
  "rumqttc",

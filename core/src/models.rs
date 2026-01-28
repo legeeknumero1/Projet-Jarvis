@@ -8,6 +8,7 @@ pub mod entities;
 pub struct AppState {
     pub python_bridges_url: String,
     pub audio_engine_url: String,
+    pub db_pool: (), // Placeholder
 }
 
 impl AppState {
@@ -132,7 +133,7 @@ pub struct HealthStatus {
     pub services: ServiceStatus,
 }
 
-#[cfg_attr(, derive(Debug, Serialize, Deserialize, ToSchema))]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ServiceStatus {
     pub database: String,
     pub python_bridges: String,
@@ -164,6 +165,21 @@ pub struct LoginResponse {
     pub expires_in: i64,
     pub user_id: String,
     pub username: String,
+}
+
+// User model from database (for authentication)
+#[derive(Debug, sqlx::FromRow)]
+pub struct User {
+    pub id: uuid::Uuid,
+    pub username: String,
+    pub password_hash: String,
+    pub email: Option<String>,
+    pub full_name: Option<String>,
+    pub is_active: bool,
+    pub is_admin: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub last_login: Option<DateTime<Utc>>,
 }
 
 /*
