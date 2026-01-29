@@ -4,18 +4,18 @@ use utoipa::ToSchema;
 
 pub mod entities;
 
+use crate::services::db::DbService;
+use crate::services::audio_engine::AudioEngineClient;
+use std::sync::Arc;
+
 #[derive(Clone)]
 pub struct AppState {
     pub python_bridges_url: String,
-    pub audio_engine_url: String,
-    pub db_pool: (), // Placeholder
+    pub audio_engine: Arc<AudioEngineClient>,
+    pub db: Arc<DbService>,
 }
 
 impl AppState {
-    pub fn audio_engine_url(&self) -> &String {
-        &self.audio_engine_url
-    }
-
     pub fn python_bridges_url(&self) -> &String {
         &self.python_bridges_url
     }

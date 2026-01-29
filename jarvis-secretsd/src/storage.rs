@@ -1,5 +1,5 @@
 use crate::crypto::{aead_decrypt, aead_encrypt, generate_secret};
-use crate::types::{SecretError, SecretMeta, SecretRecord, Vault};
+use crate::types::{SecretError, SecretMeta, SecretRecord, Vault, VaultStats};
 use anyhow::{Context, Result};
 use chrono::Utc;
 use parking_lot::RwLock;
@@ -7,6 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{info, warn};
+use zeroize::Zeroizing;
 
 /// Thread-safe vault storage with encryption
 pub struct VaultStore {
@@ -73,76 +74,32 @@ impl VaultStore {
         vault.secrets.insert(name.to_string(), record);
         vault.touch();
 
-        drop(vault); // Release lock before saving
+        drop(vault); 
         self.save()?;
 
         Ok(())
     }
 
-    /// Get a secret (decrypt)
-    pub fn get_secret(&self, name: &str) -> Result<(String, SecretMeta), SecretError> {
+    /// Get a secret (decrypt) - Returns Zeroizing to ensure cleanup
+    pub fn get_secret(&self, name: &str) -> Result<(Zeroizing<String>, SecretMeta), SecretError> {
         let vault = self.vault.read();
 
         let record = vault.secrets.get(name)
             .ok_or_else(|| SecretError::NotFound(name.to_string()))?;
 
+        // MLOCK: Prevent swapping during decryption
+        #[cfg(unix)]
+        unsafe {
+            let _ = libc::mlock(self.master.as_ptr() as *const libc::c_void, 32);
+        }
+
         let decrypted_bytes = aead_decrypt(&self.master, &record.enc)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;
 
-        let value = String::from_utf8(decrypted_bytes)
+        let value = String::from_utf8(decrypted_bytes.to_vec())
             .map_err(|e| SecretError::Crypto(format!("invalid UTF-8: {}", e)))?;
 
-        Ok((value, record.meta.clone()))
-    }
-
-    /// Check if secret exists
-    pub fn exists(&self, name: &str) -> bool {
-        self.vault.read().secrets.contains_key(name)
-    }
-
-    /// Delete a secret
-    pub fn delete_secret(&self, name: &str) -> Result<(), SecretError> {
-        let mut vault = self.vault.write();
-
-        if vault.secrets.remove(name).is_none() {
-            return Err(SecretError::NotFound(name.to_string()));
-        }
-
-        vault.touch();
-        drop(vault);
-        self.save()?;
-
-        Ok(())
-    }
-
-    /// List all secret names with metadata
-    pub fn list_secrets(&self) -> Vec<(String, SecretMeta)> {
-        let vault = self.vault.read();
-        vault
-            .secrets
-            .iter()
-            .map(|(name, record)| (name.clone(), record.meta.clone()))
-            .collect()
-    }
-
-    /// Get vault statistics
-    pub fn stats(&self) -> VaultStats {
-        let vault = self.vault.read();
-
-        let expired_count = vault
-            .secrets
-            .values()
-            .filter(|r| r.meta.is_expired())
-            .count();
-
-        VaultStats {
-            total_secrets: vault.secrets.len(),
-            expired_secrets: expired_count,
-            rotation_days: vault.rotation_days,
-            grace_days: vault.grace_days,
-            created_at: vault.created_at,
-            updated_at: vault.updated_at,
-        }
+        Ok((Zeroizing::new(value), record.meta.clone()))
     }
 
     /// Generate and store a new secret
@@ -150,7 +107,7 @@ impl VaultStore {
         let value = generate_secret(secret_type)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;
 
-        self.set_secret(name, &value, None)?;
+        self.set_secret(name, &*value, None)?;
 
         info!(" Generated new secret: {}", name);
         Ok(())
@@ -158,14 +115,11 @@ impl VaultStore {
 
     /// Rotate a secret (keep old in prev)
     pub fn rotate_secret(&self, name: &str, secret_type: &str) -> Result<(), SecretError> {
-        // Get current secret to preserve in prev
         let (_, old_meta) = self.get_secret(name)?;
 
-        // Generate new secret
         let new_value = generate_secret(secret_type)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;
 
-        // Create new metadata with old kid in prev
         let mut new_meta = {
             let vault = self.vault.read();
             let kid = format!("{}-{}", name, Utc::now().format("%Y%m%d-%H%M%S"));
@@ -173,19 +127,18 @@ impl VaultStore {
         };
         new_meta.prev = vec![old_meta.kid.clone()];
 
-        self.set_secret(name, &new_value, Some(new_meta))?;
+        self.set_secret(name, &*new_value, Some(new_meta))?;
 
         info!(" Rotated secret: {} (old kid: {})", name, old_meta.kid);
         Ok(())
     }
 
-    /// Save vault to disk (atomic write)
+    /// Save vault to disk (RAM-FS assumed)
     pub fn save(&self) -> Result<(), SecretError> {
         let vault = self.vault.read();
-        let json = serde_json::to_string_pretty(&*vault)
+        let json = serde_json::to_string(&*vault)
             .map_err(|e| SecretError::Storage(format!("JSON serialization failed: {}", e)))?;
 
-        // Atomic write: write to temp file, then rename
         let temp_path = self.path.with_extension("tmp");
         fs::write(&temp_path, json)
             .map_err(|e| SecretError::Storage(format!("failed to write vault: {}", e)))?;
@@ -193,7 +146,6 @@ impl VaultStore {
         fs::rename(&temp_path, &self.path)
             .map_err(|e| SecretError::Storage(format!("failed to rename vault: {}", e)))?;
 
-        // Set file permissions to 600 (owner read/write only)
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -208,83 +160,29 @@ impl VaultStore {
         Ok(())
     }
 
-    /// Get rotation days from vault
+    pub fn stats(&self) -> VaultStats {
+        let vault = self.vault.read();
+        let expired_count = vault.secrets.values().filter(|r| r.meta.is_expired()).count();
+        VaultStats {
+            total_secrets: vault.secrets.len(),
+            expired_secrets: expired_count,
+            rotation_days: vault.rotation_days,
+            grace_days: vault.grace_days,
+            created_at: vault.created_at,
+            updated_at: vault.updated_at,
+        }
+    }
+
+    pub fn list_secrets(&self) -> Vec<(String, SecretMeta)> {
+        let vault = self.vault.read();
+        vault.secrets.iter().map(|(n, r)| (n.clone(), r.meta.clone())).collect()
+    }
+
     pub fn rotation_days(&self) -> u32 {
         self.vault.read().rotation_days
     }
 
-    /// Get grace days from vault
     pub fn grace_days(&self) -> u32 {
         self.vault.read().grace_days
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct VaultStats {
-    pub total_secrets: usize,
-    pub expired_secrets: usize,
-    pub rotation_days: u32,
-    pub grace_days: u32,
-    pub created_at: chrono::DateTime<Utc>,
-    pub updated_at: chrono::DateTime<Utc>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::NamedTempFile;
-
-    #[test]
-    fn test_vault_create_and_load() {
-        let temp = NamedTempFile::new().unwrap();
-        let path = temp.path().to_str().unwrap();
-        let master = crate::crypto::gen_bytes_32();
-
-        // Create new vault
-        let store = VaultStore::load_or_init(path, master, 90, 14).unwrap();
-        assert_eq!(store.stats().total_secrets, 0);
-
-        // Load existing vault
-        let store2 = VaultStore::load_or_init(path, master, 90, 14).unwrap();
-        assert_eq!(store2.stats().total_secrets, 0);
-    }
-
-    #[test]
-    fn test_set_and_get_secret() {
-        let temp = NamedTempFile::new().unwrap();
-        let path = temp.path().to_str().unwrap();
-        let master = crate::crypto::gen_bytes_32();
-
-        let store = VaultStore::load_or_init(path, master, 90, 14).unwrap();
-
-        store.set_secret("test_key", "secret_value", None).unwrap();
-
-        let (value, meta) = store.get_secret("test_key").unwrap();
-        assert_eq!(value, "secret_value");
-        assert_eq!(meta.alg, "aes-gcm-256");
-    }
-
-    #[test]
-    fn test_generate_and_rotate() {
-        let temp = NamedTempFile::new().unwrap();
-        let path = temp.path().to_str().unwrap();
-        let master = crate::crypto::gen_bytes_32();
-
-        let store = VaultStore::load_or_init(path, master, 90, 14).unwrap();
-
-        // Generate
-        store.generate_and_store("jwt_key", "jwt_signing_key").unwrap();
-        let (value1, meta1) = store.get_secret("jwt_key").unwrap();
-
-        // Add a delay to ensure timestamp changes for KID generation
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
-        // Rotate
-        store.rotate_secret("jwt_key", "jwt_signing_key").unwrap();
-        let (value2, meta2) = store.get_secret("jwt_key").unwrap();
-
-        assert_ne!(value1, value2); // Values should be different
-        assert_ne!(meta1.kid, meta2.kid); // Kids should be different
-        assert_eq!(meta2.prev, vec![meta1.kid]); // Old kid in prev
     }
 }

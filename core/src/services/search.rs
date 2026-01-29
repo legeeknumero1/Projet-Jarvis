@@ -13,6 +13,7 @@ use tracing::info;
 pub struct SearchIndex {
     index: Index,
     writer: IndexWriter,
+    #[allow(dead_code)]
     schema: Schema,
     conversation_id: Field,
     user_message: Field,

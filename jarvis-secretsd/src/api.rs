@@ -1,5 +1,6 @@
 use crate::audit::AuditLog;
-use crate::policy::Policy;
+use crate::ids::IntrusionDetector;
+use crate::policy::{Permission, Policy};
 use crate::rotation::rotate_if_due;
 use crate::storage::VaultStore;
 use crate::types::*;
@@ -12,12 +13,13 @@ use axum::{
 };
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::{info, warn};
+use tracing::info;
 
 #[derive(Clone)]
 pub struct AppState {
     pub store: Arc<VaultStore>,
     pub policy: Arc<Policy>,
+    pub ids: Arc<IntrusionDetector>,
     pub audit: Arc<AuditLog>,
     pub start_time: Instant,
 }
@@ -64,17 +66,77 @@ async fn get_secret_handler(
     let client = extract_client(&headers)
         .ok_or_else(|| SecretError::NotAuthorized("missing X-Jarvis-Client header".to_string()))?;
 
-    // Check policy
-    if !state.policy.allowed(&client, &name) {
+    // 1. Check IDS ban
+    if state.ids.is_banned(&client) {
+        state.audit.log_error("get_secret", Some(&client), "banned");
+        return Err(SecretError::NotAuthorized("client is temporarily banned due to suspicious activity".to_string()));
+    }
+
+    // 2. Check Canary
+    if state.ids.check_canary(&name, &client) {
+        state.audit.log_error("get_secret", Some(&client), "canary_tripped");
+        return Err(SecretError::NotFound(name)); // Hide existence if canary
+    }
+
+    // 3. Check policy with new Permission system
+    if !state.policy.is_authorized(&client, &name, Permission::Read) {
+        state.ids.report_failure(&client, "unauthorized_access_attempt");
         state.audit.log_error("get_secret", Some(&client), "not_authorized");
+        
+        // Artificial delay to mitigate timing attacks
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
         return Err(SecretError::NotAuthorized(format!(
-            "client {} not allowed to access {}",
+            "client {} not allowed to Read {}",
             client, name
         )));
     }
 
     // Retrieve secret
-    let (value, meta) = state.store.get_secret(&name)?;
+    let (value, meta) = match state.store.get_secret(&name) {
+        Ok(v) => v,
+        Err(SecretError::NotFound(_)) => {
+            // Auto-generate based on name patterns
+            let secret_type = if name.ends_with("_password") || name == "redis_password" {
+                Some("postgres_password")
+            } else if name == "database_url" {
+                Some("database_url")
+            } else if name.starts_with("jwt_") || name == "JWT_SECRET" {
+                Some("jwt_signing_key")
+            } else if name.ends_with("_encryption_key") {
+                Some("jarvis_encryption_key")
+            } else if name.ends_with("_key") || name.ends_with("_token") {
+                Some("api_key")
+            } else {
+                None
+            };
+
+            if let Some(stype) = secret_type {
+                info!(" Auto-generating secret '{}' of type '{}' on demand", name, stype);
+                
+                // Special case for composed secrets
+                if name == "database_url" {
+                    // Ensure postgres_password exists
+                    let pg_pwd = match state.store.get_secret("postgres_password") {
+                        Ok((v, _)) => v,
+                        Err(_) => {
+                            state.store.generate_and_store("postgres_password", "postgres_password")?;
+                            state.store.get_secret("postgres_password")?.0
+                        }
+                    };
+                    let db_url = format!("postgres://jarvis:{}@postgres:5432/jarvis_db", &*pg_pwd);
+                    state.store.set_secret(&name, &db_url, None)?;
+                } else {
+                    state.store.generate_and_store(&name, stype)?;
+                }
+                
+                state.store.get_secret(&name)?
+            } else {
+                return Err(SecretError::NotFound(name));
+            }
+        }
+        Err(e) => return Err(e),
+    };
 
     state.audit.log_success("get_secret", Some(&client), Some(&name));
 
@@ -95,12 +157,18 @@ async fn create_secret_handler(
     let client = extract_client(&headers)
         .ok_or_else(|| SecretError::NotAuthorized("missing X-Jarvis-Client header".to_string()))?;
 
-    // Only admin can create secrets
-    if client != "admin" {
+    // Check IDS ban
+    if state.ids.is_banned(&client) {
+        return Err(SecretError::NotAuthorized("client is temporarily banned".to_string()));
+    }
+
+    // Check policy
+    if !state.policy.is_authorized(&client, &req.name, Permission::Write) {
+        state.ids.report_failure(&client, "unauthorized_write_attempt");
         state.audit.log_error("create_secret", Some(&client), "not_authorized");
         return Err(SecretError::NotAuthorized(format!(
-            "only admin can create secrets, got client: {}",
-            client
+            "client {} not allowed to Write {}",
+            client, req.name
         )));
     }
 
@@ -130,7 +198,7 @@ async fn list_secrets_handler(
     // Filter by policy
     let filtered: Vec<SecretMetadata> = all_secrets
         .into_iter()
-        .filter(|(name, _)| state.policy.allowed(&client, name))
+        .filter(|(name, _)| state.policy.is_authorized(&client, name, Permission::List))
         .map(|(name, meta)| {
             let is_expired = meta.is_expired();
             SecretMetadata {
@@ -159,11 +227,17 @@ async fn rotate_handler(
     let client = extract_client(&headers)
         .ok_or_else(|| SecretError::NotAuthorized("missing X-Jarvis-Client header".to_string()))?;
 
-    // Only admin can rotate
-    if client != "admin" {
+    // Check IDS ban
+    if state.ids.is_banned(&client) {
+        return Err(SecretError::NotAuthorized("client is temporarily banned".to_string()));
+    }
+
+    // Check policy
+    if !state.policy.is_authorized(&client, "*", Permission::Rotate) {
+        state.ids.report_failure(&client, "unauthorized_rotate_attempt");
         state.audit.log_error("rotate", Some(&client), "not_authorized");
         return Err(SecretError::NotAuthorized(format!(
-            "only admin can rotate secrets, got client: {}",
+            "client {} not allowed to Rotate",
             client
         )));
     }

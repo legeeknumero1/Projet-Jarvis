@@ -2,6 +2,7 @@ mod api;
 mod audit;
 mod config;
 mod crypto;
+mod ids;
 mod policy;
 mod rotation;
 mod storage;
@@ -11,6 +12,7 @@ use crate::api::{router, AppState};
 use crate::audit::AuditLog;
 use crate::config::Config;
 use crate::crypto::gen_bytes_32;
+use crate::ids::IntrusionDetector;
 use crate::policy::Policy;
 use crate::storage::VaultStore;
 use anyhow::{Context, Result};
@@ -18,7 +20,7 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::{error, info, warn};
+use tracing::info;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 #[tokio::main]
@@ -66,16 +68,20 @@ async fn main() -> Result<()> {
     let audit = AuditLog::init(&config.paths.audit_path)?;
     let audit = Arc::new(audit);
 
-    // 5. Start rotation scheduler
+    // 5. Initialize Intrusion Detection System
+    let ids = Arc::new(IntrusionDetector::new());
+
+    // 6. Start rotation scheduler
     let store_clone = store.clone();
     tokio::spawn(async move {
         rotation::start_rotation_scheduler(store_clone).await;
     });
 
-    // 6. Build Axum app
+    // 7. Build Axum app
     let app_state = AppState {
         store,
         policy,
+        ids,
         audit: audit.clone(),
         start_time: Instant::now(),
     };
@@ -120,39 +126,48 @@ fn init_logging(config: &Config) -> Result<()> {
     Ok(())
 }
 
-/// Ensure master key exists, generate if missing
+use hkdf::Hkdf;
+use sha2::Sha256;
+
+/// Ensure master key exists, generate if missing, and bind it to the host machine-id via HKDF
 fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
     let path_obj = Path::new(path);
+    
+    // 1. Get host hardware signature
+    let machine_id = fs::read_to_string("/etc/machine-id")
+        .unwrap_or_else(|_| "generic-jarvis-host-id-fallback".to_string());
+    let host_salt = machine_id.trim();
 
     if path_obj.exists() {
-        info!(" Loading existing master key from {}", path);
+        info!(" Loading existing master key from {} (HKDF Bound to host)", path);
 
         let bytes = fs::read(path)
             .with_context(|| format!("failed to read master key: {}", path))?;
 
         if bytes.len() != 32 {
-            anyhow::bail!("invalid master key length: expected 32, got {}", bytes.len());
+            anyhow::bail!("invalid master key length");
         }
 
-        let mut key = [0u8; 32];
-        key.copy_from_slice(&bytes);
+        // Use HKDF to derive the final key from raw key + host salt
+        let hk = Hkdf::<Sha256>::new(Some(host_salt.as_bytes()), &bytes);
+        let mut final_key = [0u8; 32];
+        hk.expand(b"jarvis-secretsd-host-binding", &mut final_key)
+            .map_err(|_| anyhow::anyhow!("HKDF expansion failed"))?;
 
-        Ok(key)
+        Ok(final_key)
     } else {
-        info!(" Generating new master key at {}", path);
+        info!(" Generating new master key bound to this hardware via HKDF");
 
-        // Ensure directory exists
         if let Some(parent) = path_obj.parent() {
-            fs::create_dir_all(parent)
-                .context("failed to create master key directory")?;
+            fs::create_dir_all(parent)?;
         }
 
-        let key = gen_bytes_32();
-
-        fs::write(path, &key)
+        let raw_key = gen_bytes_32();
+        
+        // Write raw key (worthless without HKDF + machine-id)
+        fs::write(path, &*raw_key)
             .with_context(|| format!("failed to write master key: {}", path))?;
 
-        // Set permissions 600
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -161,8 +176,12 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
             fs::set_permissions(path, perms)?;
         }
 
-        info!(" Generated new master key (32 bytes)");
+        let hk = Hkdf::<Sha256>::new(Some(host_salt.as_bytes()), &*raw_key);
+        let mut final_key = [0u8; 32];
+        hk.expand(b"jarvis-secretsd-host-binding", &mut final_key)
+            .map_err(|_| anyhow::anyhow!("HKDF expansion failed"))?;
 
-        Ok(key)
+        info!(" Hardware-bound master key (HKDF) initialized");
+        Ok(final_key)
     }
 }

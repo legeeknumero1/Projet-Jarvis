@@ -1,25 +1,26 @@
-# Jarvis Secrets Daemon Configuration (Docker)
+# Jarvis Secrets Daemon Configuration (Ultra-Secure)
 
 [server]
-bind_addr = "0.0.0.0:8081"  # Bind to all interfaces in container
+bind_addr = "0.0.0.0:8081"
 allow_unix_socket = false
 
 [paths]
+# Ces chemins seront montés en tmpfs (RAM) dans Docker
 vault_path = "/opt/jarvis/secrets/vault.json"
 audit_path = "/opt/jarvis/audit/audit.jsonl"
 master_key_path = "/opt/jarvis/master.key"
 
 [security]
-rotation_days = 90
-grace_days = 14
+rotation_days = 7   # Rotation ultra-fréquente demandée
+grace_days = 2      # Période de validité de l'ancien secret pour éviter les coupures
 require_client_id_header = true
-deny_network_remote = false  # Allow access from other containers/host
+deny_network_remote = false
 rbac_policy_path = "/etc/jarvis-secretsd/policy.yaml"
 
 [crypto]
 aead = "aes-gcm-256"
 jwt_sign_algo = "ed25519"
-kdf = "argon2id"
+kdf = "argon2id"    # Meilleure protection contre le brute-force
 
 [logging]
 level = "info"

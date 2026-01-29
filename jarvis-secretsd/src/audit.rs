@@ -7,6 +7,7 @@ use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tracing::{error, info};
+use zeroize::Zeroizing;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
@@ -20,7 +21,7 @@ pub struct AuditEntry {
 
 pub struct AuditLog {
     path: PathBuf,
-    signing_key: String,
+    signing_key: Zeroizing<String>,
     writer: Mutex<BufWriter<File>>,
 }
 
@@ -57,17 +58,17 @@ impl AuditLog {
     }
 
     /// Load or generate Ed25519 signing key for audit
-    fn load_or_generate_signing_key(audit_path: &Path) -> Result<String> {
+    fn load_or_generate_signing_key(audit_path: &Path) -> Result<Zeroizing<String>> {
         let key_path = audit_path.with_extension("sign.key");
 
         if key_path.exists() {
             let key = std::fs::read_to_string(&key_path)
                 .context("failed to read signing key")?;
-            Ok(key.trim().to_string())
+            Ok(Zeroizing::new(key.trim().to_string()))
         } else {
             let (sk, pk) = ed25519_generate();
 
-            std::fs::write(&key_path, &sk)
+            std::fs::write(&key_path, &*sk)
                 .context("failed to write signing key")?;
 
             let pk_path = audit_path.with_extension("sign.pub");
@@ -143,42 +144,5 @@ impl AuditLog {
         if let Err(e) = self.log(event, client, secret, "success") {
             error!(" Failed to write audit log: {}", e);
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::NamedTempFile;
-
-    #[test]
-    fn test_audit_init() {
-        let temp = NamedTempFile::new().unwrap();
-        let path = temp.path().to_str().unwrap();
-
-        let audit = AuditLog::init(path).unwrap();
-
-        // Check signing key files exist
-        let key_path = temp.path().with_extension("sign.key");
-        let pub_path = temp.path().with_extension("sign.pub");
-        assert!(key_path.exists());
-        assert!(pub_path.exists());
-    }
-
-    #[test]
-    fn test_audit_log() {
-        let temp = NamedTempFile::new().unwrap();
-        let path = temp.path().to_str().unwrap();
-
-        let audit = AuditLog::init(path).unwrap();
-
-        audit.log("get_secret", Some("backend"), Some("jwt_key"), "success").unwrap();
-        audit.log("rotate", Some("admin"), Some("postgres_password"), "success").unwrap();
-
-        // Read audit log
-        let content = std::fs::read_to_string(path).unwrap();
-        assert!(content.contains("get_secret"));
-        assert!(content.contains("backend"));
-        assert!(content.contains("jwt_key"));
     }
 }

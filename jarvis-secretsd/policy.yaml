@@ -1,58 +1,60 @@
-# Jarvis Secrets Daemon RBAC Policy
-# Copy to /etc/jarvis-secretsd/policy.yaml and customize
+# Politique RBAC Jarvis - Principe du Moindre Privilège (PoLP)
+# Chaque service ne voit QUE ce dont il a besoin.
 
 clients:
-  # Backend can access JWT signing keys, encryption keys, API keys
+  # Core Backend (Rust) : Orchestrateur central
   backend:
     allow:
-      - "jwt_signing_key"
-      - "jwt_secret_key"
-      - "jwt_algorithm"
-      - "jwt_expiration_hours"
+      - "database_url"
+      - "JWT_SECRET"
       - "jarvis_encryption_key"
       - "brave_api_key"
       - "openweather_api_key"
-      - "backup_encryption_key"
-      - "postgres_password"
-      - "redis_password"
-      - "database_url"
-    deny: []
+    permissions: [read]
 
-  # Database service can only access DB passwords
-  db:
+  # Python Bridges (IA/LLM) : Accès limité aux modèles
+  python-bridges:
     allow:
-      - "postgres_password"
-      - "timescale_password"
-      - "redis_password"
-    deny: []
+      - "ollama_api_key" # Si configuré
+    permissions: [read]
 
-  # TTS service can access TTS-specific keys
-  tts:
-    allow:
-      - "tts_api_key"
-    deny: []
+  # STT (Speech-to-Text) : Aucun secret nécessaire pour le traitement local
+  stt-api:
+    allow: []
+    permissions: []
 
-  # STT service can access STT-specific keys
-  stt:
-    allow:
-      - "stt_api_key"
-    deny: []
+  # TTS (Text-to-Speech) : Accès à la clé Piper si externe
+  tts-api:
+    allow: []
+    permissions: []
 
-  # Open-WebUI needs JWT secret for authentication
+  # Open-WebUI : Uniquement le JWT pour l'authentification session
   open-webui:
     allow:
-      - "jwt_secret_key"
-    deny: []
+      - "JWT_SECRET"
+    permissions: [read]
 
-  # Monitoring can list but not read secret values
+  # Infrastructure (Postgres/Redis) : Uniquement leurs credentials respectifs
+  postgres:
+    allow: ["postgres_password"]
+    permissions: [read]
+  
+  timescale:
+    allow: ["postgres_password"]
+    permissions: [read]
+
+  redis:
+    allow: ["redis_password"]
+    permissions: [read]
+
+  # Monitoring : Peut lister les noms (métadonnées) mais JAMAIS lire les valeurs
   monitoring:
-    allow: []
-    deny: ["*"]
+    allow: ["*"]
+    permissions: [list]
 
-  # Admin has full access (for management)
+  # Admin : Accès total pour la maintenance (uniquement via localhost/interne)
   admin:
     allow: ["*"]
-    deny: []
+    permissions: [admin]
 
-# Default deny (deny all clients not in the list)
 default_deny: true

@@ -37,11 +37,11 @@ impl CacheClient {
         match ttl {
             Some(duration) => {
                 self.manager
-                    .set_ex(key, serialized, duration.as_secs())
+                    .set_ex::<_, _, ()>(key, serialized, duration.as_secs())
                     .await?;
             }
             None => {
-                self.manager.set(key, serialized).await?;
+                self.manager.set::<_, _, ()>(key, serialized).await?;
             }
         }
 
@@ -63,7 +63,7 @@ impl CacheClient {
 
     /// Delete key
     pub async fn delete(&mut self, key: &str) -> Result<()> {
-        self.manager.del(key).await?;
+        self.manager.del::<_, ()>(key).await?;
         Ok(())
     }
 
@@ -75,7 +75,7 @@ impl CacheClient {
 
     /// Set expiration on existing key
     pub async fn expire(&mut self, key: &str, ttl: Duration) -> Result<()> {
-        self.manager.expire(key, ttl.as_secs() as i64).await?;
+        self.manager.expire::<_, ()>(key, ttl.as_secs() as i64).await?;
         Ok(())
     }
 
@@ -109,7 +109,7 @@ impl CacheClient {
     /// Flush all keys (use with caution!)
     pub async fn flush_all(&mut self) -> Result<()> {
         warn!("Flushing all Redis keys");
-        redis::cmd("FLUSHALL").query_async(&mut self.manager).await?;
+        redis::cmd("FLUSHALL").query_async::<_, ()>(&mut self.manager).await?;
         Ok(())
     }
 

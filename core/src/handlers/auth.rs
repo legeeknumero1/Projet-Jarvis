@@ -12,10 +12,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::info;
 
-use crate::middleware::{
-    check_auth_rate_limit, generate_token, InputValidator, LoginValidator, ValidatedJwt,
-};
-use crate::models::{AppState, LoginRequest, LoginResponse, User};
+use crate::middleware::ValidatedJwt;
+use crate::models::{AppState, LoginRequest, LoginResponse};
 
 /// Login endpoint - Generate JWT token for user
 ///
@@ -32,17 +30,17 @@ use crate::models::{AppState, LoginRequest, LoginResponse, User};
     )
 )]
 pub async fn login(
-    State(state): State<Arc<AppState>>,
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    Json(payload): Json<LoginRequest>,
-) -> Result<(StatusCode, Json<LoginResponse>), (StatusCode, String)> {
+    State(_state): State<Arc<AppState>>,
+    ConnectInfo(_addr): ConnectInfo<SocketAddr>,
+    Json(_payload): Json<LoginRequest>,
+) -> (StatusCode, Json<serde_json::Value>) {
     // ============================================================================
     // DATABASE-RELATED CODE COMMENTED OUT FOR TESTING
     // ============================================================================
-    Err((
+    (
         StatusCode::INTERNAL_SERVER_ERROR,
-        "Database is disabled for this test".to_string(),
-    ))
+        Json(serde_json::json!({ "error": "Database integration pending" })),
+    )
 }
 
 /// Logout endpoint

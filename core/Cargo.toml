@@ -10,6 +10,7 @@ path = "src/main.rs"
 [dependencies]
 # Web framework
 axum = { version = "0.7", features = ["multipart"] }
+axum-server = { version = "0.7", features = ["tls-rustls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "net", "signal"] }
 tower = "0.5"
 tower-http = { version = "0.5", features = ["trace", "cors"] }
@@ -20,6 +21,9 @@ utoipa-swagger-ui = { version = "8", features = ["axum"] }
 
 # Prometheus Metrics
 axum-prometheus = "0.6"
+
+# Internal modules
+jarvis-audio = { path = "../backend-rust-audio" }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }

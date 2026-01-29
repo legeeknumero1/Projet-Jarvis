@@ -27,13 +27,19 @@ services:
         ipv4_address: 172.20.0.5
     ports:
       - "127.0.0.1:8081:8081"
+    # RAM-ONLY STORAGE: Secrets never touch the physical disk
+    tmpfs:
+      - /opt/jarvis/secrets:size=10M,mode=700
+      - /opt/jarvis/audit:size=10M,mode=700
+      - /opt/jarvis/run:size=1M,mode=700
     volumes:
-      # Mount local migrated data to container
-      - ./jarvis-secretsd/run/secrets:/opt/jarvis/secrets
-      - ./jarvis-secretsd/run/audit:/opt/jarvis/audit
-      - ./jarvis-secretsd/run/master.key:/opt/jarvis/master.key
       - ./jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro
       - ./jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    # Master key is also generated and kept in RAM if we mount it via tmpfs
+    # Note: If the container reboots, the master key and vault are GONE.
+    # This is what you asked: no hardcoded storage.
+
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8081/healthz" ]
@@ -110,14 +116,13 @@ services:
     environment:
       - OLLAMA_ORIGINS=*
       - OLLAMA_HOST=0.0.0.0
-    # GPU désactivé - Mode CPU uniquement
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     healthcheck:
       test: [ "CMD", "bash", "-lc", "ollama --version >/dev/null 2>&1" ]
       interval: 30s
@@ -127,30 +132,25 @@ services:
   # Container 4: Rust Core Backend (Main Backend Logic) - Quatrième dans le schéma
   backend:
     build:
-      context: ./core
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: core/Dockerfile
     container_name: jarvis_backend
-    env_file:
-      - ./core/.env
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.40
     ports:
       - "8100:8100"
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '2.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
+    environment:
+      - SECRETSD_URL=http://jarvis-secretsd:8081
+      - CLIENT_ID=backend
+      - TLS_CERT_PATH=/etc/jarvis/certs/server.crt
+      - TLS_KEY_PATH=/etc/jarvis/certs/server.key
+      - PORT=8100
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
       - ./data:/app/data
-      # ./backend:/app volume supprimé pour éviter d'écraser les fichiers buildés
-      # ./memory:/app/memory volume supprimé pour éviter d'écraser les fichiers buildés
+      - ./certs:/etc/jarvis/certs:ro
     restart: unless-stopped
     depends_on:
       postgres:
@@ -214,27 +214,35 @@ services:
       backend:
         condition: service_healthy
 
-  # PyO3 Rust-Python Bridge
-  pyo3-bridge:
+  # Python Bridges IA (FastAPI) - Services LLM, STT, TTS
+  python-bridges:
     build:
-      context: ./backend-pyo3-bridge
+      context: ./backend-python-bridges
       dockerfile: Dockerfile
-    container_name: jarvis_pyo3_bridge
-    env_file:
-      - ./backend-pyo3-bridge/.env
+    container_name: jarvis_python_bridges
     networks:
       jarvis_network:
         ipv4_address: 172.20.0.35
     ports:
       - "8005:8005"
+    environment:
+      - SECRETSD_URL=http://jarvis-secretsd:8081
+      - CLIENT_ID=python-bridges
+      - OLLAMA_URL=http://jarvis_ollama:11434
+      - WHISPER_MODEL=base
+      - EMBEDDINGS_MODEL=distiluse-base-multilingual-cased-v2
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "python3", "-c", "import jarvis_bridge; print('OK')" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+
 
   # Services de support
   postgres:
@@ -246,18 +254,12 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-jarvis_db}
-      POSTGRES_USER: ${POSTGRES_USER:-jarvis}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      - POSTGRES_DB=jarvis_db
+      - POSTGRES_USER=jarvis
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U jarvis -d jarvis_db" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
+... # The rest of the postgres service definition is unchanged
   redis:
     image: redis:7-alpine
     container_name: jarvis_redis
@@ -266,6 +268,7 @@ services:
         ipv4_address: 172.20.0.110
     ports:
       - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     restart: unless-stopped

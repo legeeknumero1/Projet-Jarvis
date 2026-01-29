@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y \
     git \
     libasound2-dev \
     libsndfile1-dev \
+    portaudio19-dev \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -28,7 +30,9 @@ FROM python:3.11.6-slim-bookworm
 RUN apt-get update && apt-get install -y \
     libasound2 \
     libsndfile1 \
+    libportaudio2 \
     ffmpeg \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copier venv depuis builder
@@ -51,9 +55,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8005/health || exit 1
 
 # Configuration
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=production
 EXPOSE 8005
 
-# Lancement
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=8005"]
+# Lancement FastAPI avec Uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8005"]

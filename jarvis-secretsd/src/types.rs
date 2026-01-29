@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use thiserror::Error;
+use zeroize::Zeroizing;
 
 /// Secret metadata
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -89,7 +90,7 @@ pub struct CreateSecretRequest {
 #[derive(Serialize)]
 pub struct GetSecretResponse {
     pub name: String,
-    pub value: String,
+    pub value: Zeroizing<String>,
     pub kid: String,
     pub expires_at: Option<DateTime<Utc>>,
 }
@@ -126,6 +127,16 @@ pub struct HealthResponse {
     pub version: String,
     pub uptime_secs: u64,
     pub secrets_count: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct VaultStats {
+    pub total_secrets: usize,
+    pub expired_secrets: usize,
+    pub rotation_days: u32,
+    pub grace_days: u32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 /// Error types

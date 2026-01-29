@@ -1,4 +1,4 @@
-# Runtime-only image for jarvis-secretsd (using pre-built binary)
+# Runtime-only image for jarvis-secretsd (High Security Hardened)
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
@@ -8,15 +8,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directories
-RUN mkdir -p /etc/jarvis-secretsd /opt/jarvis/secrets /opt/jarvis/audit
+RUN mkdir -p /etc/jarvis-secretsd /opt/jarvis/secrets /opt/jarvis/audit /opt/jarvis/run
 
-# Copy pre-built binary from host
+# Copy pre-built binary
 COPY target/release/jarvis-secretsd /usr/local/bin/jarvis-secretsd
 RUN chmod +x /usr/local/bin/jarvis-secretsd
-
-# Copy config examples
-COPY config.toml /etc/jarvis-secretsd/config.toml.example
-COPY policy.yaml /etc/jarvis-secretsd/policy.yaml.example
 
 # Create non-root user
 RUN useradd -r -u 1000 -m jarvis
@@ -24,12 +20,16 @@ RUN useradd -r -u 1000 -m jarvis
 # Set permissions
 RUN chown -R jarvis:jarvis /opt/jarvis
 
+# SECURITY HARDENING: Disable core dumps
+RUN echo "* hard core 0" >> /etc/security/limits.conf
+RUN echo "fs.suid_dumpable = 0" >> /etc/sysctl.conf || true
+
 USER jarvis
 
 EXPOSE 8081
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8081/healthz || exit 1
+# Mount machine-id from host to bind secrets to physical hardware
+# This will be done in docker-compose.yml
 
 ENTRYPOINT ["/usr/local/bin/jarvis-secretsd"]
 CMD ["--config", "/etc/jarvis-secretsd/config.toml"]

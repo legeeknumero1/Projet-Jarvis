@@ -1,7 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
-use chrono::Utc;
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 
 use crate::models::{AppState, HealthStatus, Metrics, ServiceStatus};
 

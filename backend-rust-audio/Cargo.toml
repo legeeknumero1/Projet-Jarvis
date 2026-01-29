@@ -1,0 +1,20 @@
+[package]
+name = "jarvis-audio"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Audio I/O
+cpal = "0.15"
+
+# Fast Math and DSP
+ringbuf = "0.3"
+hound = "3.5"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+
+# Concurrence
+crossbeam-channel = "0.5"
+
+[dev-dependencies]
+approx = "0.5"

@@ -14,7 +14,7 @@ mod models;
 mod openapi;
 mod services;
 
-use handlers::{auth, chat, health, memory, openai_compat, stt, tts, web_search};
+use handlers::{chat, health, memory, openai_compat, stt, tts, web_search};
 use middleware::{CertificateLoader, EnvironmentChecklist, SecretsValidator, TlsConfig};
 use models::AppState;
 use openapi::ApiDoc;
@@ -75,44 +75,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = std::env::var("PORT").unwrap_or_else(|_| "8100".to_string());
     let python_bridges_url =
         std::env::var("PYTHON_BRIDGES_URL").unwrap_or_else(|_| "http://localhost:8005".to_string());
-    let audio_engine_url =
-        std::env::var("AUDIO_ENGINE_URL").unwrap_or_else(|_| "http://localhost:8004".to_string());
     let cors_origins =
         std::env::var("CORS_ORIGINS").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    
     info!(" Configuration:");
     info!("  - Server: {}:{}", host, port);
     info!("  - Python Bridges: {}", python_bridges_url);
-    info!("  - Audio Engine: {}", audio_engine_url);
+    info!("  - Audio Engine: Integrated (Rust Native)");
     info!("  - CORS Origins: {}", cors_origins);
 
     // ============================================================================
-    // DATABASE CONNECTION - Initialize PostgreSQL pool for authentication
+    // SERVICES INITIALIZATION
     // ============================================================================
-    // let database_url = std::env::var("DATABASE_URL")
-    //     .expect("DATABASE_URL must be set (loaded from jarvis-secretsd)");
+    let audio_engine = Arc::new(services::audio_engine::AudioEngineClient::new());
 
-    // info!(" Connecting to PostgreSQL database...");
-    // let db_pool = sqlx::postgres::PgPoolOptions::new()
-    //     .max_connections(10)
-    //     .connect(&database_url)
-    //     .await
-    //     .expect("Failed to connect to PostgreSQL");
+    // ============================================================================
+    // DATABASE CONNECTION
+    // ============================================================================
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set (loaded from jarvis-secretsd)");
 
-    // info!(" Database connection established");
+    info!(" Connecting to PostgreSQL database...");
+    let db_service = services::db::DbService::new(&database_url)
+        .await
+        .expect("Failed to connect to PostgreSQL");
 
-    // // Run migrations
-    // info!(" Running database migrations...");
-    // sqlx::migrate!("./migrations")
-    //     .run(&db_pool)
-    //     .await
-    //     .expect("Failed to run database migrations");
-    // info!(" Database migrations completed");
+    info!(" Database connection established");
 
     // Create application state
     let state = Arc::new(AppState {
         python_bridges_url,
-        audio_engine_url,
-        db_pool: (), // Dummy value for now
+        audio_engine,
+        db: Arc::new(db_service),
     });
 
     // ============================================================================
@@ -205,36 +199,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = app.into_make_service_with_connect_info::<std::net::SocketAddr>();
 
-    let addr = format!("{}:{}", host, port);
+    let addr = format!("{}:{}", host, port).parse::<std::net::SocketAddr>()?;
 
     // ============================================================================
-    // Start HTTP Server (TLS infrastructure ready for deployment)
+    // Start HTTPS Server
     // ============================================================================
-    // Note: Full HTTPS integration requires using a reverse proxy (nginx) or
-    // alternative web framework (actix-web). TLS certificate validation and
-    // config creation are implemented in tls.rs and ready for integration.
+    let cert_path = std::env::var("TLS_CERT_PATH").unwrap_or_else(|_| "certs/server.crt".to_string());
+    let key_path = std::env::var("TLS_KEY_PATH").unwrap_or_else(|_| "certs/server.key".to_string());
 
-    if CertificateLoader::validate_certificates(&tls_config).is_ok() {
-        info!(" TLS certificates are valid - ready for HTTPS deployment via reverse proxy");
-        info!("   Set up nginx with TLS or use actix-web for direct HTTPS support");
+    if std::path::Path::new(&cert_path).exists() && std::path::Path::new(&key_path).exists() {
+        info!(" Starting Jarvis in HTTPS mode");
+        info!("  - Cert: {}", cert_path);
+        info!("  - Key: {}", key_path);
+        
+        let config = axum_server::tls_rustls::RustlsConfig::from_pem_file(cert_path, key_path)
+            .await?;
+
+        info!(" Server listening on https://{}", addr);
+        axum_server::bind_rustls(addr, config)
+            .serve(app)
+            .await?;
     } else {
-        info!("  TLS certificates not configured - running HTTP-only (development mode)");
-    }
-
-    match tokio::net::TcpListener::bind(&addr).await {
-        Ok(listener) => {
-            info!(" Server listening on http://{}", addr);
-            info!(" Health check: http://{}/health", addr);
-            info!(" Chat API: POST http://{}/api/chat", addr);
-            info!(" STT API: POST http://{}/api/voice/transcribe", addr);
-            info!(" TTS API: POST http://{}/api/voice/synthesize", addr);
-
-            axum::serve(listener, app).await?;
-        }
-        Err(e) => {
-            error!(" Erreur liaison au serveur {}: {}", addr, e);
-            return Err(e.into());
-        }
+        warn!(" TLS certificates not found. Falling back to HTTP.");
+        info!(" Server listening on http://{}", addr);
+        let listener = tokio::net::TcpListener::bind(&addr).await?;
+        axum::serve(listener, app).await?;
     }
 
     Ok(())

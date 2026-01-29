@@ -11,7 +11,7 @@
 // - Correction : Validation des secrets à startup + guide de rotation
 
 use std::env;
-use tracing::{error, warn, info};
+use tracing::{warn, info};
 
 // ============================================================================
 // Secret Configuration Requirements
