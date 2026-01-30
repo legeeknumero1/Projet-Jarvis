@@ -6,18 +6,27 @@ pub mod entities;
 
 use crate::services::db::DbService;
 use crate::services::audio_engine::AudioEngineClient;
+use crate::services::qdrant::QdrantService;
+use crate::services::ollama::OllamaService;
+use crate::services::stt_native::SttNativeService;
+use crate::services::tts_native::TtsNativeService;
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub python_bridges_url: String,
+    pub ollama_url: String,
+    pub qdrant_url: String,
     pub audio_engine: Arc<AudioEngineClient>,
     pub db: Arc<DbService>,
+    pub qdrant: Arc<QdrantService>,
+    pub ollama: Arc<OllamaService>,
+    pub stt: Arc<SttNativeService>,
+    pub tts: Arc<TtsNativeService>,
 }
 
 impl AppState {
-    pub fn python_bridges_url(&self) -> &String {
-        &self.python_bridges_url
+    pub fn ollama_url(&self) -> &String {
+        &self.ollama_url
     }
 }
 
@@ -180,6 +189,50 @@ pub struct User {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub last_login: Option<DateTime<Utc>>,
+}
+
+/*
+============= OpenAI Compatibility Models =============
+*/
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OpenAIChatRequest {
+    pub model: String,
+    pub messages: Vec<OpenAIChatMessage>,
+    #[serde(default)]
+    pub stream: bool,
+    pub temperature: Option<f32>,
+    pub max_tokens: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OpenAIChatMessage {
+    pub role: String,
+    pub content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OpenAIChatResponse {
+    pub id: String,
+    pub object: String,
+    pub created: i64,
+    pub model: String,
+    pub choices: Vec<OpenAIChoice>,
+    pub usage: OpenAIUsage,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OpenAIChoice {
+    pub index: i32,
+    pub message: OpenAIChatMessage,
+    pub finish_reason: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct OpenAIUsage {
+    pub prompt_tokens: i32,
+    pub completion_tokens: i32,
+    pub total_tokens: i32,
 }
 
 /*

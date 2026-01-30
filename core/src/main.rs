@@ -23,6 +23,11 @@ use utoipa_swagger_ui::SwaggerUi;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // SECURITY FIX: Explicitly initialize rustls crypto provider
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -73,14 +78,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configuration depuis les variables d'environnement
     let host = std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("PORT").unwrap_or_else(|_| "8100".to_string());
-    let python_bridges_url =
-        std::env::var("PYTHON_BRIDGES_URL").unwrap_or_else(|_| "http://localhost:8005".to_string());
+    let ollama_url = 
+        std::env::var("OLLAMA_URL").unwrap_or_else(|_| "http://jarvis_ollama:11434".to_string());
+    let qdrant_url = 
+        std::env::var("QDRANT_URL").unwrap_or_else(|_| "http://jarvis_qdrant:6333".to_string());
     let cors_origins =
         std::env::var("CORS_ORIGINS").unwrap_or_else(|_| "http://localhost:3000".to_string());
     
     info!(" Configuration:");
     info!("  - Server: {}:{}", host, port);
-    info!("  - Python Bridges: {}", python_bridges_url);
+    info!("  - Ollama: {}", ollama_url);
+    info!("  - Qdrant: {}", qdrant_url);
     info!("  - Audio Engine: Integrated (Rust Native)");
     info!("  - CORS Origins: {}", cors_origins);
 
@@ -88,6 +96,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // SERVICES INITIALIZATION
     // ============================================================================
     let audio_engine = Arc::new(services::audio_engine::AudioEngineClient::new());
+    let ollama = Arc::new(services::ollama::OllamaService::new(&ollama_url));
+    let qdrant = Arc::new(services::qdrant::QdrantService::new(&qdrant_url));
+    
+    // Native Voice Services (The new Rust Ears and Voice)
+    let stt = match services::stt_native::SttNativeService::new("/app/models/stt/ggml-base.bin") {
+        Ok(service) => Arc::new(service),
+        Err(e) => {
+            warn!(" WARNING: STT Native Service could not be initialized: {}", e);
+            warn!(" Voice transcription will be unavailable until models are placed in models/stt/");
+            Arc::new(services::stt_native::SttNativeService::new_dummy())
+        }
+    };
+    let tts = Arc::new(services::tts_native::TtsNativeService::new("/app/models/fr_FR-upmc-medium.onnx"));
+
+    // Initialize Qdrant collection (nomic-embed-text is 768 dimensions)
+    if let Ok(rt) = tokio::runtime::Handle::try_current() {
+        let q_clone = qdrant.clone();
+        rt.spawn(async move {
+            if let Err(e) = q_clone.init_collection(768).await {
+                warn!(" Failed to initialize Qdrant collection: {}", e);
+            }
+        });
+    }
 
     // ============================================================================
     // DATABASE CONNECTION
@@ -104,9 +135,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create application state
     let state = Arc::new(AppState {
-        python_bridges_url,
+        ollama_url,
+        qdrant_url,
         audio_engine,
         db: Arc::new(db_service),
+        ollama,
+        qdrant,
+        stt,
+        tts,
     });
 
     // ============================================================================
@@ -188,6 +224,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Web Search endpoint (uses BRAVE_API_KEY from jarvis-secretsd)
         .route("/api/v1/search", get(web_search::web_search))
         // OpenAI-compatible endpoints for Open-WebUI integration
+        .route("/v1/models", get(openai_compat::list_models))
+        .route("/v1/chat/completions", post(openai_compat::chat_completions))
         .route("/v1/audio/transcriptions", post(openai_compat::create_transcription))
         .route("/v1/audio/speech", post(openai_compat::create_speech))
         // WebSocket
@@ -197,34 +235,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(prometheus_layer)
         .with_state(state);
 
-    let app = app.into_make_service_with_connect_info::<std::net::SocketAddr>();
-
     let addr = format!("{}:{}", host, port).parse::<std::net::SocketAddr>()?;
 
     // ============================================================================
-    // Start HTTPS Server
+    // Start HTTP Server (Internal communication is better in HTTP)
     // ============================================================================
-    let cert_path = std::env::var("TLS_CERT_PATH").unwrap_or_else(|_| "certs/server.crt".to_string());
-    let key_path = std::env::var("TLS_KEY_PATH").unwrap_or_else(|_| "certs/server.key".to_string());
-
-    if std::path::Path::new(&cert_path).exists() && std::path::Path::new(&key_path).exists() {
-        info!(" Starting Jarvis in HTTPS mode");
-        info!("  - Cert: {}", cert_path);
-        info!("  - Key: {}", key_path);
-        
-        let config = axum_server::tls_rustls::RustlsConfig::from_pem_file(cert_path, key_path)
-            .await?;
-
-        info!(" Server listening on https://{}", addr);
-        axum_server::bind_rustls(addr, config)
-            .serve(app)
-            .await?;
-    } else {
-        warn!(" TLS certificates not found. Falling back to HTTP.");
-        info!(" Server listening on http://{}", addr);
-        let listener = tokio::net::TcpListener::bind(&addr).await?;
-        axum::serve(listener, app).await?;
-    }
+    info!(" Starting Jarvis Server");
+    info!("  - Port: {}", port);
+    info!(" Server listening on http://{}", addr);
+    
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app).await?;
 
     Ok(())
 }

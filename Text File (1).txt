@@ -1,0 +1,156 @@
+
+
+## PROJECT CONTEXT
+
+Jarvis is a local AI voice assistant with:
+
+* FastAPI backend
+* React frontend
+* Docker Compose deployment
+* PostgreSQL storage
+* Memory subsystem (context persistence + retrieval)
+* Ollama local LLM (LLaMA)
+* Whisper STT
+* Piper TTS
+* Security constraints: privacy-first, local-first, minimal external exposure
+
+The project recently had major work on memory correctness, performance, and security hardening.
+
+---
+
+## AUDIT OBJECTIVES
+
+You must analyze the entire repository in depth and deliver:
+
+### 1. Architecture Review
+
+* High-level component map
+* Data flows (request → memory → LLM → response)
+* Trust boundaries and attack surfaces
+* Single points of failure
+
+### 2. Memory System Audit (Critical)
+
+* Persistence correctness
+* Session/user isolation
+* Retrieval quality and ranking
+* Expiration/forgetting policies
+* Consistency under restart
+* Concurrency and race conditions
+
+Deliver explicit invariants like:
+
+* “Memory must survive container restart”
+* “No cross-user leakage is possible”
+
+### 3. Security Audit (OWASP-grade)
+
+Check for:
+
+* Secrets exposure (env, logs, git history)
+* Authentication/authorization correctness
+* Container hardening (rootless, capabilities)
+* Network segmentation
+* Input validation
+* Dependency vulnerabilities
+
+Output must include:
+
+* Severity levels (Critical/High/Medium/Low)
+* Concrete exploit scenarios
+* Exact remediation steps
+
+Reference OWASP ASVS when relevant.
+
+### 4. Performance Audit
+
+Analyze:
+
+* Latency bottlenecks
+* DB query patterns
+* Caching opportunities
+* Memory usage
+* CPU/GPU efficiency for AI components
+
+Provide measurable optimization proposals.
+
+### 5. Reliability & Production Readiness
+
+Evaluate:
+
+* Observability (logs, metrics, tracing)
+* Error handling
+* Restart resilience
+* Backup strategy
+* Upgrade strategy
+
+### 6. Code Quality & Maintainability
+
+Identify:
+
+* Technical debt hotspots
+* Poor abstractions
+* Missing tests
+* Refactoring priorities
+
+### 7. Deployment & Infrastructure Audit
+
+Review:
+
+* Docker Compose correctness
+* Security of exposed ports
+* Volume persistence
+* Recommended migration path to Kubernetes (optional)
+
+---
+
+## REQUIRED OUTPUT FORMAT
+
+Your answer must be extremely structured:
+
+### Executive Summary (10 lines max)
+
+### Critical Findings (must-fix)
+
+* Finding + evidence (file/function)
+* Impact
+* Fix
+
+### High Priority Improvements
+
+### Medium/Low Priority Improvements
+
+### Architecture Diagram (ASCII)
+
+### Suggested Roadmap (Next 30 days)
+
+### Test Plan to Prevent Regressions
+
+Include at least:
+
+* Unit tests
+* Integration tests
+* Restart tests
+* Load tests
+
+---
+
+## IMPORTANT RULES
+
+* Do NOT guess. If something cannot be proven from code, say “unknown”.
+* Always reference exact files, functions, and code snippets.
+* Be harsh, realistic, and production-oriented.
+* Assume this system may later be exposed in a real network.
+
+---
+
+## REPOSITORY INPUT
+
+I will now provide the full repository tree + key files.
+Wait for them before starting.
+
+---
+
+# END PROMPT
+
+

@@ -1,25 +1,31 @@
 #!/bin/bash
 set -e
 
-SECRETSD_URL="${SECRETSD_URL:-http://jarvis-secretsd:8081}"
+SECRETSD_URL="${SECRETSD_URL:-https://jarvis_secretsd:8081}"
 CLIENT_ID="${CLIENT_ID:-open-webui}"
 
-echo "[fetch-secrets-webui] Fetching JWT secret from $SECRETSD_URL..."
+# Internal mTLS certificates (mounted via docker-compose)
+CLIENT_CERT="/etc/jarvis/certs/pki/issued/backend.crt"
+CLIENT_KEY="/etc/jarvis/certs/pki/private/backend.key"
+CA_CERT="/etc/jarvis/certs/pki/ca/ca.crt"
 
-# Fetch JWT secret
-JWT_VALUE=$(curl -s -H "X-Jarvis-Client: $CLIENT_ID" \
+echo "[fetch-secrets-webui] Fetching JWT secret from $SECRETSD_URL..."
+JWT_SECRET=$(curl -s --cacert "$CA_CERT" --cert "$CLIENT_CERT" --key "$CLIENT_KEY" \
+    -H "X-Jarvis-Client: $CLIENT_ID" \
     "$SECRETSD_URL/secret/jwt_secret_key" | jq -r '.value // empty')
 
-if [ -n "$JWT_VALUE" ]; then
-    export WEBUI_SECRET_KEY="$JWT_VALUE"
-    export AUDIO_STT_OPENAI_API_KEY="$JWT_VALUE"
-    export AUDIO_TTS_OPENAI_API_KEY="$JWT_VALUE"
-    echo "[fetch-secrets-webui] JWT secret loaded successfully"
+if [ -n "$JWT_SECRET" ]; then
+    export OPENAI_API_KEYS="$JWT_SECRET"
+    export AUDIO_STT_OPENAI_API_KEY="$JWT_SECRET"
+    export AUDIO_TTS_OPENAI_API_KEY="$JWT_SECRET"
+    echo "[fetch-secrets-webui] JWT Secret loaded and keys exported"
 else
-    echo "[fetch-secrets-webui] WARNING: Failed to fetch JWT secret" >&2
+    echo "[fetch-secrets-webui] ERROR: Failed to fetch JWT secret"
+    # Fallback to the internal trust key for emergency access
+    export OPENAI_API_KEYS="sk-jarvis-internal-trust-key"
+    export AUDIO_STT_OPENAI_API_KEY="sk-jarvis-internal-trust-key"
+    export AUDIO_TTS_OPENAI_API_KEY="sk-jarvis-internal-trust-key"
 fi
 
-echo "[fetch-secrets-webui] Starting Open-WebUI with authenticated secrets..."
-
-# Execute the main command (exports are already done above)
-exec "$@"
+# Execute the original start script
+exec bash start.sh

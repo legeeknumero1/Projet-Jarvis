@@ -1,4 +1,11 @@
-# Runtime-only image for jarvis-secretsd (High Security Hardened)
+# Stage 1: Builder
+FROM rust:1.90-bookworm AS builder
+
+WORKDIR /build
+COPY . .
+RUN cargo build --release
+
+# Stage 2: Runtime
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
@@ -10,8 +17,8 @@ RUN apt-get update && apt-get install -y \
 # Create directories
 RUN mkdir -p /etc/jarvis-secretsd /opt/jarvis/secrets /opt/jarvis/audit /opt/jarvis/run
 
-# Copy pre-built binary
-COPY target/release/jarvis-secretsd /usr/local/bin/jarvis-secretsd
+# Copy built binary from stage 1
+COPY --from=builder /build/target/release/jarvis-secretsd /usr/local/bin/jarvis-secretsd
 RUN chmod +x /usr/local/bin/jarvis-secretsd
 
 # Create non-root user
@@ -20,16 +27,9 @@ RUN useradd -r -u 1000 -m jarvis
 # Set permissions
 RUN chown -R jarvis:jarvis /opt/jarvis
 
-# SECURITY HARDENING: Disable core dumps
-RUN echo "* hard core 0" >> /etc/security/limits.conf
-RUN echo "fs.suid_dumpable = 0" >> /etc/sysctl.conf || true
-
 USER jarvis
 
 EXPOSE 8081
-
-# Mount machine-id from host to bind secrets to physical hardware
-# This will be done in docker-compose.yml
 
 ENTRYPOINT ["/usr/local/bin/jarvis-secretsd"]
 CMD ["--config", "/etc/jarvis-secretsd/config.toml"]

@@ -1,0 +1,302 @@
+Parfait. C’est exactement la bonne étape : **après une journée “crypto-hardening + refactor massif”, demain c’est validation systématique**.
+
+Je te laisse un plan de test **ultra concret**, façon engineering checklist. Comme ça tu te lèves, tu exécutes, zéro flou.
+
+---
+
+#  Plan de test massif (Jarvis-secretsd)
+
+## 0. Pré-flight (sanity)
+
+### Build propre
+
+```bash
+cd jarvis-secretsd
+cargo clean
+cargo build --release
+```
+
+Attendu :
+
+* build OK
+* seulement warnings mineurs
+
+---
+
+### Lancement local
+
+```bash
+./target/release/jarvis-secretsd --config ./config.toml
+```
+
+Attendu :
+
+* vault init
+* master key bound to host
+* API up
+
+---
+
+---
+
+# 1. Tests fonctionnels API (happy path)
+
+## Healthcheck
+
+```bash
+curl -s http://localhost:8081/healthz | jq
+```
+
+Attendu : status OK.
+
+---
+
+## Create secret (admin)
+
+```bash
+curl -X POST http://localhost:8081/secrets \
+  -H "X-Jarvis-Client: admin" \
+  -d '{"name":"test_secret","value":"supersecret"}'
+```
+
+Attendu : `200 OK`
+
+---
+
+## Read secret (authorized client)
+
+Ajoute une règle RBAC pour backend :
+
+```yaml
+backend:
+  allow: ["test_secret"]
+  permissions: [read]
+```
+
+Puis :
+
+```bash
+curl http://localhost:8081/secrets/test_secret \
+  -H "X-Jarvis-Client: backend"
+```
+
+Attendu :
+
+* secret value renvoyée
+* audit log écrit
+
+---
+
+---
+
+# 2. RBAC strict
+
+## Unauthorized read
+
+```bash
+curl http://localhost:8081/secrets/test_secret \
+  -H "X-Jarvis-Client: db"
+```
+
+Attendu :
+
+* `403 NotAuthorized`
+* IDS failure increment
+
+---
+
+## List permission only
+
+```bash
+curl http://localhost:8081/secrets \
+  -H "X-Jarvis-Client: monitoring"
+```
+
+Attendu :
+
+* metadata seulement
+* jamais de values
+
+---
+
+---
+
+# 3. IDS validation
+
+## Canary trip
+
+```bash
+curl http://localhost:8081/secrets/root_master_password \
+  -H "X-Jarvis-Client: backend"
+```
+
+Attendu :
+
+* NotFound (camouflage)
+* audit = canary_tripped
+
+---
+
+## Bruteforce ban
+
+Faire 5 accès interdits :
+
+```bash
+for i in {1..6}; do
+  curl -s http://localhost:8081/secrets/test_secret \
+    -H "X-Jarvis-Client: attacker"
+done
+```
+
+Attendu :
+
+* ban temporaire après 5
+* message "client banned"
+
+---
+
+---
+
+# 4. Rotation dual-key
+
+## Force rotate
+
+```bash
+curl -X POST http://localhost:8081/rotate \
+  -H "X-Jarvis-Client: admin" \
+  -d '{"force":true}'
+```
+
+Attendu :
+
+* secrets rekeyed
+* old kid encore valide grace period
+
+---
+
+---
+
+# 5. Host binding anti-clone
+
+## Test crucial
+
+Copie master key + vault sur une autre VM :
+
+```bash
+scp vault.json master.key otherhost:/tmp/
+```
+
+Lance jarvis-secretsd sur autre host.
+
+Attendu :
+
+* déchiffrement impossible
+* secrets illisibles
+
+➡️ Si ça marche quand même = binding cassé.
+
+---
+
+---
+
+# 6. Timing mitigation (basic)
+
+Test rapide :
+
+```bash
+time curl http://localhost:8081/secrets/test_secret -H "X-Jarvis-Client: db"
+time curl http://localhost:8081/secrets/test_secret -H "X-Jarvis-Client: backend"
+```
+
+Attendu :
+
+* latence proche (pas parfaite mais pas triviale)
+
+---
+
+---
+
+# 7. Audit log integrity
+
+Check signature file :
+
+```bash
+cat audit.log | tail -n 5
+```
+
+Puis vérifier avec `verify_audit` si tu l’actives.
+
+Attendu :
+
+* signatures non modifiables
+
+---
+
+---
+
+# 8. Container hardening
+
+## Core dump disabled
+
+Dans container :
+
+```bash
+ulimit -c
+```
+
+Attendu :
+
+```text
+0
+```
+
+---
+
+## tmpfs mounted
+
+```bash
+mount | grep tmpfs
+```
+
+Attendu :
+
+* secrets storage en RAM
+
+---
+
+---
+
+#  Résultat final attendu
+
+Si tout passe :
+
+ Secrets manager complet
+ RBAC strict
+ IDS actif
+ Rotation sans downtime
+ Host binding validé
+ Aucun secret disque
+ Audit signé
+
+Tu es officiellement sur un niveau **Vault-like v1.0**.
+
+---
+
+# Conseil de senior pour demain matin
+
+Fais ça en ordre :
+
+1. Happy path
+2. RBAC
+3. IDS
+4. Rotation
+5. Host binding
+6. Docker hardening
+
+Sinon tu vas te perdre dans les erreurs.
+
+---
+
+Bonne nuit.
+Demain tu vas kiffer : c’est le moment où tu transformes “gros patch” en “produit stable”.
+

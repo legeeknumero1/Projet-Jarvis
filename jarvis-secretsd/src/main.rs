@@ -20,11 +20,15 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::info;
+use tracing::{info, error};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Audit Version Marker
+    println!("--- JARVIS SECRETSD AUDIT MODE ACTIVE ---");
+    
     // Parse CLI args
     let args: Vec<String> = std::env::args().collect();
     let config_path = if args.len() > 2 && args[1] == "--config" {
@@ -88,22 +92,72 @@ async fn main() -> Result<()> {
 
     let app = router(app_state);
 
-    // 7. Start server
-    let bind_addr = config.server.bind_addr.clone();
-    info!(" Starting server on {}", bind_addr);
+    // 7. Start server with mTLS
+    let bind_addr = config.server.bind_addr.parse::<std::net::SocketAddr>()
+        .with_context(|| format!("failed to parse bind address: {}", config.server.bind_addr))?;
+    
+    info!(" Starting mTLS server on {}", bind_addr);
 
-    let listener = tokio::net::TcpListener::bind(&bind_addr)
-        .await
-        .with_context(|| format!("failed to bind to {}", bind_addr))?;
+    // Load TLS certificates
+    let cert_path = "/etc/jarvis/certs/pki/issued/secretsd.crt";
+    let key_path = "/etc/jarvis/certs/pki/private/secretsd.key";
+    let ca_path = "/etc/jarvis/certs/pki/ca/ca.crt";
 
-    info!(" Server started successfully");
-    audit.log_success("server_start", None, None);
+    if Path::new(cert_path).exists() && Path::new(key_path).exists() && Path::new(ca_path).exists() {
+        info!(" TLS certificates found, enabling mTLS enforcement");
+        
+        // Custom acceptor to require client certificates
+        let rustls_config = rustls::ServerConfig::builder()
+            .with_client_cert_verifier(
+                rustls::server::WebPkiClientVerifier::builder(
+                    Arc::new(load_ca_cert(ca_path)?)
+                ).build()?
+            )
+            .with_single_cert(
+                load_certs(cert_path)?,
+                load_private_key(key_path)?
+            )?;
+        
+        let mut rustls_config = rustls_config;
+        rustls_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
-    axum::serve(listener, app)
-        .await
-        .context("server error")?;
+        axum_server::from_tcp_rustls(std::net::TcpListener::bind(bind_addr)?, axum_server::tls_rustls::RustlsConfig::from_config(Arc::new(rustls_config)))
+            .serve(app.into_make_service())
+            .await
+            .context("mTLS server error")?;
+    } else {
+        info!(" TLS certificates missing, falling back to insecure HTTP");
+        let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
+        axum::serve(listener, app).await.context("insecure server error")?;
+    }
 
     Ok(())
+}
+
+fn load_certs(path: &str) -> Result<Vec<CertificateDer<'static>>> {
+    let file = fs::File::open(path)?;
+    let mut reader = std::io::BufReader::new(file);
+    let certs = rustls_pemfile::certs(&mut reader)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(certs)
+}
+
+fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>> {
+    let file = fs::File::open(path)?;
+    let mut reader = std::io::BufReader::new(file);
+    let key = rustls_pemfile::private_key(&mut reader)?
+        .ok_or_else(|| anyhow::anyhow!("no private key found"))?;
+    Ok(key)
+}
+
+fn load_ca_cert(path: &str) -> Result<rustls::RootCertStore> {
+    let file = fs::File::open(path)?;
+    let mut reader = std::io::BufReader::new(file);
+    let mut root_store = rustls::RootCertStore::empty();
+    for cert in rustls_pemfile::certs(&mut reader) {
+        root_store.add(cert?)?;
+    }
+    Ok(root_store)
 }
 
 /// Initialize logging (tracing)

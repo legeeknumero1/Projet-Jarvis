@@ -14,7 +14,7 @@
 
 ##  Option 1: Démarrage Local (Rapide)
 
-### 1⃣ Cloner et configurer
+###  Cloner et configurer
 
 ```bash
 cd Projet-Jarvis/core
@@ -23,7 +23,7 @@ cd Projet-Jarvis/core
 cp .env.example .env
 ```
 
-### 2⃣ Compiler et lancer
+###  Compiler et lancer
 
 ```bash
 # Compilation (première fois ~30-60s)
@@ -33,7 +33,7 @@ cargo build --release
 ./target/release/jarvis-core
 ```
 
-### 3⃣ Vérifier que ça marche
+###  Vérifier que ça marche
 
 ```bash
 # Dans un autre terminal
@@ -53,7 +53,7 @@ curl http://localhost:8100/health
 
 ##  Option 2: Démarrage Docker (Recommandé)
 
-### 1⃣ Construire l'image
+###  Construire l'image
 
 ```bash
 cd Projet-Jarvis/core
@@ -61,13 +61,13 @@ cd Projet-Jarvis/core
 docker build -t jarvis-core:1.9.0 .
 ```
 
-### 2⃣ Lancer avec Docker Compose
+###  Lancer avec Docker Compose
 
 ```bash
 docker-compose up -d
 ```
 
-### 3⃣ Vérifier que c'est opérationnel
+###  Vérifier que c'est opérationnel
 
 ```bash
 # Voir les logs

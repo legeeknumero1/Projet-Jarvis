@@ -1,10 +1,16 @@
 # Stage 1: Build
 FROM rust:1.90-bookworm AS builder
 
-# Dépendances système pour compiler l'audio (ALSA)
+# Dépendances système pour compiler l'audio et Whisper (C++)
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libasound2-dev \
+    clang \
+    llvm-dev \
+    libclang-dev \
+    build-essential \
+    cmake \
+    && rustup component add rustfmt \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -26,7 +32,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     jq \
     libasound2 \
+    libstdc++6 \
+    espeak-ng \
+    ffmpeg \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Piper TTS binary (Download and extract)
+RUN curl -L https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz | tar -xzC /usr/local/bin --strip-components=1
 
 WORKDIR /app
 

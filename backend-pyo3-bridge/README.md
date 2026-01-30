@@ -1,1 +1,0 @@
-/home/legeek/Documents/ReadMe/Projet-Jarvis/backend-pyo3-bridge/README.md

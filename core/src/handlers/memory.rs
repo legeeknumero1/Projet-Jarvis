@@ -15,7 +15,7 @@ use crate::middleware::{ValidatedJwt, MemoryContentValidator, SearchQueryValidat
 
 pub async fn add_memory(
     ValidatedJwt(claims): ValidatedJwt,
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(req): Json<AddMemoryRequest>,
 ) -> Result<(StatusCode, Json<MemoryEntry>), (StatusCode, String)> {
     // ============================================================================
@@ -31,10 +31,26 @@ pub async fn add_memory(
     }
 
     info!(" Adding memory for user: {}", claims.user_id);
+    
+    // 1. Generate Embedding via Ollama
+    let embedding = state.ollama.get_embeddings(&req.content).await
+        .map_err(|e| {
+            tracing::error!("Failed to generate embedding: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Embedding error: {}", e))
+        })?;
+
+    // 2. Store in Qdrant
+    let memory_id = Uuid::new_v4().to_string();
+    state.qdrant.add_memory(&memory_id, &req.content, embedding, &claims.user_id).await
+        .map_err(|e| {
+            tracing::error!("Failed to save to Qdrant: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Storage error: {}", e))
+        })?;
+
     let memory = MemoryEntry {
-        id: Uuid::new_v4().to_string(),
+        id: memory_id,
         content: req.content,
-        embedding: None,
+        embedding: None, // We don't return the vector to client to save bandwidth
         importance: req.importance.unwrap_or(0.5),
         created_at: Utc::now(),
     };
@@ -44,7 +60,7 @@ pub async fn add_memory(
 
 pub async fn search_memory(
     ValidatedJwt(claims): ValidatedJwt,
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(req): Json<SearchMemoryRequest>,
 ) -> Result<(StatusCode, Json<SearchMemoryResponse>), (StatusCode, String)> {
     // ============================================================================
@@ -60,19 +76,38 @@ pub async fn search_memory(
     }
 
     info!(" Searching memory for user: {}", claims.user_id);
-    let results = vec![
+    
+    // 1. Generate Embedding for query
+    let embedding = state.ollama.get_embeddings(&req.query).await
+        .map_err(|e| {
+            tracing::error!("Failed to generate query embedding: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Embedding error: {}", e))
+        })?;
+
+    // 2. Search in Qdrant
+    let limit = req.limit.unwrap_or(5) as usize;
+    let results_text = state.qdrant.search_memory(embedding, limit, &claims.user_id).await
+        .map_err(|e| {
+            tracing::error!("Failed to search Qdrant: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Search error: {}", e))
+        })?;
+
+    // 3. Convert results
+    let results: Vec<MemoryEntry> = results_text.into_iter().map(|text| {
         MemoryEntry {
-            id: Uuid::new_v4().to_string(),
-            content: format!("Résultat de recherche pour: {}", req.query),
+            id: Uuid::new_v4().to_string(), // Qdrant currently only returns payload text, not ID. Should be improved later.
+            content: text,
             embedding: None,
-            importance: 0.8,
+            importance: 1.0, // Default relevance
             created_at: Utc::now(),
-        },
-    ];
+        }
+    }).collect();
+
+    let total = results.len();
 
     let response = SearchMemoryResponse {
         results,
-        total: 1,
+        total: total as i32,
     };
 
     Ok((StatusCode::OK, Json(response)))

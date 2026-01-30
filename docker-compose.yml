@@ -27,81 +27,35 @@ services:
         ipv4_address: 172.20.0.5
     ports:
       - "127.0.0.1:8081:8081"
-    # RAM-ONLY STORAGE: Secrets never touch the physical disk
+    cap_add:
+      - IPC_LOCK
+    ulimits:
+      core: 0
+      memlock: -1
     tmpfs:
-      - /opt/jarvis/secrets:size=10M,mode=700
-      - /opt/jarvis/audit:size=10M,mode=700
-      - /opt/jarvis/run:size=1M,mode=700
+      - /opt/jarvis/run:size=1M,mode=700,uid=1000
+      - /tmp:noexec,nosuid,uid=1000
     volumes:
       - ./jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro
       - ./jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro
+      - ./certs/pki:/etc/jarvis/certs/pki:ro
       - /etc/machine-id:/etc/machine-id:ro
-    # Master key is also generated and kept in RAM if we mount it via tmpfs
-    # Note: If the container reboots, the master key and vault are GONE.
-    # This is what you asked: no hardcoded storage.
-
+      - secrets_data:/opt/jarvis
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/healthz" ]
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/8081'" ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 10s
     security_opt:
       - no-new-privileges:true
-    read_only: false
-    tmpfs:
-      - /tmp:noexec,nosuid
 
-  # Container 1: STT API (Speech-to-Text) - Premier dans le schéma
-  stt-api:
-    build:
-      context: .
-      dockerfile: services/stt/Dockerfile
-    container_name: jarvis_stt_api
-    env_file:
-      - ./services/stt/.env
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.10
-    ports:
-      - "8003:8003"
-    volumes:
-      - ./services/stt:/app
-      - ./models/stt:/app/models/stt
-      - ./logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Container 2: TTS API (Text-to-Speech) - Deuxième dans le schéma
-  tts-api:
-    build:
-      context: .
-      dockerfile: services/tts/Dockerfile
-    container_name: jarvis_tts_api
-    env_file:
-      - ./services/tts/.env
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.20
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./services/tts:/app
-      - ./models/tts:/app/models/tts
-      - ./logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Container 3: Ollama Container - Troisième dans le schéma
+  # Container 3: Ollama Container - GPU Accelerated
   ollama:
     image: ollama/ollama:latest
     container_name: jarvis_ollama
@@ -109,7 +63,7 @@ services:
       jarvis_network:
         ipv4_address: 172.20.0.30
     ports:
-      - "11435:11434"
+      - "127.0.0.1:11435:11434"
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
@@ -129,7 +83,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # Container 4: Rust Core Backend (Main Backend Logic) - Quatrième dans le schéma
+  # Container 4: Rust Core Backend (Main Backend Logic)
   backend:
     build:
       context: .
@@ -141,18 +95,31 @@ services:
     ports:
       - "8100:8100"
     environment:
-      - SECRETSD_URL=http://jarvis-secretsd:8081
+      - SECRETSD_URL=https://jarvis_secretsd:8081
       - CLIENT_ID=backend
+      - OLLAMA_URL=http://jarvis_ollama:11434
+      - QDRANT_URL=http://jarvis_qdrant:6333
       - TLS_CERT_PATH=/etc/jarvis/certs/server.crt
       - TLS_KEY_PATH=/etc/jarvis/certs/server.key
       - PORT=8100
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - ./models:/app/models
       - ./logs:/app/logs
       - ./data:/app/data
       - ./certs:/etc/jarvis/certs:ro
+      - ./certs/pki:/etc/jarvis/certs/pki:ro
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     depends_on:
+      jarvis-secretsd:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
@@ -160,15 +127,101 @@ services:
       ollama:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
       timescale:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8100/health" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8100/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 10s
 
+  # Container 5: PostgreSQL with dynamic secret fetching
+  postgres:
+    build:
+      context: .
+      dockerfile: services/postgres.Dockerfile
+    container_name: jarvis_postgres
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.100
+    environment:
+      - POSTGRES_DB=jarvis_db
+      - POSTGRES_USER=jarvis
+      - SECRETSD_URL=http://jarvis-secretsd:8081
+      - CLIENT_ID=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./certs/pki:/etc/jarvis/certs/pki:ro
+    restart: unless-stopped
+    depends_on:
+      jarvis-secretsd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Container 6: Redis
+  redis:
+    image: redis:7-alpine
+    container_name: jarvis_redis
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.110
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Container 7: Qdrant Vector DB
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: jarvis_qdrant
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.120
+    ports:
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # Container 8: TimescaleDB with dynamic secret fetching
+  timescale:
+    build:
+      context: .
+      dockerfile: services/timescale.Dockerfile
+    container_name: jarvis_timescale
+    networks:
+      jarvis_network:
+        ipv4_address: 172.20.0.130
+    environment:
+      - POSTGRES_USER=jarvis
+      - POSTGRES_DB=jarvis_timeseries
+      - SECRETSD_URL=http://jarvis-secretsd:8081
+      - CLIENT_ID=timescale
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./certs/pki:/etc/jarvis/certs/pki:ro
+    restart: unless-stopped
+    depends_on:
+      jarvis-secretsd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Container 9: Open-WebUI
   open-webui:
     build:
       context: ./services/open-webui
@@ -180,158 +233,52 @@ services:
     ports:
       - "3000:8080"
     environment:
-      # Secretsd Configuration
+      # --- SECURITY & CENTRALIZATION ---
+      # Open-WebUI must talk ONLY to Jarvis Core.
+      # No direct access to Ollama, Qdrant, or Secretsd allowed here.
+      
       - SECRETSD_URL=http://jarvis-secretsd:8081
       - CLIENT_ID=open-webui
-      # Ollama Configuration
-      - OLLAMA_BASE_URL=http://jarvis_ollama:11434
-      - OLLAMA_API_BASE_URL=http://jarvis_ollama:11434
-      # Memory / RAG Configuration
-      - VECTOR_DB=qdrant
-      - QDRANT_URI=http://jarvis_qdrant:6333
-      # Jarvis Backend Integration
-      - BACKEND_URL=http://jarvis_backend:8100
-      # Audio STT Configuration (OpenAI-compatible)
+      
+      # --- CORE CONNECTION ---
+      # We use the 'openai' protocol to talk to Jarvis Core
+      - OPENAI_API_BASE_URLS=http://jarvis_backend:8100/v1
+      - OPENAI_API_KEYS=${JARVIS_INTERNAL_KEY}
+      
+      # --- AUDIO (Through Core) ---
       - AUDIO_STT_ENGINE=openai
       - AUDIO_STT_OPENAI_API_BASE_URL=http://jarvis_backend:8100/v1
+      - AUDIO_STT_OPENAI_API_KEY=${JARVIS_INTERNAL_KEY}
       - AUDIO_STT_MODEL=whisper-1
-      # Audio TTS Configuration (OpenAI-compatible)
+      
       - AUDIO_TTS_ENGINE=openai
       - AUDIO_TTS_OPENAI_API_BASE_URL=http://jarvis_backend:8100/v1
+      - AUDIO_TTS_OPENAI_API_KEY=${JARVIS_INTERNAL_KEY}
       - AUDIO_TTS_MODEL=tts-1
       - AUDIO_TTS_VOICE=alloy
-      - AUDIO_TTS_SPLIT_ON=punctuation
-      # Force OpenAI engine even if UI shows different options
-      - AUDIO_OPENAI_API_KEYS=dummy
+
+      # --- RAG (DISABLED LOCALLY) ---
+      # RAG is handled by Jarvis Core, not the UI.
+      - ENABLE_RAG_WEB_SEARCH=False
+      - ENABLE_RAG_LOCAL=False
+      - RAG_EMBEDDING_ENGINE=openai 
+      - RAG_OPENAI_API_BASE_URL=http://jarvis_backend:8100/v1
+      - RAG_OPENAI_API_KEY=${JARVIS_INTERNAL_KEY}
+      
     volumes:
       - open_webui_data:/app/backend/data
     restart: unless-stopped
     depends_on:
       jarvis-secretsd:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
       backend:
         condition: service_healthy
 
-  # Python Bridges IA (FastAPI) - Services LLM, STT, TTS
-  python-bridges:
-    build:
-      context: ./backend-python-bridges
-      dockerfile: Dockerfile
-    container_name: jarvis_python_bridges
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.35
-    ports:
-      - "8005:8005"
-    environment:
-      - SECRETSD_URL=http://jarvis-secretsd:8081
-      - CLIENT_ID=python-bridges
-      - OLLAMA_URL=http://jarvis_ollama:11434
-      - WHISPER_MODEL=base
-      - EMBEDDINGS_MODEL=distiluse-base-multilingual-cased-v2
-    volumes:
-      - ./logs:/app/logs
-    restart: unless-stopped
-    depends_on:
-      ollama:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-
-  # Services de support
-  postgres:
-    image: postgres:15
-    container_name: jarvis_postgres
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.100
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=jarvis_db
-      - POSTGRES_USER=jarvis
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-... # The rest of the postgres service definition is unchanged
-  redis:
-    image: redis:7-alpine
-    container_name: jarvis_redis
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.110
-    ports:
-      - "6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Qdrant Vector Database - Memoire vectorielle neuromorphique
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: jarvis_qdrant
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.120
-    ports:
-      - "6333:6333" # API REST
-      - "6334:6334" # gRPC (optionnel)
-    environment:
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
-      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=4
-      - QDRANT__SERVICE__ENABLE_CORS=true
-    volumes:
-      - qdrant_data:/qdrant/storage
-      - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333'" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # TimescaleDB - Memoire temporelle pour logs et metriques
-  timescale:
-    image: timescale/timescaledb:latest-pg15
-    container_name: jarvis_timescale
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.130
-    environment:
-      POSTGRES_DB: ${TIMESCALE_DB:-jarvis_timeseries}
-      POSTGRES_USER: ${TIMESCALE_USER:-jarvis}
-      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
-      TIMESCALEDB_TELEMETRY: off
-    volumes:
-      - timescale_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
 volumes:
-  secretsd_vault:
-  secretsd_audit:
+  open_webui_data:
+  ollama_data:
   postgres_data:
   redis_data:
-  ollama_data:
   qdrant_data:
   timescale_data:
-  open_webui_data:
-
-
+  secrets_data:

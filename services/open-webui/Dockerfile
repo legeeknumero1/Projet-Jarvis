@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y \
 # Copy secrets fetching script
 COPY fetch-secrets-webui.sh /app/fetch-secrets-webui.sh
 RUN chmod +x /app/fetch-secrets-webui.sh && \
-    chown 1000:1000 /app/fetch-secrets-webui.sh
+    chown -R 1000:1000 /app
 
-USER 1000
+# USER 1000
+USER root
 
 # Use fetch-secrets as entrypoint wrapper
 ENTRYPOINT ["/app/fetch-secrets-webui.sh"]

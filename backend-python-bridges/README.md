@@ -1,1 +1,0 @@
-/home/legeek/Documents/ReadMe/Projet-Jarvis/backend-python-bridges/README.md

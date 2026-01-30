@@ -9,9 +9,14 @@ license = "MIT"
 [dependencies]
 # Web framework
 axum = "0.7"
+axum-server = { version = "0.7", features = ["tls-rustls"] }
 tokio = { version = "1.39", features = ["full"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# TLS Support
+rustls = { version = "0.23", features = ["aws-lc-rs"] }
+rustls-pemfile = "2.1"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

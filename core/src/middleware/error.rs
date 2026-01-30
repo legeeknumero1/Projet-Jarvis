@@ -140,7 +140,7 @@ impl AppError {
                 tracing::warn!(" RATE LIMIT: {}", log_msg);
             }
             AppError::NotFound(_) | AppError::Conflict(_) => {
-                tracing::info!("ℹ  BUSINESS: {}", log_msg);
+                tracing::info!("  BUSINESS: {}", log_msg);
             }
             AppError::InternalError(_) | AppError::DatabaseError(_) => {
                 tracing::error!(" ERROR: {}", log_msg);

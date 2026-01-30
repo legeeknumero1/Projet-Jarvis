@@ -6,7 +6,7 @@ use parking_lot::RwLock;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tracing::{info, warn};
+use tracing::{info, warn, error};
 use zeroize::Zeroizing;
 
 /// Thread-safe vault storage with encryption
@@ -47,6 +47,18 @@ impl VaultStore {
             Vault::new(rotation_days, grace_days)
         };
 
+        // MLOCK: Prevent swapping of the master key for the entire process lifetime
+        #[cfg(unix)]
+        unsafe {
+            let rc = libc::mlock(master.as_ptr() as *const libc::c_void, 32);
+            if rc != 0 {
+                let err = std::io::Error::last_os_error();
+                error!("CRITICAL: mlock failed (errno: {}). The daemon cannot guarantee secret safety. Refusing to start.", err);
+                return Err(anyhow::anyhow!("Memory locking failed: {}", err));
+            }
+            info!("Master key successfully locked in physical RAM (VmLck active)");
+        }
+
         Ok(Self {
             vault: Arc::new(RwLock::new(vault)),
             master,
@@ -86,12 +98,6 @@ impl VaultStore {
 
         let record = vault.secrets.get(name)
             .ok_or_else(|| SecretError::NotFound(name.to_string()))?;
-
-        // MLOCK: Prevent swapping during decryption
-        #[cfg(unix)]
-        unsafe {
-            let _ = libc::mlock(self.master.as_ptr() as *const libc::c_void, 32);
-        }
 
         let decrypted_bytes = aead_decrypt(&self.master, &record.enc)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;

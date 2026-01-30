@@ -58,29 +58,50 @@ pub async fn chat_endpoint(
     state.db.add_message(conv_id, "user", &sanitized_content).await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // 4. Appeler le Bridge Python (IA)
-    let client = reqwest::Client::new();
-    let bridge_url = format!("{}/api/llm/generate", state.python_bridges_url);
+    // ========================================================================
+    // RAG IMPLEMENTATION (Retrieval Augmented Generation)
+    // ========================================================================
+    let mut system_context = String::new();
     
-    // Note: Dans un environnement réel, on passerait le token JWT reçu ou un token de service
-    let response = client.post(&bridge_url)
-        .header("Authorization", format!("Bearer dev-token-placeholder")) // À ajuster selon auth inter-service
-        .json(&serde_json::json!({
-            "prompt": sanitized_content,
-            "user_id": user_id
-        }))
-        .send()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Bridge error: {}", e)))?;
-
-    if !response.status().is_success() {
-        return Err((StatusCode::BAD_GATEWAY, "Python Bridge returned an error".to_string()));
+    // Attempt to retrieve context from memory (Fail-safe: ignore errors)
+    if let Ok(embedding) = state.ollama.get_embeddings(&sanitized_content).await {
+        if let Ok(memories) = state.qdrant.search_memory(embedding, 3, user_id).await {
+            if !memories.is_empty() {
+                info!(" RAG: Found {} relevant memories for user {}", memories.len(), user_id);
+                system_context.push_str("Contexte mémoriel pertinent :\n");
+                for mem in memories {
+                    system_context.push_str(&format!("- {}\n", mem));
+                }
+                system_context.push_str("\nInstructions: Utilise ce contexte pour répondre si pertinent.\n");
+            }
+        }
     }
 
-    let ai_data: serde_json::Value = response.json().await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Parsing error: {}", e)))?;
+    // Construct messages for Ollama
+    let mut messages = Vec::new();
     
-    let ai_content = ai_data["text"].as_str().unwrap_or("Désolé, je n'ai pas pu générer de réponse.");
+    // Add System Prompt with Context if available
+    if !system_context.is_empty() {
+        messages.push(serde_json::json!({
+            "role": "system",
+            "content": system_context
+        }));
+    }
+
+    messages.push(serde_json::json!({
+        "role": "user",
+        "content": sanitized_content
+    }));
+
+    // 4. Appeler Ollama directement (RUST NATIVE!)
+    let ai_data = state.ollama.chat_completion(
+        "llama3:latest",
+        messages
+    ).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("IA error: {}", e)))?;
+    
+    let ai_content = ai_data["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap_or("Désolé, je n'ai pas pu générer de réponse.");
 
     // 5. Sauvegarder la réponse de l'IA
     let ai_msg = state.db.add_message(conv_id, "assistant", ai_content).await
@@ -92,7 +113,7 @@ pub async fn chat_endpoint(
         role: "assistant".to_string(),
         content: ai_content.to_string(),
         timestamp: Utc::now(),
-        tokens: ai_data["tokens_generated"].as_i64().map(|t| t as i32),
+        tokens: ai_data["usage"]["total_tokens"].as_i64().map(|t| t as i32),
     };
 
     Ok((StatusCode::OK, Json(response)))

@@ -6,16 +6,23 @@ clients:
   backend:
     allow:
       - "database_url"
-      - "JWT_SECRET"
+      - "jwt_secret_key"
+      - "jwt_algorithm"
+      - "jwt_expiration_hours"
+      - "postgres_password"
+      - "redis_password"
       - "jarvis_encryption_key"
       - "brave_api_key"
       - "openweather_api_key"
+      - "ollama_base_url"
+      - "qdrant_url"
+      - "jarvis_internal_key"
     permissions: [read]
 
   # Python Bridges (IA/LLM) : Accès limité aux modèles
   python-bridges:
     allow:
-      - "ollama_api_key" # Si configuré
+      - "ollama_api_key"
     permissions: [read]
 
   # STT (Speech-to-Text) : Aucun secret nécessaire pour le traitement local
@@ -31,7 +38,7 @@ clients:
   # Open-WebUI : Uniquement le JWT pour l'authentification session
   open-webui:
     allow:
-      - "JWT_SECRET"
+      - "jwt_secret_key"
     permissions: [read]
 
   # Infrastructure (Postgres/Redis) : Uniquement leurs credentials respectifs
@@ -40,7 +47,7 @@ clients:
     permissions: [read]
   
   timescale:
-    allow: ["postgres_password"]
+    allow: ["postgres_password", "timescale_password"]
     permissions: [read]
 
   redis:
