@@ -1,0 +1,471 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jarvis
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+# ---------------------------------------------------------
+# SECRETSD - Secret Manager (tmpfs + IPC_LOCK)
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-secretsd
+  namespace: jarvis
+  labels:
+    app: jarvis-secretsd
+    tier: security
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-secretsd
+  template:
+    metadata:
+      labels:
+        app: jarvis-secretsd
+        tier: security
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: secretsd
+          image: jarvis-secretsd:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - IPC_LOCK  # Requis pour mlock en mémoire
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: secrets-tmpfs
+              mountPath: /run/secrets
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: secrets-tmpfs
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-secretsd
+  namespace: jarvis
+spec:
+  selector:
+    app: jarvis-secretsd
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http
+---
+# ---------------------------------------------------------
+# OLLAMA - Local LLMs
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-ollama
+  namespace: jarvis
+  labels:
+    app: jarvis-ollama
+    tier: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-ollama
+  template:
+    metadata:
+      labels:
+        app: jarvis-ollama
+        tier: ai
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 11434
+              name: http
+          env:
+            - name: OLLAMA_MODELS
+              value: "/tmp/.ollama/models"
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "4Gi"
+            limits:
+              cpu: "4000m"
+              memory: "8Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /api/version
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/version
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-ollama
+  namespace: jarvis
+spec:
+  selector:
+    app: jarvis-ollama
+  ports:
+    - protocol: TCP
+      port: 11434
+      targetPort: 11434
+      name: http
+---
+# ---------------------------------------------------------
+# VOICE - Audio DSP (Rust)
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-voice
+  namespace: jarvis
+  labels:
+    app: jarvis-voice
+    tier: audio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jarvis-voice
+  template:
+    metadata:
+      labels:
+        app: jarvis-voice
+        tier: audio
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: voice
+          image: jarvis-voice:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+              name: http
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-voice
+  namespace: jarvis
+spec:
+  selector:
+    app: jarvis-voice
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      name: http
+---
+# ---------------------------------------------------------
+# CORE - Rust Backend API
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-core
+  namespace: jarvis
+  labels:
+    app: jarvis-core
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jarvis-core
+  template:
+    metadata:
+      labels:
+        app: jarvis-core
+        tier: backend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: core
+          image: jarvis-core:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: SECRETSD_URL
+              value: "http://jarvis-secretsd:8080"
+            - name: OLLAMA_URL
+              value: "http://jarvis-ollama:11434"
+            - name: VOICE_URL
+              value: "http://jarvis-voice:9000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-core
+  namespace: jarvis
+spec:
+  selector:
+    app: jarvis-core
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      name: http
+---
+# ---------------------------------------------------------
+# DASHBOARD - React Frontend
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-dashboard
+  namespace: jarvis
+  labels:
+    app: jarvis-dashboard
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jarvis-dashboard
+  template:
+    metadata:
+      labels:
+        app: jarvis-dashboard
+        tier: frontend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: dashboard
+          image: jarvis-dashboard:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: CORE_API_URL
+              value: "http://jarvis-core:8000"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-dashboard
+  namespace: jarvis
+spec:
+  selector:
+    app: jarvis-dashboard
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      name: http
+---
+# ---------------------------------------------------------
+# INGRESS - Entrypoint
+# ---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jarvis-ingress
+  namespace: jarvis
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - host: jarvis.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jarvis-dashboard
+                port:
+                  number: 3000
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: jarvis-core
+                port:
+                  number: 8000

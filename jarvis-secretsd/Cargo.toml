@@ -19,6 +19,7 @@ serde_json = "1.0"
 toml = "0.8"
 serde_yaml = "0.9"
 zeroize = { version = "1.8", features = ["derive", "serde"] }
+subtle = "2.5"
 blake3 = "1.5"
 hkdf = "0.12"
 sha2 = "0.10"

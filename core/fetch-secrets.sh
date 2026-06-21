@@ -36,12 +36,43 @@ fetch_secret "database_url" "DATABASE_URL"
 fetch_secret "brave_api_key" "BRAVE_API_KEY"
 fetch_secret "openweather_api_key" "OPENWEATHER_API_KEY"
 fetch_secret "jarvis_encryption_key" "JARVIS_ENCRYPTION_KEY"
+fetch_secret "gemini_api_key" "GEMINI_API_KEY"
 
 # Fetch other configuration
 fetch_secret "ollama_base_url" "OLLAMA_BASE_URL"
 fetch_secret "qdrant_url" "QDRANT_URL"
 
-echo "[fetch-secrets] All secrets loaded successfully"
+# ============================================================================
+# AUTOMATED IN-MEMORY TLS LOAD - TRANSPARENT, AUTOMATIC & SECURE
+# ============================================================================
+# Récupération automatique et écriture sécurisée en RAM vive (tmpfs) des certificats
+# TLS depuis le Secrets Daemon, sans jamais toucher au stockage persistant physique.
+# ============================================================================
+mkdir -p /tmp/secrets
+chmod 700 /tmp/secrets
+
+echo "[fetch-secrets] Fetching TLS certificates from secrets daemon..."
+cert_val=$(curl -s -H "X-Jarvis-Client: $CLIENT_ID" "$SECRETSD_URL/secret/ssl_server_crt" | jq -r '.value // empty')
+if [ -n "$cert_val" ] && [[ "$cert_val" == *"-----BEGIN"* ]]; then
+    echo "$cert_val" > /tmp/secrets/server.crt
+    chmod 600 /tmp/secrets/server.crt
+    export TLS_CERT_PATH=/tmp/secrets/server.crt
+    echo "[fetch-secrets]  [SUCCESS] SSL certificate loaded to in-memory RAM"
+else
+    echo "[fetch-secrets]  [WARNING] ssl_server_crt not found or invalid format, falling back to disk certs"
+fi
+
+key_val=$(curl -s -H "X-Jarvis-Client: $CLIENT_ID" "$SECRETSD_URL/secret/ssl_server_key" | jq -r '.value // empty')
+if [ -n "$key_val" ] && [[ "$key_val" == *"-----BEGIN"* ]]; then
+    echo "$key_val" > /tmp/secrets/server.key
+    chmod 600 /tmp/secrets/server.key
+    export TLS_KEY_PATH=/tmp/secrets/server.key
+    echo "[fetch-secrets]  [SUCCESS] SSL private key loaded to in-memory RAM"
+else
+    echo "[fetch-secrets]  [WARNING] ssl_server_key not found or invalid format, falling back to disk keys"
+fi
+
+echo "[fetch-secrets] All secrets and RAM certificates loaded successfully"
 
 # Execute the main command
 exec "$@"

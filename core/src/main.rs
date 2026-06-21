@@ -14,15 +14,59 @@ mod models;
 mod openapi;
 mod services;
 
-use handlers::{chat, health, memory, openai_compat, stt, tts, web_search};
+use handlers::{chat, health, openai_compat, web_search};
 use middleware::{CertificateLoader, EnvironmentChecklist, SecretsValidator, TlsConfig};
 use models::AppState;
 use openapi::ApiDoc;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
+
+// removed RATE_LIMITS
+
+async fn rate_limiter(
+    axum::extract::State(state): axum::extract::State<Arc<AppState>>,
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    // Try to get IP from ConnectInfo extension
+    let ip = match req.extensions().get::<axum::extract::ConnectInfo<std::net::SocketAddr>>() {
+        Some(axum::extract::ConnectInfo(addr)) => addr.ip(),
+        None => std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)),
+    };
+    let now = std::time::Instant::now();
+    
+    let mut limits = state.rate_limits.write();
+    let entry = limits.entry(ip).or_insert((0, now));
+    
+    if now.duration_since(entry.1).as_secs() > 60 {
+        entry.0 = 0;
+        entry.1 = now;
+    }
+    
+    if entry.0 > 100 {
+        tracing::warn!("Rate limit exceeded for IP: {}", ip);
+        return axum::response::IntoResponse::into_response(axum::http::StatusCode::TOO_MANY_REQUESTS);
+    }
+    entry.0 += 1;
+
+    // Prevent infinite HashMap leak by pruning expired items
+    if limits.len() > 1000 {
+        limits.retain(|_, v| now.duration_since(v.1).as_secs() <= 60);
+    }
+
+    drop(limits);
+    
+    next.run(req).await
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Install default crypto provider for Rustls 0.23+ (resolves CryptoProvider panic)
+    rustls::crypto::ring::default_provider()
+        .map_err(|_| "Failed to install rustls default crypto provider")?;
+
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -42,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             error!(" SECURITY ERROR: Secret validation failed - {}", e);
             error!("  Application will NOT start without proper secrets configuration");
             EnvironmentChecklist::print_requirements();
-            panic!("Secret validation failed: {}", e);
+            return Err(e.into());
         }
     }
 
@@ -71,6 +115,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Configuration depuis les variables d'environnement
+    let jwt_secret = std::env::var("JWT_SECRET")
+        .map_err(|_| "SECURITY ERROR: JWT_SECRET environment variable is not set!")?;
     let host = std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = std::env::var("PORT").unwrap_or_else(|_| "8100".to_string());
     let python_bridges_url =
@@ -90,23 +136,110 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let audio_engine = Arc::new(services::audio_engine::AudioEngineClient::new());
 
     // ============================================================================
-    // DATABASE CONNECTION
+    // OLLAMA LOCAL FALLBACK & EMBEDDINGS (Zero-VRAM Standby)
     // ============================================================================
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set (loaded from jarvis-secretsd)");
+    let ollama_llm_model = std::env::var("OLLAMA_LLM_MODEL")
+        .unwrap_or_else(|_| "qwen2.5:1.5b".to_string());
+    let ollama_embed_model = std::env::var("OLLAMA_EMBED_MODEL")
+        .unwrap_or_else(|_| "nomic-embed-text".to_string());
+    info!(" Ollama fallback configured:");
+    info!("  - LLM Model: {} (zero-VRAM standby, keep_alive:0)", ollama_llm_model);
+    info!("  - Embed Model: {} (~300Mo, on-demand)", ollama_embed_model);
+    let ollama_client = Arc::new(services::ollama_client::OllamaClient::new(
+        ollama_llm_model,
+        ollama_embed_model,
+    ));
 
-    info!(" Connecting to PostgreSQL database...");
-    let db_service = services::db::DbService::new(&database_url)
-        .await
-        .expect("Failed to connect to PostgreSQL");
+    // ============================================================================
+    // MEMORY INDEX LAYER (Tantivy Local RAG Pipeline)
+    // ============================================================================
+    info!(" Initializing local Tantivy Memory Index RAG pipeline...");
+    let memory_index_path = std::env::var("MEMORY_INDEX_PATH").unwrap_or_else(|_| "/app/memory_index".to_string());
+    let memory_index = Arc::new(
+        services::memory_index::AsyncMemoryIndex::new(memory_index_path, ollama_client.clone())
+            .map_err(|e| format!("Failed to initialize Tantivy AsyncMemoryIndex: {}", e))?
+    );
 
-    info!(" Database connection established");
+    // ============================================================================
+    // GEMINI AI INTEGRATION (with Secretsd support)
+    // ============================================================================
+    let mut gemini_api_key = std::env::var("GEMINI_API_KEY").unwrap_or_else(|_| "".to_string());
+    if gemini_api_key.is_empty() {
+        let secretsd_url = std::env::var("SECRETSD_URL").unwrap_or_else(|_| "http://jarvis_secretsd:8081".to_string());
+        let client_id = std::env::var("CLIENT_ID").unwrap_or_else(|_| "backend".to_string());
+        
+        info!(" GEMINI_API_KEY not found in env, attempting to fetch from secretsd...");
+        
+        let client = reqwest::Client::new();
+        let resp = client.get(&format!("{}/secret/gemini_api_key", secretsd_url))
+            .header("X-Jarvis-Client", "backend")
+            .header("Authorization", format!("Bearer {}", std::env::var("SECRETSD_TOKEN").unwrap_or_else(|_| "secret-vault-token".to_string())))
+            .send()
+            .await;
+            
+        match resp {
+            Ok(r) if r.status().is_success() => {
+                if let Ok(json) = r.json::<serde_json::Value>().await {
+                    if let Some(key) = json["value"].as_str() {
+                        gemini_api_key = key.to_string();
+                        info!(" Successfully loaded GEMINI_API_KEY from secretsd vault.");
+                    }
+                }
+            }
+            Ok(r) => warn!(" Secretsd returned {}. GEMINI_API_KEY missing from vault.", r.status()),
+            Err(e) => warn!(" Failed to reach secretsd: {}", e),
+        }
+    }
+    
+    if gemini_api_key.is_empty() {
+        warn!(" GEMINI_API_KEY is not set. Intent analysis will fail.");
+    }
+    let gemini_client = Arc::new(services::gemini_client::GeminiClient::new(gemini_api_key));
+
+    // ============================================================================
+    // HOME ASSISTANT INTEGRATION (with Secretsd support)
+    // ============================================================================
+    let mut haos_api_token = std::env::var("HAOS_API_TOKEN").unwrap_or_else(|_| "".to_string());
+    if haos_api_token.is_empty() {
+        let secretsd_url = std::env::var("SECRETSD_URL").unwrap_or_else(|_| "http://jarvis_secretsd:8081".to_string());
+        let client_id = std::env::var("CLIENT_ID").unwrap_or_else(|_| "backend".to_string());
+        
+        info!(" HAOS_API_TOKEN not found in env, attempting to fetch from secretsd...");
+        
+        let client = reqwest::Client::new();
+        let resp = client.get(&format!("{}/secret/haos_api_token", secretsd_url))
+            .header("X-Jarvis-Client", "backend")
+            .header("Authorization", format!("Bearer {}", std::env::var("SECRETSD_TOKEN").unwrap_or_else(|_| "secret-vault-token".to_string())))
+            .send()
+            .await;
+            
+        match resp {
+            Ok(r) if r.status().is_success() => {
+                if let Ok(json) = r.json::<serde_json::Value>().await {
+                    if let Some(key) = json["value"].as_str() {
+                        haos_api_token = key.to_string();
+                        info!(" Successfully loaded HAOS_API_TOKEN from secretsd vault.");
+                    }
+                }
+            }
+            Ok(r) => warn!(" Secretsd returned {}. HAOS_API_TOKEN missing from vault.", r.status()),
+            Err(e) => warn!(" Failed to reach secretsd: {}", e),
+        }
+    }
+    
+    if haos_api_token.is_empty() {
+        warn!(" HAOS_API_TOKEN is not set. Domotics will not function.");
+    }
+    let haos_client = Arc::new(services::home_assistant_client::HomeAssistantClient::new(haos_api_token));
 
     // Create application state
     let state = Arc::new(AppState {
         python_bridges_url,
         audio_engine,
-        db: Arc::new(db_service),
+        memory_index,
+        agents: Arc::new(parking_lot::RwLock::new(std::collections::HashMap::new())),
+        rate_limits: Arc::new(parking_lot::RwLock::new(std::collections::HashMap::new())),
+        jwt_secret,
     });
 
     // ============================================================================
@@ -129,22 +262,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // CRITICAL FIX: Panic if no valid origins (prevents AllowOrigin::any())
     if allowed_origins.is_empty() {
-        panic!(" SECURITY ERROR: CORS_ORIGINS must contain at least one valid origin!");
+        return Err(" SECURITY ERROR: CORS_ORIGINS must contain at least one valid origin!".into());
     }
 
     let cors = CorsLayer::new()
         .allow_origin(AllowOrigin::list(allowed_origins))
-        .allow_methods([
-            axum::http::Method::GET,
-            axum::http::Method::POST,
-            axum::http::Method::DELETE,
-            axum::http::Method::OPTIONS,
-        ])
-        .allow_headers([
-            axum::http::header::CONTENT_TYPE,
-            axum::http::header::AUTHORIZATION,
-        ])
-        .allow_credentials(true)
+        .allow_methods(tower_http::cors::Any)
+        .allow_headers(tower_http::cors::Any)
         .max_age(Duration::from_secs(3600));
 
     // Initialize Prometheus metrics
@@ -161,40 +285,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/metrics", get(|| async move { metric_handle.render() }))
         // OpenAPI/Swagger UI
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        // Auth endpoints
-        // .route("/api/auth/login", post(auth::login))
-        // .route("/api/auth/verify", post(auth::verify_token))
-        // .route("/api/auth/whoami", get(auth::whoami))
         // ============================================================================
-        // PROTECTED ENDPOINTS (JWT authentication required)
+        // PROTECTED ENDPOINTS (JWT authentication required - MIGRATED TO V2)
         // ============================================================================
-        // Chat endpoints
-        // .route("/api/chat", post(chat::chat_endpoint))
-        // .route("/api/chat/conversations", get(chat::get_conversations))
-        // .route("/api/chat/history/:id", get(chat::get_history))
-        // .route(
-        //     "/api/chat/conversation/:id",
-        //     axum::routing::delete(chat::delete_conversation),
-        // )
-        // STT/TTS endpoints
-        .route("/api/voice/transcribe", post(stt::transcribe))
-        .route("/api/voice/synthesize", post(tts::synthesize))
-        .route("/api/voice/voices", get(tts::list_voices))
-        .route("/api/voice/languages", get(stt::list_languages))
-        // Memory endpoints
-        .route("/api/memory/add", post(memory::add_memory))
-        .route("/api/memory/search", post(memory::search_memory))
-        .route("/api/memory/list", get(memory::list_memories))
         // Web Search endpoint (uses BRAVE_API_KEY from jarvis-secretsd)
         .route("/api/v1/search", get(web_search::web_search))
         // OpenAI-compatible endpoints for Open-WebUI integration
         .route("/v1/audio/transcriptions", post(openai_compat::create_transcription))
         .route("/v1/audio/speech", post(openai_compat::create_speech))
-        // WebSocket
-        .route("/ws", axum::routing::get(chat::websocket_handler))
+        // WebSocket and Commands
+        .route("/api/v2/jarvis/ws", axum::routing::get(chat::jarvis_ws_handler))
+        .route("/api/v2/jarvis/command", post(chat::process_jarvis_command))
+        // Agent Management
+        .route("/api/agents/register", post(handlers::agents::register_agent))
+        .route("/api/agents/list", get(handlers::agents::list_agents))
         // Security layers
         .layer(cors)
         .layer(prometheus_layer)
+        .layer(axum::Extension(gemini_client))
+        .layer(axum::Extension(ollama_client))
+        .layer(axum::Extension(haos_client))
         .with_state(state);
 
     let app = app.into_make_service_with_connect_info::<std::net::SocketAddr>();

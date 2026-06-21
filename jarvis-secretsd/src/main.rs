@@ -129,34 +129,65 @@ fn init_logging(config: &Config) -> Result<()> {
 use hkdf::Hkdf;
 use sha2::Sha256;
 
+use zeroize::Zeroizing;
+
 /// Ensure master key exists, generate if missing, and bind it to the host machine-id via HKDF
-fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
-    let path_obj = Path::new(path);
-    
+fn ensure_master_key(path: &str) -> Result<Zeroizing<[u8; 32]>> {
     // 1. Get host hardware signature
     let machine_id = fs::read_to_string("/etc/machine-id")
-        .unwrap_or_else(|_| "generic-jarvis-host-id-fallback".to_string());
+        .or_else(|_| fs::read_to_string("/var/lib/dbus/machine-id"))
+        .or_else(|_| {
+            #[cfg(target_os = "macos")]
+            {
+                let output = std::process::Command::new("sysctl").arg("-n").arg("kern.uuid").output()?;
+                if output.status.success() {
+                    return Ok(String::from_utf8_lossy(&output.stdout).to_string());
+                }
+            }
+            Err(std::io::Error::new(std::io::ErrorKind::NotFound, "machine-id not found"))
+        })
+        .context("CRITICAL SECURITY ERROR: Could not read /etc/machine-id or fallback. Hardware binding impossible. Refusing to start.")?;
     let host_salt = machine_id.trim();
 
-    if path_obj.exists() {
-        info!(" Loading existing master key from {} (HKDF Bound to host)", path);
+    // 2. Check systemd credentials first (Zero-Trust capability)
+    let creds_dir = std::env::var("CREDENTIALS_DIRECTORY").ok();
+    let actual_path = if let Some(dir) = &creds_dir {
+        let sys_cred = Path::new(dir).join("master_key");
+        if sys_cred.exists() {
+            info!(" Systemd Credential capability detected. Loading master key from {}", sys_cred.display());
+            sys_cred.to_string_lossy().to_string()
+        } else {
+            path.to_string()
+        }
+    } else {
+        path.to_string()
+    };
 
-        let bytes = fs::read(path)
-            .with_context(|| format!("failed to read master key: {}", path))?;
+    let path_obj = Path::new(&actual_path);
+
+    if path_obj.exists() {
+        info!(" Loading existing master key from {} (HKDF Bound to host)", actual_path);
+
+        let bytes = Zeroizing::new(fs::read(&actual_path)
+            .with_context(|| format!("failed to read master key: {}", actual_path))?);
 
         if bytes.len() != 32 {
             anyhow::bail!("invalid master key length");
         }
 
         // Use HKDF to derive the final key from raw key + host salt
-        let hk = Hkdf::<Sha256>::new(Some(host_salt.as_bytes()), &bytes);
+        let hk = Hkdf::<Sha256>::new(Some(host_salt.as_bytes()), bytes.as_slice());
         let mut final_key = [0u8; 32];
         hk.expand(b"jarvis-secretsd-host-binding", &mut final_key)
             .map_err(|_| anyhow::anyhow!("HKDF expansion failed"))?;
 
-        Ok(final_key)
+        Ok(Zeroizing::new(final_key))
     } else {
         info!(" Generating new master key bound to this hardware via HKDF");
+
+        if creds_dir.is_some() {
+            tracing::warn!("SECOPS WARNING: CREDENTIALS_DIRECTORY is set but 'master_key' not found. Falling back to disk generation.");
+        }
 
         if let Some(parent) = path_obj.parent() {
             fs::create_dir_all(parent)?;
@@ -165,15 +196,15 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
         let raw_key = gen_bytes_32();
         
         // Write raw key (worthless without HKDF + machine-id)
-        fs::write(path, &*raw_key)
-            .with_context(|| format!("failed to write master key: {}", path))?;
+        fs::write(&actual_path, &*raw_key)
+            .with_context(|| format!("failed to write master key: {}", actual_path))?;
 
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(path)?.permissions();
+            let mut perms = fs::metadata(&actual_path)?.permissions();
             perms.set_mode(0o600);
-            fs::set_permissions(path, perms)?;
+            fs::set_permissions(&actual_path, perms)?;
         }
 
         let hk = Hkdf::<Sha256>::new(Some(host_salt.as_bytes()), &*raw_key);
@@ -182,6 +213,6 @@ fn ensure_master_key(path: &str) -> Result<[u8; 32]> {
             .map_err(|_| anyhow::anyhow!("HKDF expansion failed"))?;
 
         info!(" Hardware-bound master key (HKDF) initialized");
-        Ok(final_key)
+        Ok(Zeroizing::new(final_key))
     }
 }

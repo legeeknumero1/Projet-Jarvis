@@ -12,13 +12,13 @@ use zeroize::Zeroizing;
 /// Thread-safe vault storage with encryption
 pub struct VaultStore {
     vault: Arc<RwLock<Vault>>,
-    master: [u8; 32],
+    master: Zeroizing<[u8; 32]>,
     path: PathBuf,
 }
 
 impl VaultStore {
     /// Load existing vault or create new one
-    pub fn load_or_init(path: &str, master: [u8; 32], rotation_days: u32, grace_days: u32) -> Result<Self> {
+    pub fn load_or_init(path: &str, master: Zeroizing<[u8; 32]>, rotation_days: u32, grace_days: u32) -> Result<Self> {
         let path_buf = PathBuf::from(path);
 
         let vault = if path_buf.exists() {
@@ -88,24 +88,51 @@ impl VaultStore {
             .ok_or_else(|| SecretError::NotFound(name.to_string()))?;
 
         // MLOCK: Prevent swapping during decryption
-        #[cfg(unix)]
+        #[cfg(all(unix, not(target_os = "macos")))]
         unsafe {
-            let _ = libc::mlock(self.master.as_ptr() as *const libc::c_void, 32);
+            // Linux requires CAP_IPC_LOCK capability for non-root users.
+            // This is provided via systemd AmbientCapabilities=CAP_IPC_LOCK
+            // or docker cap_add: - IPC_LOCK.
+            if libc::mlock(self.master.as_ptr() as *const libc::c_void, 32) != 0 {
+                let err = std::io::Error::last_os_error();
+                tracing::error!("SECOPS ALERT: Failed to mlock master key in memory (missing CAP_IPC_LOCK?): {}", err);
+            }
+        }
+        #[cfg(target_os = "macos")]
+        {
+            // macOS mlock requires root privileges, breaking rootless isolation.
+            // Skipping mlock on macOS.
         }
 
         let decrypted_bytes = aead_decrypt(&self.master, &record.enc)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;
 
-        let value = String::from_utf8(decrypted_bytes.to_vec())
+        let value_str = std::str::from_utf8(decrypted_bytes.as_ref())
             .map_err(|e| SecretError::Crypto(format!("invalid UTF-8: {}", e)))?;
 
-        Ok((Zeroizing::new(value), record.meta.clone()))
+        Ok((Zeroizing::new(value_str.to_string()), record.meta.clone()))
     }
 
     /// Generate and store a new secret
     pub fn generate_and_store(&self, name: &str, secret_type: &str) -> Result<(), SecretError> {
-        let value = generate_secret(secret_type)
-            .map_err(|e| SecretError::Crypto(e.to_string()))?;
+        let value = if secret_type == "deterministic_password" {
+            // Derive a stable 32-char password from master key + name using HKDF
+            // This prevents mismatch with DBs if the tmpfs vault is wiped on restart.
+            use hkdf::Hkdf;
+            use sha2::Sha256;
+            let hk = Hkdf::<Sha256>::new(None, &*self.master);
+            let mut derived = [0u8; 32];
+            hk.expand(name.as_bytes(), &mut derived)
+                .map_err(|_| SecretError::Crypto("HKDF expansion failed".to_string()))?;
+            
+            const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            let pwd: String = derived.iter().map(|&b| CHARSET[(b as usize) % CHARSET.len()] as char).collect();
+            
+            zeroize::Zeroizing::new(pwd)
+        } else {
+            generate_secret(secret_type)
+                .map_err(|e| SecretError::Crypto(e.to_string()))?
+        };
 
         self.set_secret(name, &*value, None)?;
 
@@ -116,6 +143,10 @@ impl VaultStore {
     /// Rotate a secret (keep old in prev)
     pub fn rotate_secret(&self, name: &str, secret_type: &str) -> Result<(), SecretError> {
         let (_, old_meta) = self.get_secret(name)?;
+
+        if secret_type == "deterministic_password" {
+            return Err(SecretError::Storage("Deterministic passwords cannot be automatically rotated without external sync".into()));
+        }
 
         let new_value = generate_secret(secret_type)
             .map_err(|e| SecretError::Crypto(e.to_string()))?;
@@ -139,23 +170,29 @@ impl VaultStore {
         let json = serde_json::to_string(&*vault)
             .map_err(|e| SecretError::Storage(format!("JSON serialization failed: {}", e)))?;
 
-        let temp_path = self.path.with_extension("tmp");
-        fs::write(&temp_path, json)
-            .map_err(|e| SecretError::Storage(format!("failed to write vault: {}", e)))?;
+        let temp_path = self.path.with_extension(format!("tmp.{}", rand::random::<u64>()));
+        
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            let mut file = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(&temp_path)
+                .map_err(|e| SecretError::Storage(format!("failed to create vault: {}", e)))?;
+            use std::io::Write;
+            file.write_all(json.as_bytes())
+                .map_err(|e| SecretError::Storage(format!("failed to write vault: {}", e)))?;
+        }
+        #[cfg(not(unix))]
+        {
+            fs::write(&temp_path, json)
+                .map_err(|e| SecretError::Storage(format!("failed to write vault: {}", e)))?;
+        }
 
         fs::rename(&temp_path, &self.path)
             .map_err(|e| SecretError::Storage(format!("failed to rename vault: {}", e)))?;
-
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(&self.path)
-                .map_err(|e| SecretError::Storage(format!("failed to get metadata: {}", e)))?
-                .permissions();
-            perms.set_mode(0o600);
-            fs::set_permissions(&self.path, perms)
-                .map_err(|e| SecretError::Storage(format!("failed to set permissions: {}", e)))?;
-        }
 
         Ok(())
     }
@@ -184,5 +221,14 @@ impl VaultStore {
 
     pub fn grace_days(&self) -> u32 {
         self.vault.read().grace_days
+    }
+}
+
+impl Drop for VaultStore {
+    fn drop(&mut self) {
+        #[cfg(all(unix, not(target_os = "macos")))]
+        unsafe {
+            let _ = libc::munlock(self.master.as_ptr() as *const libc::c_void, 32);
+        }
     }
 }

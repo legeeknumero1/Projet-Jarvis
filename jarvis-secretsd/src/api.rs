@@ -35,12 +35,53 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
 }
 
+use subtle::ConstantTimeEq;
+
+/// Constant-time string comparison to prevent timing attacks
+fn secure_eq(a: &str, b: &str) -> bool {
+    if a.len() != b.len() { return false; }
+    a.as_bytes().ct_eq(b.as_bytes()).into()
+}
+
 /// Extract client ID from header
 fn extract_client(headers: &HeaderMap) -> Option<String> {
-    headers
-        .get("X-Jarvis-Client")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string())
+    // 1. Check for SECRETSD_TOKENS mapping: "admin:tok1,backend:tok2"
+    let tokens_env = std::env::var("SECRETSD_TOKENS").unwrap_or_default();
+    if !tokens_env.is_empty() {
+        if let Some(auth) = headers.get("authorization").and_then(|h| h.to_str().ok()) {
+            for mapping in tokens_env.split(',') {
+                let mut parts = mapping.split(':');
+                if let (Some(role), Some(token)) = (parts.next(), parts.next()) {
+                    let expected = format!("Bearer {}", token.trim());
+                    if secure_eq(auth, &expected) {
+                        return Some(role.trim().to_string());
+                    }
+                }
+            }
+        }
+        tracing::error!("SECRETSD: Invalid Bearer token or mapping not found");
+        return None;
+    }
+
+    // 2. Fallback to monolithic token (with X-Jarvis-Client trust)
+    let expected_token = std::env::var("SECRETSD_TOKEN").unwrap_or_default();
+    if expected_token.is_empty() {
+        tracing::error!("SECRETSD: Tokens not configured");
+        return None;
+    }
+    
+    let expected_auth = format!("Bearer {}", expected_token);
+    if let Some(auth) = headers.get("authorization").and_then(|h| h.to_str().ok()) {
+        if !secure_eq(auth, &expected_auth) {
+            tracing::error!("SECRETSD: Invalid Bearer token");
+            return None;
+        }
+    } else {
+        tracing::error!("SECRETSD: Missing Authorization header");
+        return None;
+    }
+
+    headers.get("X-Jarvis-Client").and_then(|v| v.to_str().ok()).map(|s| s.to_string())
 }
 
 /// Health check
@@ -63,6 +104,7 @@ async fn get_secret_handler(
     Path(name): Path<String>,
     headers: HeaderMap,
 ) -> Result<Json<GetSecretResponse>, SecretError> {
+    let name = name.to_lowercase();
     let client = extract_client(&headers)
         .ok_or_else(|| SecretError::NotAuthorized("missing X-Jarvis-Client header".to_string()))?;
 
@@ -97,39 +139,21 @@ async fn get_secret_handler(
         Ok(v) => v,
         Err(SecretError::NotFound(_)) => {
             // Auto-generate based on name patterns
-            let secret_type = if name.ends_with("_password") || name == "redis_password" {
-                Some("postgres_password")
-            } else if name == "database_url" {
-                Some("database_url")
-            } else if name.starts_with("jwt_") || name == "JWT_SECRET" {
+            let secret_type = if name.starts_with("jwt_") || name == "JWT_SECRET" {
                 Some("jwt_signing_key")
             } else if name.ends_with("_encryption_key") {
                 Some("jarvis_encryption_key")
             } else if name.ends_with("_key") || name.ends_with("_token") {
                 Some("api_key")
+            } else if name.ends_with("_password") {
+                Some("deterministic_password")
             } else {
                 None
             };
 
             if let Some(stype) = secret_type {
                 info!(" Auto-generating secret '{}' of type '{}' on demand", name, stype);
-                
-                // Special case for composed secrets
-                if name == "database_url" {
-                    // Ensure postgres_password exists
-                    let pg_pwd = match state.store.get_secret("postgres_password") {
-                        Ok((v, _)) => v,
-                        Err(_) => {
-                            state.store.generate_and_store("postgres_password", "postgres_password")?;
-                            state.store.get_secret("postgres_password")?.0
-                        }
-                    };
-                    let db_url = format!("postgres://jarvis:{}@postgres:5432/jarvis_db", &*pg_pwd);
-                    state.store.set_secret(&name, &db_url, None)?;
-                } else {
-                    state.store.generate_and_store(&name, stype)?;
-                }
-                
+                state.store.generate_and_store(&name, stype)?;
                 state.store.get_secret(&name)?
             } else {
                 return Err(SecretError::NotFound(name));

@@ -1,0 +1,163 @@
+# ---------------------------------------------------------
+# NETWORK POLICIES - Micro-segmentation & Zero Trust
+# ---------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: jarvis
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow DNS egress for all pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: jarvis
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# Ingress Controller allowed to access dashboard and core
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress
+  namespace: jarvis
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [jarvis-dashboard, jarvis-core]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik-system
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8000
+---
+# Dashboard can communicate with core API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dashboard-egress
+  namespace: jarvis
+spec:
+  podSelector:
+    matchLabels:
+      app: jarvis-dashboard
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: jarvis-core
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# Core API Ingress from Dashboard
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: core-ingress
+  namespace: jarvis
+spec:
+  podSelector:
+    matchLabels:
+      app: jarvis-core
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: jarvis-dashboard
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# Core API Egress to Backend Services (Secretsd, Ollama, Voice)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: core-egress
+  namespace: jarvis
+spec:
+  podSelector:
+    matchLabels:
+      app: jarvis-core
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: jarvis-secretsd
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: jarvis-ollama
+      ports:
+        - protocol: TCP
+          port: 11434
+    - to:
+        - podSelector:
+            matchLabels:
+              app: jarvis-voice
+      ports:
+        - protocol: TCP
+          port: 9000
+---
+# Backend Services Ingress from Core API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-services-ingress
+  namespace: jarvis
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [jarvis-secretsd, jarvis-ollama, jarvis-voice]
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: jarvis-core
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 11434
+        - protocol: TCP
+          port: 9000

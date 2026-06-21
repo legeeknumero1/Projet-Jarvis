@@ -16,7 +16,7 @@
 // - CVSS 5.0: Buffer Overflow (pas de limite de taille)
 
 use regex::Regex;
-use once_cell::sync::Lazy;
+
 
 // ============================================================================
 // Validation Constants
@@ -59,25 +59,21 @@ impl ValidationLimits {
 // Regex Patterns for Validation
 // ============================================================================
 
-static LANGUAGE_CODE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    // Matches language codes like: en, fr, en-US, en_US
-    Regex::new(r"^[a-z]{2}(-|_)?[a-z]{2}?$").unwrap()
-});
+fn get_language_code_pattern() -> Result<Regex, String> {
+    Regex::new(r"^[a-z]{2}(-|_)?[a-z]{2}?$").map_err(|e| e.to_string())
+}
 
-static BASE64_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    // Basic base64 pattern
-    Regex::new(r"^[A-Za-z0-9+/]*={0,2}$").unwrap()
-});
+fn get_base64_pattern() -> Result<Regex, String> {
+    Regex::new(r"^[A-Za-z0-9+/]*={0,2}$").map_err(|e| e.to_string())
+}
 
-static VOICE_ID_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    // Matches voice IDs like: fr_FR-upmc-medium, en_US-glow-tts
-    Regex::new(r"^[a-z]{2}_[A-Z]{2}-[a-z0-9_-]+$").unwrap()
-});
+fn get_voice_id_pattern() -> Result<Regex, String> {
+    Regex::new(r"^[a-z]{2}_[A-Z]{2}-[a-z0-9_-]+$").map_err(|e| e.to_string())
+}
 
-static USERNAME_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    // Alphanumeric, underscore, hyphen, period
-    Regex::new(r"^[a-zA-Z0-9_\-\.]+$").unwrap()
-});
+fn get_username_pattern() -> Result<Regex, String> {
+    Regex::new(r"^[a-zA-Z0-9_\-\.]+$").map_err(|e| e.to_string())
+}
 
 // ============================================================================
 // Main Validator Trait
@@ -275,7 +271,8 @@ impl InputValidator for LoginValidator {
         }
 
         // Validate username format (alphanumeric, underscore, hyphen, period)
-        if !USERNAME_PATTERN.is_match(&self.username) {
+        let pattern = get_username_pattern()?;
+        if !pattern.is_match(&self.username) {
             return Err(
                 "Username contains invalid characters. Use only alphanumeric, underscore, hyphen, or period"
                     .to_string(),
@@ -348,7 +345,8 @@ impl InputValidator for TTSValidator {
             }
 
             // Basic voice ID pattern: should contain underscore and hyphen
-            if !VOICE_ID_PATTERN.is_match(voice) {
+            let pattern = get_voice_id_pattern()?;
+            if !pattern.is_match(voice) {
                 tracing::warn!("Voice ID does not match expected pattern: {}", voice);
                 // Don't fail, just warn - allow custom voice IDs
             }
@@ -399,7 +397,8 @@ impl InputValidator for STTValidator {
         }
 
         // Validate base64 format
-        if !BASE64_PATTERN.is_match(&self.audio_data) {
+        let pattern = get_base64_pattern()?;
+        if !pattern.is_match(&self.audio_data) {
             return Err("Audio data must be valid base64 encoded".to_string());
         }
 
@@ -418,7 +417,8 @@ impl InputValidator for STTValidator {
             }
 
             // Language code pattern: en, fr, en-US, etc.
-            if !LANGUAGE_CODE_PATTERN.is_match(language) {
+            let pattern = get_language_code_pattern()?;
+            if !pattern.is_match(language) {
                 tracing::warn!("Language code does not match expected pattern: {}", language);
                 // Don't fail, just warn - allow custom language codes
             }

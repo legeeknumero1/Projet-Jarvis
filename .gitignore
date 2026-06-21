@@ -319,3 +319,6 @@ secrets_list.json
 
 # Dossier ReadMe externe (lien symbolique)
 /home/legeek/Documents/ReadMe/
+# Large AI Models
+python-bridges/models/*.safetensors
+python-bridges/models/*.wav

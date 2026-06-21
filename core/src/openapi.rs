@@ -19,13 +19,7 @@ use utoipa::OpenApi;
     paths(
         crate::handlers::health::health_check,
         crate::handlers::health::readiness_check,
-        crate::handlers::chat::chat_endpoint,
-        crate::handlers::chat::get_conversations,
-        crate::handlers::chat::get_history,
-        crate::handlers::stt::transcribe,
-        crate::handlers::tts::synthesize,
-        crate::handlers::auth::login,
-        crate::handlers::auth::logout,
+
         crate::handlers::openai_compat::create_transcription,
         crate::handlers::openai_compat::create_speech,
         crate::handlers::web_search::web_search,

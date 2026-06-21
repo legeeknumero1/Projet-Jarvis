@@ -1,1 +1,0 @@
-/home/legeek/Documents/ReadMe/Projet-Jarvis/k8s/README.md

@@ -1,1 +1,0 @@
-/home/legeek/Documents/ReadMe/Projet-Jarvis/jarvis-secretsd/jarvis-secretsd/README.md

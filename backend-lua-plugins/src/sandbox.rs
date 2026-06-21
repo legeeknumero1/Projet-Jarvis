@@ -33,6 +33,7 @@ impl Default for ResourceLimits {
 pub struct LuaSandbox {
     lua: Arc<Mutex<Lua>>,
     limits: ResourceLimits,
+    instruction_count: std::sync::Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl LuaSandbox {
@@ -52,19 +53,18 @@ impl LuaSandbox {
 
         // Set CPU limit via instruction hook
         let max_instructions = limits.max_instructions;
+        let instruction_count = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+        let instruction_count_clone = instruction_count.clone();
         lua.set_hook(mlua::HookTriggers {
             every_nth_instruction: Some(10000), // Check every 10k instructions
             ..Default::default()
         }, move |_lua, _debug| {
-            static mut INSTRUCTION_COUNT: u64 = 0;
-            unsafe {
-                INSTRUCTION_COUNT += 10000;
-                if INSTRUCTION_COUNT >= max_instructions {
-                    INSTRUCTION_COUNT = 0;
-                    return Err(mlua::Error::RuntimeError(
-                        format!("CPU limit exceeded: {} instructions", max_instructions)
-                    ));
-                }
+            let current = instruction_count_clone.fetch_add(10000, std::sync::atomic::Ordering::Relaxed);
+            if current + 10000 >= max_instructions {
+                instruction_count_clone.store(0, std::sync::atomic::Ordering::Relaxed);
+                return Err(mlua::Error::RuntimeError(
+                    format!("CPU limit exceeded: {} instructions", max_instructions)
+                ));
             }
             Ok(())
         })?;
@@ -80,22 +80,27 @@ impl LuaSandbox {
         globals.set("dofile", lua.nil())?;
         globals.set("require", lua.nil())?;
         globals.set("debug", lua.nil())?;
+        globals.set("package", lua.nil())?;
+        globals.set("coroutine", lua.nil())?;
 
         // Allow safe functions
         // - math, string, table OK
-        // - coroutine OK (with limits)
+        // - coroutine DISABLED (security vulnerability: bypasses instruction hook)
 
         info!("Lua sandbox created (safe mode with resource limits)");
 
         Ok(Self {
             lua: Arc::new(Mutex::new(lua)),
             limits,
+            instruction_count,
         })
     }
 
     /// Load and execute plugin
     pub async fn load_plugin(&self, plugin: &Plugin) -> PluginResult<()> {
         debug!("Loading plugin: {}", plugin.metadata.id);
+
+        self.instruction_count.store(0, std::sync::atomic::Ordering::Relaxed);
 
         let lua = self.lua.lock().await;
         let content = tokio::fs::read_to_string(&plugin.path).await?;
@@ -116,6 +121,7 @@ impl LuaSandbox {
     ) -> PluginResult<serde_json::Value> {
         debug!("Calling hook: {}::{}", plugin_id, hook_name);
 
+        self.instruction_count.store(0, std::sync::atomic::Ordering::Relaxed);
         let timeout_duration = self.limits.max_execution_time;
 
         // Execute hook with timeout enforcement
@@ -165,6 +171,7 @@ impl LuaSandbox {
     ) -> PluginResult<serde_json::Value> {
         debug!("Calling filter: {}", hook_name);
 
+        self.instruction_count.store(0, std::sync::atomic::Ordering::Relaxed);
         let lua = self.lua.lock().await;
         let globals = lua.globals();
 

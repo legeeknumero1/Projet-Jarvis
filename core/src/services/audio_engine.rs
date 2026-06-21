@@ -26,4 +26,12 @@ impl AudioEngineClient {
         let engine = self.engine.lock().map_err(|e| e.to_string())?;
         engine.process(samples)
     }
+
+    pub fn get_peak_level(&self) -> f32 {
+        if let Ok(engine) = self.engine.lock() {
+            engine.get_peak_level()
+        } else {
+            0.0
+        }
+    }
 }

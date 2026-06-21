@@ -2,9 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-pub mod entities;
 
-use crate::services::db::DbService;
 use crate::services::audio_engine::AudioEngineClient;
 use std::sync::Arc;
 
@@ -12,13 +10,39 @@ use std::sync::Arc;
 pub struct AppState {
     pub python_bridges_url: String,
     pub audio_engine: Arc<AudioEngineClient>,
-    pub db: Arc<DbService>,
+    pub memory_index: Arc<crate::services::memory_index::AsyncMemoryIndex>,
+    pub agents: Arc<parking_lot::RwLock<std::collections::HashMap<String, AgentInfo>>>,
+    pub rate_limits: Arc<parking_lot::RwLock<std::collections::HashMap<std::net::IpAddr, (u32, std::time::Instant)>>>,
+    pub jwt_secret: String,
 }
 
 impl AppState {
     pub fn python_bridges_url(&self) -> &String {
         &self.python_bridges_url
     }
+}
+
+// ============= Agent Models =============
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct AgentInfo {
+    pub agent_id: String,
+    pub hostname: String,
+    pub os_name: String,
+    pub os_version: String,
+    pub kernel_version: String,
+    pub architecture: String,
+    pub total_memory_mb: u64,
+    pub total_swap_mb: u64,
+    pub total_disk_mb: u64,
+    pub cpu_cores: usize,
+    pub cpu_brand: String,
+    pub cpu_frequency_mhz: u64,
+    pub uptime_seconds: u64,
+    pub load_average: (f64, f64, f64),
+    pub mac_addresses: Vec<String>,
+    pub last_seen: i64,
+    pub ip_address: Option<String>,
 }
 
 // ============= Chat Models =============
@@ -165,21 +189,6 @@ pub struct LoginResponse {
     pub expires_in: i64,
     pub user_id: String,
     pub username: String,
-}
-
-// User model from database (for authentication)
-#[derive(Debug, sqlx::FromRow)]
-pub struct User {
-    pub id: uuid::Uuid,
-    pub username: String,
-    pub password_hash: String,
-    pub email: Option<String>,
-    pub full_name: Option<String>,
-    pub is_active: bool,
-    pub is_admin: bool,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub last_login: Option<DateTime<Utc>>,
 }
 
 /*

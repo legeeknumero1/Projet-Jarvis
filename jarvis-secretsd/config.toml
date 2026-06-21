@@ -5,10 +5,11 @@ bind_addr = "0.0.0.0:8081"
 allow_unix_socket = false
 
 [paths]
-# Ces chemins seront montés en tmpfs (RAM) dans Docker
-vault_path = "/opt/jarvis/secrets/vault.json"
+# Ces chemins persistent les clés maîtresses et API
+vault_path = "/opt/jarvis/secrets/persistent/vault.json"
+master_key_path = "/opt/jarvis/secrets/persistent/master.key"
+# Ce chemin reste en RAM
 audit_path = "/opt/jarvis/audit/audit.jsonl"
-master_key_path = "/opt/jarvis/master.key"
 
 [security]
 rotation_days = 7   # Rotation ultra-fréquente demandée

@@ -18,11 +18,10 @@ pub fn gen_bytes_32() -> Zeroizing<[u8; 32]> {
 /// Generate random password with alphanumeric chars only
 pub fn gen_password(len: usize) -> Zeroizing<String> {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let mut rng = rand::thread_rng();
 
     let pwd: String = (0..len)
         .map(|_| {
-            let idx = rng.gen_range(0..CHARSET.len());
+            let idx = OsRng.gen_range(0..CHARSET.len());
             CHARSET[idx] as char
         })
         .collect();
@@ -35,9 +34,10 @@ pub fn gen_password(len: usize) -> Zeroizing<String> {
 pub fn aead_encrypt(master: &[u8; 32], plaintext: &[u8]) -> Result<String> {
     let cipher = Aes256Gcm::new(master.into());
 
-    // Generate random 96-bit nonce
+    // Generate purely random 96-bit nonce to prevent AES-GCM collisions
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill(&mut nonce_bytes);
+    
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     // Encrypt
@@ -96,15 +96,17 @@ pub fn ed25519_generate() -> (Zeroizing<String>, String) {
 /// Sign a message using Ed25519 private key
 /// Returns base64(signature)
 pub fn sign_audit(sk_b64: &str, message: &str) -> Result<String> {
-    let sk_bytes = BASE64
-        .decode(sk_b64)
-        .context("failed to decode signing key")?;
+    let sk_bytes = Zeroizing::new(
+        BASE64
+            .decode(sk_b64)
+            .context("failed to decode signing key")?
+    );
 
     if sk_bytes.len() != 32 {
         anyhow::bail!("invalid signing key length");
     }
 
-    let signing_key = SigningKey::from_bytes(&sk_bytes.try_into().unwrap());
+    let signing_key = SigningKey::from_bytes(&sk_bytes.as_slice().try_into().unwrap());
     let signature = signing_key.sign(message.as_bytes());
 
     Ok(BASE64.encode(signature.to_bytes()))
@@ -139,13 +141,6 @@ pub fn generate_secret(secret_type: &str) -> Result<Zeroizing<String>> {
         "jwt_signing_key" => {
             let (sk, _pk) = ed25519_generate();
             Ok(sk)
-        }
-        "postgres_password" | "redis_password" => {
-            Ok(gen_password(64))
-        }
-        "database_url" => {
-            let pwd = gen_password(32);
-            Ok(Zeroizing::new(format!("postgres://jarvis:{}@postgres:5432/jarvis_db", *pwd)))
         }
         "backup_encryption_key" | "jarvis_encryption_key" => {
             Ok(Zeroizing::new(BASE64.encode(*gen_bytes_32())))

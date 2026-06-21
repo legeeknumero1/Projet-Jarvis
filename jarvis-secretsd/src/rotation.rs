@@ -64,10 +64,10 @@ fn infer_secret_type(name: &str) -> &str {
 
     if lower.contains("jwt") || lower.contains("signing") {
         "jwt_signing_key"
-    } else if lower.contains("postgres") || lower.contains("password") {
-        "postgres_password"
     } else if lower.contains("encryption") || lower.contains("backup") {
         "backup_encryption_key"
+    } else if lower.ends_with("_password") {
+        "deterministic_password"
     } else if lower.contains("api") && lower.contains("key") {
         "api_key"
     } else {

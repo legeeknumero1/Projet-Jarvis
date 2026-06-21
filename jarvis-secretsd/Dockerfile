@@ -1,10 +1,10 @@
 # Multi-stage build for jarvis-secretsd
-FROM rust:1.82-slim AS builder
+FROM rust:slim AS builder
 
 WORKDIR /build
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -20,8 +20,8 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directories
@@ -30,15 +30,16 @@ RUN mkdir -p /etc/jarvis-secretsd /opt/jarvis/secrets /opt/jarvis/audit
 # Copy binary
 COPY --from=builder /build/target/release/jarvis-secretsd /usr/local/bin/
 
-# Copy config examples
-COPY config.toml.example /etc/jarvis-secretsd/
-COPY policy.yaml.example /etc/jarvis-secretsd/
+# Copy config
+COPY config.toml /etc/jarvis-secretsd/
+COPY policy.yaml /etc/jarvis-secretsd/
 
 # Create non-root user
 RUN useradd -r -u 1000 -m jarvis
 
 # Set permissions
-RUN chown -R jarvis:jarvis /opt/jarvis
+RUN chown -R jarvis:jarvis /opt/jarvis && \
+    chown -R jarvis:jarvis /etc/jarvis-secretsd
 
 USER jarvis
 

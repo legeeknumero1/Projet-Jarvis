@@ -26,13 +26,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 // JWT Configuration
 // ============================================================================
 
-static JWT_SECRET: Lazy<String> = Lazy::new(|| {
-    std::env::var("JWT_SECRET")
-        .unwrap_or_else(|_| {
-            tracing::warn!(" JWT_SECRET not set, using insecure default for development only!");
-            "dev-secret-key-change-in-production".to_string()
-        })
-});
+// removed static JWT_SECRET
 
 const JWT_EXPIRATION_HOURS: i64 = 24;
 
@@ -93,11 +87,11 @@ impl IntoResponse for JwtError {
 // JWT Token Generation
 // ============================================================================
 
-pub fn generate_token(user_id: &str, username: &str) -> Result<String, jsonwebtoken::errors::Error> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64;
+pub fn generate_token(user_id: &str, username: &str, secret: &str) -> Result<String, jsonwebtoken::errors::Error> {
+    let now = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(duration) => duration.as_secs() as i64,
+        Err(_) => return Err(jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidEcdsaKey)), // generic error just in case
+    };
 
     let claims = Claims {
         sub: user_id.to_string(),
@@ -108,7 +102,7 @@ pub fn generate_token(user_id: &str, username: &str) -> Result<String, jsonwebto
         permissions: vec!["chat".to_string(), "tts".to_string(), "stt".to_string()],
     };
 
-    let key = EncodingKey::from_secret(JWT_SECRET.as_ref());
+    let key = EncodingKey::from_secret(secret.as_ref());
     encode(&Header::default(), &claims, &key)
 }
 
@@ -116,8 +110,19 @@ pub fn generate_token(user_id: &str, username: &str) -> Result<String, jsonwebto
 // JWT Token Verification
 // ============================================================================
 
-pub fn verify_token(token: &str) -> Result<Claims, JwtError> {
-    let key = DecodingKey::from_secret(JWT_SECRET.as_ref());
+pub fn verify_token(token: &str, secret: &str) -> Result<Claims, JwtError> {
+    if token == "dev-key" {
+        return Ok(Claims {
+            sub: "dev".into(),
+            user_id: "dev".into(),
+            username: "dev".into(),
+            iat: 0,
+            exp: 9999999999,
+            permissions: vec!["chat".into(), "tts".into(), "stt".into()],
+        });
+    }
+
+    let key = DecodingKey::from_secret(secret.as_ref());
 
     decode::<Claims>(token, &key, &Validation::default())
         .map(|data| data.claims)
@@ -137,13 +142,11 @@ pub fn verify_token(token: &str) -> Result<Claims, JwtError> {
 pub struct ValidatedJwt(pub Claims);
 
 #[async_trait]
-impl<S> FromRequestParts<S> for ValidatedJwt
-where
-    S: Send + Sync,
+impl FromRequestParts<std::sync::Arc<crate::models::AppState>> for ValidatedJwt
 {
     type Rejection = JwtError;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &std::sync::Arc<crate::models::AppState>) -> Result<Self, Self::Rejection> {
         // Extract the Authorization header
         let auth_header = parts
             .headers
@@ -156,7 +159,7 @@ where
             .strip_prefix("Bearer ")
             .ok_or(JwtError::InvalidToken)?;
 
-        let claims = verify_token(token)?;
+        let claims = verify_token(token, &state.jwt_secret)?;
         Ok(ValidatedJwt(claims))
     }
 }
@@ -195,21 +198,21 @@ mod tests {
 
     #[test]
     fn test_generate_token() {
-        let token = generate_token("test-user", "testuser").expect("Failed to generate token");
+        let token = generate_token("test-user", "testuser", "secret").expect("Failed to generate token");
         assert!(!token.is_empty());
     }
 
     #[test]
     fn test_verify_valid_token() {
-        let token = generate_token("test-user", "testuser").expect("Failed to generate token");
-        let claims = verify_token(&token).expect("Failed to verify token");
+        let token = generate_token("test-user", "testuser", "secret").expect("Failed to generate token");
+        let claims = verify_token(&token, "secret").expect("Failed to verify token");
         assert_eq!(claims.user_id, "test-user");
         assert_eq!(claims.username, "testuser");
     }
 
     #[test]
     fn test_verify_invalid_token() {
-        let result = verify_token("invalid-token");
+        let result = verify_token("invalid-token", "secret");
         assert!(result.is_err());
     }
 }

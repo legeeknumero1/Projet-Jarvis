@@ -1,11 +1,10 @@
-pub mod python_bridges;
 pub mod audio_engine;
-pub mod search;
-pub mod cache;
-pub mod db;
+pub mod memory_index;
+pub mod gemini_client;
+pub mod intent_router;
+pub mod ollama_client;
+pub mod home_assistant_client;
 
-// pub use python_bridges::PythonBridgesClient;
-// pub use audio_engine::AudioEngineClient;
-pub use search::{SearchIndex, SearchResult};
-pub use cache::{CacheClient, ConversationContext};
-pub use db::DbService;
+pub use intent_router::LocalIntentRouter;
+pub use ollama_client::OllamaClient;
+pub use memory_index::{AsyncMemoryIndex, MemoryCommand};
