@@ -1,337 +1,269 @@
+version: '3.8'
+
 networks:
+  frontend:
+    external: true
   jarvis_network:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
-          gateway: 172.20.0.1
-    external: false
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1
     attachable: true
-    driver_opts:
-      com.docker.network.bridge.name: jarvis-br0
-      com.docker.network.bridge.enable_icc: "true"
-      com.docker.network.bridge.enable_ip_masquerade: "true"
-      com.docker.network.driver.mtu: 1500
 
 services:
-  # Jarvis Secrets Daemon - Secure secrets management
-  jarvis-secretsd:
+  # --------------------------------------------------------
+  # 1. CORE BRAIN (Critical Layer)
+  # --------------------------------------------------------
+  core:
     build:
-      context: ./jarvis-secretsd
-      dockerfile: Dockerfile.runtime
-    container_name: jarvis_secretsd
-    env_file:
-      - ./jarvis-secretsd/.env
+      context: .
+      dockerfile: core/Dockerfile
+    container_name: jarvis_core
     networks:
       jarvis_network:
-        ipv4_address: 172.20.0.5
-    ports:
-      - "127.0.0.1:8081:8081"
-    # RAM-ONLY STORAGE: Secrets never touch the physical disk
-    tmpfs:
-      - /opt/jarvis/secrets:size=10M,mode=700
-      - /opt/jarvis/audit:size=10M,mode=700
-      - /opt/jarvis/run:size=1M,mode=700
+        ipv4_address: 172.25.0.40
+      frontend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=frontend"
+      - "traefik.http.routers.jarvis-core.rule=Host(`jarvis.legeeksys.fr`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.jarvis-core.entrypoints=websecure"
+      - "traefik.http.routers.jarvis-core.tls=true"
+      - "traefik.http.routers.jarvis-core.tls.certresolver=cloudflare"
+      - "traefik.http.services.jarvis-core.loadbalancer.server.port=8100"
+    environment:
+      - SECRETSD_URL=http://jarvis_secretsd:8081
+      - CLIENT_ID=backend
+      - PORT=8100
+      - CORS_ORIGINS=https://jarvis.legeeksys.fr,http://localhost:3000,http://127.0.0.1:3000
+      - PYTHON_BRIDGES_URL=http://jarvis_voice:8005
+    env_file: [".env"]
     volumes:
-      - ./jarvis-secretsd/config.toml:/etc/jarvis-secretsd/config.toml:ro
-      - ./jarvis-secretsd/policy.yaml:/etc/jarvis-secretsd/policy.yaml:ro
-      - /etc/machine-id:/etc/machine-id:ro
-    # Master key is also generated and kept in RAM if we mount it via tmpfs
-    # Note: If the container reboots, the master key and vault are GONE.
-    # This is what you asked: no hardcoded storage.
+      - ai_models:/app/models
+      - core_logs:/app/logs
+      - core_data:/app/data
+    restart: always # Must always stay up
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /app/memory_index:mode=777,uid=1000,gid=1000
+    depends_on:
+      ollama:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
 
+  # --------------------------------------------------------
+  # 2. LOCAL AI & MEMORY (Knowledge Layer)
+  # --------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: jarvis_ollama
+    networks:
+      frontend:
+      jarvis_network:
+        ipv4_address: 172.25.0.30
+    volumes:
+      - ollama_data:/root/.ollama
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: [ "CMD", "bash", "-lc", "ollama --version >/dev/null 2>&1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 12G # Ollama needs RAM for local models
+        reservations:
+          memory: 4G
+
+  # --------------------------------------------------------
+  # 3. SENSORS: VOICE & NLP (Non-Critical Layer)
+  # --------------------------------------------------------
+  voice:
+    build:
+      context: ./python-bridges
+      dockerfile: Dockerfile
+    container_name: jarvis_voice
+    networks:
+      jarvis_network:
+        ipv4_address: 172.25.0.50
+      frontend:
+    environment:
+      - AI_CONCURRENCY_LIMIT=2
+      - HOST=0.0.0.0
+      - PORT=8005
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=frontend"
+      - "traefik.http.routers.jarvis-voice.rule=Host(`jarvis.legeeksys.fr`) && PathPrefix(`/api/voice`)"
+      - "traefik.http.routers.jarvis-voice.entrypoints=websecure"
+      - "traefik.http.routers.jarvis-voice.tls=true"
+      - "traefik.http.routers.jarvis-voice.tls.certresolver=cloudflare"
+      - "traefik.http.middlewares.voice-strip.stripprefix.prefixes=/api/voice"
+      - "traefik.http.routers.jarvis-voice.middlewares=voice-strip"
+      - "traefik.http.services.jarvis-voice.loadbalancer.server.port=8005"
+    env_file: [".env"]
+    volumes:
+      - ai_models:/app/models
+      - voice_logs:/app/logs
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /home/jarvis/.cache:mode=777,uid=1000,gid=1000
+    deploy:
+      resources:
+        limits:
+          memory: 8G # ML is heavy. If it OOMs, only this container dies.
+        reservations:
+          memory: 2G
+
+  # --------------------------------------------------------
+  # 4. INTERFACE: WEB DASHBOARD (Non-Critical Layer)
+  # --------------------------------------------------------
+  dashboard:
+    build:
+      context: ./jarvis-dashboard
+      dockerfile: Dockerfile
+    container_name: jarvis_dashboard
+    networks:
+      jarvis_network:
+        ipv4_address: 172.25.0.60
+      frontend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=frontend"
+      - "traefik.http.routers.jarvis.rule=Host(`jarvis.legeeksys.fr`)"
+      - "traefik.http.routers.jarvis.entrypoints=websecure"
+      - "traefik.http.routers.jarvis.tls=true"
+      - "traefik.http.routers.jarvis.tls.certresolver=cloudflare"
+      - "traefik.http.services.jarvis.loadbalancer.server.port=3000"
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+
+  # --------------------------------------------------------
+  # 5. SECURITY: SECRETS VAULT (Critical Layer)
+  # --------------------------------------------------------
+  secretsd:
+    build:
+      context: ./jarvis-secretsd
+      dockerfile: Dockerfile
+    container_name: jarvis_secretsd
+    networks:
+      frontend:
+      jarvis_network:
+        ipv4_address: 172.25.0.5
+    volumes:
+      # Hardware binding
+      - /etc/machine-id:/etc/machine-id:ro
+      # Persistent storage for API keys and DB passwords
+      - secrets_data:/opt/jarvis/secrets/persistent
+      # Note: We removed tmpfs for vault storage to prevent postgres password desync after reboot.
+      # The master key should be securely injected via environment or Systemd Credentials in production.
+    tmpfs:
+      - /opt/jarvis/audit:size=10M,mode=700,uid=1000,gid=1000
+      - /opt/jarvis/run:size=1M,mode=700,uid=1000,gid=1000
+    restart: always
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8081/healthz" ]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 10s
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - IPC_LOCK
     security_opt:
       - no-new-privileges:true
-    read_only: false
-    tmpfs:
-      - /tmp:noexec,nosuid
 
-  # Container 1: STT API (Speech-to-Text) - Premier dans le schéma
-  stt-api:
-    build:
-      context: .
-      dockerfile: services/stt/Dockerfile
-    container_name: jarvis_stt_api
-    env_file:
-      - ./services/stt/.env
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.10
+
+
+
+  # --------------------------------------------------------
+  # 6. REVERSE PROXY (TRAEFIK STRICT SSL)
+  # --------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: jarvis_traefik
+    env_file: [".env"]
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      # Redirection permanente 80 -> 443
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      # Trust Cloudflare and LAN IPs for X-Forwarded-For
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,192.168.0.0/16,172.16.0.0/12,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      # Apply Cloudflare/LAN IPAllowList middleware globally on websecure
+      - "--entrypoints.websecure.http.middlewares=cloudflareonly@docker"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.cloudflare.acme.email=admin@legeeksys.fr"
+      - "--certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+    labels:
+      - "traefik.enable=true"
+      # Define IPAllowList middleware restricting access to LAN and Cloudflare IPs
+      - "traefik.http.middlewares.cloudflareonly.ipallowlist.sourcerange=127.0.0.1/32,192.168.0.0/16,172.16.0.0/12,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      - "traefik.http.middlewares.cloudflareonly.ipallowlist.ipstrategy.depth=0"
     ports:
-      - "8003:8003"
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./services/stt:/app
-      - ./models/stt:/app/models/stt
-      - ./logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8003/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Container 2: TTS API (Text-to-Speech) - Deuxième dans le schéma
-  tts-api:
-    build:
-      context: .
-      dockerfile: services/tts/Dockerfile
-    container_name: jarvis_tts_api
-    env_file:
-      - ./services/tts/.env
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik_certs:/letsencrypt"
     networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.20
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./services/tts:/app
-      - ./models/tts:/app/models/tts
-      - ./logs:/app/logs
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8002/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Container 3: Ollama Container - Troisième dans le schéma
-  ollama:
-    image: ollama/ollama:latest
-    container_name: jarvis_ollama
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.30
-    ports:
-      - "11435:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-    environment:
-      - OLLAMA_ORIGINS=*
-      - OLLAMA_HOST=0.0.0.0
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: [ "CMD", "bash", "-lc", "ollama --version >/dev/null 2>&1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Container 4: Rust Core Backend (Main Backend Logic) - Quatrième dans le schéma
-  backend:
-    build:
-      context: .
-      dockerfile: core/Dockerfile
-    container_name: jarvis_backend
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.40
-    ports:
-      - "8100:8100"
-    environment:
-      - SECRETSD_URL=http://jarvis-secretsd:8081
-      - CLIENT_ID=backend
-      - TLS_CERT_PATH=/etc/jarvis/certs/server.crt
-      - TLS_KEY_PATH=/etc/jarvis/certs/server.key
-      - PORT=8100
-    volumes:
-      - ./models:/app/models
-      - ./logs:/app/logs
-      - ./data:/app/data
-      - ./certs:/etc/jarvis/certs:ro
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      ollama:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-      timescale:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8100/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  open-webui:
-    build:
-      context: ./services/open-webui
-      dockerfile: Dockerfile
-    container_name: jarvis_open_webui
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.60
-    ports:
-      - "3000:8080"
-    environment:
-      # Secretsd Configuration
-      - SECRETSD_URL=http://jarvis-secretsd:8081
-      - CLIENT_ID=open-webui
-      # Ollama Configuration
-      - OLLAMA_BASE_URL=http://jarvis_ollama:11434
-      - OLLAMA_API_BASE_URL=http://jarvis_ollama:11434
-      # Memory / RAG Configuration
-      - VECTOR_DB=qdrant
-      - QDRANT_URI=http://jarvis_qdrant:6333
-      # Jarvis Backend Integration
-      - BACKEND_URL=http://jarvis_backend:8100
-      # Audio STT Configuration (OpenAI-compatible)
-      - AUDIO_STT_ENGINE=openai
-      - AUDIO_STT_OPENAI_API_BASE_URL=http://jarvis_backend:8100/v1
-      - AUDIO_STT_MODEL=whisper-1
-      # Audio TTS Configuration (OpenAI-compatible)
-      - AUDIO_TTS_ENGINE=openai
-      - AUDIO_TTS_OPENAI_API_BASE_URL=http://jarvis_backend:8100/v1
-      - AUDIO_TTS_MODEL=tts-1
-      - AUDIO_TTS_VOICE=alloy
-      - AUDIO_TTS_SPLIT_ON=punctuation
-      # Force OpenAI engine even if UI shows different options
-      - AUDIO_OPENAI_API_KEYS=dummy
-    volumes:
-      - open_webui_data:/app/backend/data
-    restart: unless-stopped
-    depends_on:
-      jarvis-secretsd:
-        condition: service_healthy
-      ollama:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-
-  # Python Bridges IA (FastAPI) - Services LLM, STT, TTS
-  python-bridges:
-    build:
-      context: ./backend-python-bridges
-      dockerfile: Dockerfile
-    container_name: jarvis_python_bridges
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.35
-    ports:
-      - "8005:8005"
-    environment:
-      - SECRETSD_URL=http://jarvis-secretsd:8081
-      - CLIENT_ID=python-bridges
-      - OLLAMA_URL=http://jarvis_ollama:11434
-      - WHISPER_MODEL=base
-      - EMBEDDINGS_MODEL=distiluse-base-multilingual-cased-v2
-    volumes:
-      - ./logs:/app/logs
-    restart: unless-stopped
-    depends_on:
-      ollama:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-
-  # Services de support
-  postgres:
-    image: postgres:15
-    container_name: jarvis_postgres
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.100
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=jarvis_db
-      - POSTGRES_USER=jarvis
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-... # The rest of the postgres service definition is unchanged
-  redis:
-    image: redis:7-alpine
-    container_name: jarvis_redis
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.110
-    ports:
-      - "6379:6379"
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Qdrant Vector Database - Memoire vectorielle neuromorphique
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: jarvis_qdrant
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.120
-    ports:
-      - "6333:6333" # API REST
-      - "6334:6334" # gRPC (optionnel)
-    environment:
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
-      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=4
-      - QDRANT__SERVICE__ENABLE_CORS=true
-    volumes:
-      - qdrant_data:/qdrant/storage
-      - ./config/qdrant_config.yaml:/qdrant/config/production.yaml
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333'" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # TimescaleDB - Memoire temporelle pour logs et metriques
-  timescale:
-    image: timescale/timescaledb:latest-pg15
-    container_name: jarvis_timescale
-    networks:
-      jarvis_network:
-        ipv4_address: 172.20.0.130
-    environment:
-      POSTGRES_DB: ${TIMESCALE_DB:-jarvis_timeseries}
-      POSTGRES_USER: ${TIMESCALE_USER:-jarvis}
-      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
-      TIMESCALEDB_TELEMETRY: off
-    volumes:
-      - timescale_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U jarvis -d jarvis_timeseries" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - frontend
+      - jarvis_network
+    restart: always
 
 volumes:
-  secretsd_vault:
-  secretsd_audit:
-  postgres_data:
-  redis_data:
   ollama_data:
-  qdrant_data:
-  timescale_data:
-  open_webui_data:
-
-
+  ai_models:
+  core_logs:
+  core_data:
+  voice_logs:
+  secrets_data:
+  traefik_certs:
