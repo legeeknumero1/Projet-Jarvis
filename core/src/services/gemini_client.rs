@@ -144,20 +144,49 @@ Ce JSON doit contenir l'action domotique/interface à effectuer, ET ta réponse 
             }]
         });
 
-        let response = self.client.post(&url)
-            .json(&payload)
-            .send()
-            .await?
-            .json::<serde_json::Value>()
-            .await?;
+        let mut attempts = 0;
+        let max_attempts = 3;
 
-        // Extraction sécurisée du texte JSON généré par le modèle
-        if let Some(raw_text) = response["candidates"][0]["content"]["parts"][0]["text"].as_str() {
-            let validated_json: serde_json::Value = serde_json::from_str(raw_text)?;
-            return Ok(validated_json);
-        }
+        loop {
+            attempts += 1;
+            let response_result = self.client.post(&url)
+                .json(&payload)
+                .send()
+                .await;
 
-        tracing::error!("Gemini API raw response: {}", response.to_string());
-        Err(format!("Le backend de Google AI Studio a renvoyé une structure invalide. RAW: {}", response.to_string()).into())
-    }
+            match response_result {
+                Ok(res) => {
+                    let status = res.status();
+                    let raw_text = res.text().await?;
+
+                    if status.is_success() {
+                        if let Ok(json_res) = serde_json::from_str::<serde_json::Value>(&raw_text) {
+                            if let Some(generated_text) = json_res["candidates"][0]["content"]["parts"][0]["text"].as_str() {
+                                let validated_json: serde_json::Value = serde_json::from_str(generated_text)?;
+                                return Ok(validated_json);
+                            }
+                        }
+                    }
+
+                    if status.as_u16() == 503 {
+                        if attempts < max_attempts {
+                            tracing::warn!("Gemini 503 High Demand (Attempt {}/{}). Retrying in 2 seconds...", attempts, max_attempts);
+                            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                            continue;
+                        }
+                    }
+
+                    tracing::error!("Gemini API error (Status: {}): {}", status, raw_text);
+                    return Err(format!("Google AI Studio Error {}: {}", status, raw_text).into());
+                }
+                Err(e) => {
+                    if attempts < max_attempts {
+                        tracing::warn!("Network error contacting Gemini (Attempt {}/{}): {}. Retrying...", attempts, max_attempts, e);
+                        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                        continue;
+                    }
+                    return Err(Box::new(e));
+                }
+            }
+        }    }
 }
