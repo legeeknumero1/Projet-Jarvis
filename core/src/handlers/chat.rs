@@ -30,7 +30,7 @@ pub async fn jarvis_ws_handler(
     State(state): State<Arc<AppState>>,
 ) -> impl IntoResponse {
     let token = params.get("token").cloned().unwrap_or_default();
-    if let Err(e) = crate::middleware::auth::verify_token(&token) {
+    if let Err(e) = crate::middleware::auth::verify_token(&token, &state.jwt_secret) {
         tracing::warn!("Unauthorized WS connection attempt blocked: {:?}", e);
         return (StatusCode::UNAUTHORIZED, "Invalid or missing token").into_response();
     }
