@@ -65,6 +65,7 @@ async fn rate_limiter(
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Install default crypto provider for Rustls 0.23+ (resolves CryptoProvider panic)
     rustls::crypto::ring::default_provider()
+        .install_default()
         .map_err(|_| "Failed to install rustls default crypto provider")?;
 
     // Initialize tracing
