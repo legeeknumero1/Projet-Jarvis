@@ -79,9 +79,9 @@ jobs:
     strategy:
       matrix:
         image:
-          - jarvis-core
+          - core
           - jarvis-secretsd
-          - backend-python-bridges
+          - python-bridges
     steps:
       - uses: actions/checkout@v4
 
