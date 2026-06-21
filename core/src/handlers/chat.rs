@@ -332,22 +332,38 @@ Tu dois l'appeler "Monsieur". Sois flegmatique. N'ajoute AUCUN format JSON, just
         }
         Err(cloud_err) => {
             // =================================================================
-            // ERROR HANDLING (NO OLLAMA FALLBACK)
+            // ERROR HANDLING WITH OLLAMA FALLBACK
             // =================================================================
             warn!(
-                intent = "CLOUD_FAILED",
+                intent = "CLOUD_FAILED_FALLBACK",
                 error = %cloud_err,
                 command = %payload.message,
-                "Cloud API failure detected. User requested NO Ollama fallback for heavy LLM operations."
+                "Cloud API failure detected. Activating local Ollama LLM fallback."
             );
 
+            let system_fallback = r#"Tu es J.A.R.V.I.S. Ton cerveau cloud (Gemini) vient de subir une panne réseau (Erreur 503). 
+Tu as basculé sur ton cerveau local auxiliaire. 
+Réponds impérativement au format JSON valide avec les clés suivantes :
+"speech_status": "SPEAKING",
+"audio_amplitude": 0.2,
+"widget_id": "error",
+"visible": true,
+"action": "NONE",
+"reply_text": "<ta réponse parlée ici, où tu expliques poliment à Monsieur que les serveurs cloud de Google sont surchargés, mais que tu l'écoutes sur batterie de secours. Sois très bref.>"
+"#;
+
+            if let Ok(local_hud) = ollama_client.fallback_chat(system_fallback, &payload.message).await {
+                return Ok(Json(local_hud));
+            }
+
+            // Ultimate fallback if local LLM fails too
             let error_hud = serde_json::json!({
                 "speech_status": "CRITICAL",
                 "audio_amplitude": 0.0,
                 "widget_id": "error",
                 "visible": true,
                 "action": "NONE",
-                "reply_text": "Pardonnez-moi Monsieur, la liaison avec mon centre de calcul principal a été interrompue. Je ne peux pas traiter de requêtes complexes pour le moment.",
+                "reply_text": "Pardonnez-moi Monsieur, la liaison avec mon centre de calcul principal est rompue, et les circuits auxiliaires ne répondent pas. Je suis en panne.",
                 "widget_data": {
                     "error": cloud_err.to_string()
                 }
